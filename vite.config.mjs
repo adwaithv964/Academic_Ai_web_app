@@ -26,8 +26,8 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5000000, // 5MB
       },
       manifest: {
-        name: 'Academic Result Predictor',
-        short_name: 'StudyMate',
+        name: 'StudyMate',
+        short_name: 'Academic Result Predictor',
         description: 'Predict your academic results and analyze performance',
         theme_color: '#ffffff',
         icons: [
