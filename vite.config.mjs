@@ -27,12 +27,12 @@ export default defineConfig({
       },
       manifest: {
         name: 'StudyMate',
-        short_name: 'Academic Result Predictor',
+        short_name: 'StudyMate',
         description: 'Predict your academic results and analyze performance',
         theme_color: '#ffffff',
         icons: [
           {
-            src: 'favicon.ico',
+            src: 'graduate-hat.ico',
             sizes: '64x64 32x32 24x24 16x16',
             type: 'image/x-icon'
           },
