@@ -5,7 +5,7 @@ import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
 
 const ProfileTab = () => {
-  const [profileData, setProfileData] = useState({
+  const defaultProfileData = {
     firstName: "John",
     lastName: "Smith",
     email: "john.smith@university.edu",
@@ -16,6 +16,11 @@ const ProfileTab = () => {
     phone: "+1 (555) 123-4567",
     dateOfBirth: "2002-03-15",
     address: "123 Campus Drive, University City, UC 12345"
+  };
+
+  const [profileData, setProfileData] = useState(() => {
+    const saved = localStorage.getItem('studentProfile');
+    return saved ? JSON.parse(saved) : defaultProfileData;
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -53,7 +58,7 @@ const ProfileTab = () => {
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors?.[field]) {
       setErrors(prev => ({
@@ -65,58 +70,50 @@ const ProfileTab = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!profileData?.firstName?.trim()) {
       newErrors.firstName = 'First name is required';
     }
-    
+
     if (!profileData?.lastName?.trim()) {
       newErrors.lastName = 'Last name is required';
     }
-    
+
     if (!profileData?.email?.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/?.test(profileData?.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!profileData?.studentId?.trim()) {
       newErrors.studentId = 'Student ID is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    
+
     setIsSaving(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    localStorage.setItem('studentProfile', JSON.stringify(profileData));
+
     setIsSaving(false);
     setIsEditing(false);
-    
+
     // Show success message (in real app, use toast notification)
     alert('Profile updated successfully!');
   };
 
   const handleCancel = () => {
-    // Reset form data to original values
-    setProfileData({
-      firstName: "John",
-      lastName: "Smith",
-      email: "john.smith@university.edu",
-      studentId: "STU2024001",
-      institution: "University of Technology",
-      major: "Computer Science",
-      graduationYear: "2026",
-      phone: "+1 (555) 123-4567",
-      dateOfBirth: "2002-03-15",
-      address: "123 Campus Drive, University City, UC 12345"
-    });
+    // Reset form data to saved values
+    const saved = localStorage.getItem('studentProfile');
+    setProfileData(saved ? JSON.parse(saved) : defaultProfileData);
     setErrors({});
     setIsEditing(false);
   };
@@ -172,7 +169,7 @@ const ProfileTab = () => {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-foreground mb-4">Basic Information</h3>
-            
+
             <Input
               label="First Name"
               type="text"
@@ -227,7 +224,7 @@ const ProfileTab = () => {
           {/* Academic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-foreground mb-4">Academic Information</h3>
-            
+
             <Input
               label="Student ID"
               type="text"
@@ -294,7 +291,16 @@ const ProfileTab = () => {
           </div>
           <div className="text-center p-4 bg-muted/30 rounded-lg">
             <Icon name="Award" size={24} className="text-accent mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-foreground">3.7</p>
+            <p className="text-2xl font-semibold text-foreground">
+              {(() => {
+                try {
+                  const settings = localStorage.getItem('academicSettings');
+                  return settings ? JSON.parse(settings).currentGPA : '3.7';
+                } catch (e) {
+                  return '3.7';
+                }
+              })()}
+            </p>
             <p className="text-sm text-muted-foreground">Current GPA</p>
           </div>
         </div>

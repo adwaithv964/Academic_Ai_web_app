@@ -6,7 +6,14 @@ const PerformanceCards = () => {
     {
       id: 1,
       title: "Current GPA",
-      value: "3.67",
+      value: (() => {
+        try {
+          const settings = localStorage.getItem('academicSettings');
+          return settings ? JSON.parse(settings).currentGPA : '3.67';
+        } catch (e) {
+          return '3.67';
+        }
+      })(),
       change: "+0.23",
       changeType: "positive",
       icon: "TrendingUp",
@@ -61,13 +68,13 @@ const PerformanceCards = () => {
             </div>
             <div className={`
               px-2 py-1 rounded-full text-xs font-medium
-              ${item?.changeType === 'positive' ? 'bg-success/10 text-success' : 
-                item?.changeType === 'negative'? 'bg-error/10 text-error' : 'bg-muted text-muted-foreground'}
+              ${item?.changeType === 'positive' ? 'bg-success/10 text-success' :
+                item?.changeType === 'negative' ? 'bg-error/10 text-error' : 'bg-muted text-muted-foreground'}
             `}>
               {item?.change}
             </div>
           </div>
-          
+
           <div className="space-y-1">
             <h3 className="text-2xl font-bold text-foreground">{item?.value}</h3>
             <p className="text-sm font-medium text-foreground">{item?.title}</p>

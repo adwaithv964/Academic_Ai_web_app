@@ -8,11 +8,19 @@ import GPAChart from './components/GPAChart';
 import ScenarioComparison from './components/ScenarioComparison';
 import GoalSetting from './components/GoalSetting';
 
+import { calculateGPA, getStoredGpaScale } from '../../utils/gradeScale';
+
 const WhatIfAnalysis = () => {
   const navigate = useNavigate();
   const [activeScenario, setActiveScenario] = useState(1);
   const [chartType, setChartType] = useState('line');
   const [viewMode, setViewMode] = useState('builder'); // builder, comparison, goals
+  const [gpaScale, setGpaScale] = useState('4.0');
+
+  useEffect(() => {
+    const storedScale = getStoredGpaScale();
+    setGpaScale(storedScale);
+  }, []);
 
   const [scenarios, setScenarios] = useState([
     {
@@ -53,6 +61,14 @@ const WhatIfAnalysis = () => {
     }
   ]);
 
+  // Recalculate GPAs when scale changes or scenarios load
+  useEffect(() => {
+    setScenarios(prev => prev.map(scenario => ({
+      ...scenario,
+      projectedGPA: calculateGPA(scenario.courses, gpaScale)
+    })));
+  }, [gpaScale]);
+
   const chartTypeOptions = [
     { value: 'line', label: 'Line Chart' },
     { value: 'bar', label: 'Bar Chart' }
@@ -68,7 +84,7 @@ const WhatIfAnalysis = () => {
     setScenarios(prev => prev?.map(scenario => {
       if (scenario?.id === scenarioId) {
         const updatedCourses = [...scenario?.courses, course];
-        const newGPA = calculateGPA(updatedCourses);
+        const newGPA = calculateGPA(updatedCourses, gpaScale);
         return { ...scenario, courses: updatedCourses, projectedGPA: newGPA };
       }
       return scenario;
@@ -79,7 +95,7 @@ const WhatIfAnalysis = () => {
     setScenarios(prev => prev?.map(scenario => {
       if (scenario?.id === scenarioId) {
         const updatedCourses = scenario?.courses?.filter(course => course?.id !== courseId);
-        const newGPA = calculateGPA(updatedCourses);
+        const newGPA = calculateGPA(updatedCourses, gpaScale);
         return { ...scenario, courses: updatedCourses, projectedGPA: newGPA };
       }
       return scenario;
@@ -92,27 +108,11 @@ const WhatIfAnalysis = () => {
         const updatedCourses = scenario?.courses?.map(course =>
           course?.id === courseId ? { ...course, ...updates } : course
         );
-        const newGPA = calculateGPA(updatedCourses);
+        const newGPA = calculateGPA(updatedCourses, gpaScale);
         return { ...scenario, courses: updatedCourses, projectedGPA: newGPA };
       }
       return scenario;
     }));
-  };
-
-  const calculateGPA = (courses) => {
-    const gradePoints = {
-      'A+': 4.0, 'A': 4.0, 'A-': 3.7,
-      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-      'D+': 1.3, 'D': 1.0, 'F': 0.0
-    };
-
-    const totalPoints = courses?.reduce((sum, course) => 
-      sum + (gradePoints?.[course?.grade] || 0) * course?.credits, 0
-    );
-    const totalCredits = courses?.reduce((sum, course) => sum + course?.credits, 0);
-
-    return totalCredits > 0 ? (totalPoints / totalCredits)?.toFixed(2) : '0.00';
   };
 
   const handleSaveScenario = (scenarioId) => {
@@ -159,6 +159,7 @@ const WhatIfAnalysis = () => {
             onAddCourse={handleAddCourse}
             onRemoveCourse={handleRemoveCourse}
             onUpdateCourse={handleUpdateCourse}
+            gpaScale={gpaScale}
           />
         );
     }

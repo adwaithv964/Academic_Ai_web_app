@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PredictionBreakdown = ({ predictionData, isVisible }) => {
+const PredictionBreakdown = ({ predictionData, isVisible, onSave }) => {
   if (!predictionData) return null;
 
   const { targetGrades, recommendations, riskAssessment } = predictionData;
@@ -93,10 +93,9 @@ const PredictionBreakdown = ({ predictionData, isVisible }) => {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Difficulty:</span>
-                  <span className={`font-medium ${
-                    target?.difficulty === 'Easy' ? 'text-success' :
-                    target?.difficulty === 'Moderate' ? 'text-warning' : 'text-error'
-                  }`}>
+                  <span className={`font-medium ${target?.difficulty === 'Easy' ? 'text-success' :
+                      target?.difficulty === 'Moderate' ? 'text-warning' : 'text-error'
+                    }`}>
                     {target?.difficulty}
                   </span>
                 </div>
@@ -120,26 +119,24 @@ const PredictionBreakdown = ({ predictionData, isVisible }) => {
         <div className="space-y-4">
           {recommendations?.map((rec, index) => (
             <div key={index} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                rec?.priority === 'high' ? 'bg-error/10' :
-                rec?.priority === 'medium' ? 'bg-warning/10' : 'bg-success/10'
-              }`}>
-                <Icon 
-                  name={rec?.icon} 
-                  size={16} 
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${rec?.priority === 'high' ? 'bg-error/10' :
+                  rec?.priority === 'medium' ? 'bg-warning/10' : 'bg-success/10'
+                }`}>
+                <Icon
+                  name={rec?.icon}
+                  size={16}
                   className={
                     rec?.priority === 'high' ? 'text-error' :
-                    rec?.priority === 'medium' ? 'text-warning' : 'text-success'
-                  } 
+                      rec?.priority === 'medium' ? 'text-warning' : 'text-success'
+                  }
                 />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-medium text-foreground">{rec?.title}</h4>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    rec?.priority === 'high' ? 'bg-error/10 text-error' :
-                    rec?.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${rec?.priority === 'high' ? 'bg-error/10 text-error' :
+                      rec?.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'
+                    }`}>
                     {rec?.priority} priority
                   </span>
                 </div>
@@ -198,10 +195,11 @@ const PredictionBreakdown = ({ predictionData, isVisible }) => {
           iconName="Save"
           iconPosition="left"
           className="flex-1"
+          onClick={onSave}
         >
           Save Prediction
         </Button>
-        
+
         <Button
           variant="outline"
           iconName="Calculator"
@@ -210,7 +208,7 @@ const PredictionBreakdown = ({ predictionData, isVisible }) => {
         >
           What-If Analysis
         </Button>
-        
+
         <Button
           variant="outline"
           iconName="Calendar"
@@ -219,7 +217,7 @@ const PredictionBreakdown = ({ predictionData, isVisible }) => {
         >
           Create Study Plan
         </Button>
-        
+
         <Button
           variant="ghost"
           iconName="Download"

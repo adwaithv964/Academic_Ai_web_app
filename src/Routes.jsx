@@ -12,6 +12,7 @@ import StudentProfileSettings from './pages/student-profile-settings';
 import UserManagement from './pages/user-management';
 import AcademicTools from './pages/academic-tools';
 import AIAssistant from './pages/ai-assistant';
+import TodoList from './pages/todo-list';
 
 const Routes = () => {
   return (
@@ -29,6 +30,7 @@ const Routes = () => {
           <Route path="/student-profile-settings" element={<StudentProfileSettings />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
+          <Route path="/todo-list" element={<TodoList />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
       </ErrorBoundary>

@@ -4,7 +4,7 @@ import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
-const CourseSelectionForm = ({ onPredict, isLoading }) => {
+const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
   const [formData, setFormData] = useState({
     course: '',
     currentGrade: '',
@@ -15,6 +15,16 @@ const CourseSelectionForm = ({ onPredict, isLoading }) => {
     difficulty: 'medium',
     historicalPerformance: 'average'
   });
+
+  // Load initial data if provided
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialData
+      }));
+    }
+  }, [initialData]);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -83,7 +93,11 @@ const CourseSelectionForm = ({ onPredict, isLoading }) => {
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (formData?.course && formData?.currentGrade) {
-      onPredict(formData);
+      const selectedCourse = courseOptions.find(c => c.value === formData.course);
+      onPredict({
+        ...formData,
+        courseName: selectedCourse ? selectedCourse.label : formData.course
+      });
     }
   };
 

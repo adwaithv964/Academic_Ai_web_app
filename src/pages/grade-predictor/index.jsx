@@ -9,18 +9,33 @@ import ScenarioTabs from './components/ScenarioTabs';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { predictGrades as predictGradesApi, health as apiHealth } from '../../services/api';
-import AIChat from '../../components/AIChat';
+import { db } from '../../services/db';
+import PredictionHistory from './components/PredictionHistory';
 
 const GradePredictor = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [predictionData, setPredictionData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [selectedHistory, setSelectedHistory] = useState(null);
 
   // Backend API health and error state
   const [serverAvailable, setServerAvailable] = useState(false);
   const [apiError, setApiError] = useState(null);
+
+  const handleLoadHistory = (historyItem) => {
+    setSelectedHistory(historyItem);
+    // Populate form data (handled by passing selectedHistory to CourseSelectionForm)
+
+    // Restore prediction results
+    if (historyItem.data) {
+      setPredictionData(historyItem.data);
+      setShowResults(true);
+      setToastMessage("Prediction loaded from history");
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -39,6 +54,27 @@ const GradePredictor = () => {
   const generatePredictionData = (formData) => {
     const currentGrade = parseFloat(formData?.currentGrade);
     const predictedGrade = Math.min(100, currentGrade + Math.random() * 15 - 5);
+
+    // Get stored GPA
+    let currentGPA = 3.45;
+    try {
+      const settings = localStorage.getItem('academicSettings');
+      if (settings) {
+        currentGPA = parseFloat(JSON.parse(settings).currentGPA) || 3.45;
+      }
+    } catch (e) {
+      console.error('Error reading GPA', e);
+    }
+
+    // Helper to calculate new GPA (simplified mock logic)
+    const calculateNewGPA = (grade) => {
+      // Assume this course is 3 credits and we have 90 existing credits
+      // This is a rough approximation for demo purposes
+      const existingCredits = 90;
+      const newCredits = 3;
+      const gradePoint = grade >= 90 ? 4.0 : grade >= 80 ? 3.0 : grade >= 70 ? 2.0 : grade >= 60 ? 1.0 : 0.0;
+      return ((currentGPA * existingCredits + gradePoint * newCredits) / (existingCredits + newCredits)).toFixed(2);
+    };
 
     return {
       currentGrade: currentGrade,
@@ -167,7 +203,7 @@ const GradePredictor = () => {
         letterGrade: predictedGrade >= 90 ? 'A' : predictedGrade >= 80 ? 'B' : predictedGrade >= 70 ? 'C' : predictedGrade >= 60 ? 'D' : 'F',
         gradeDescription: predictedGrade >= 90 ? 'Excellent' : predictedGrade >= 80 ? 'Good' : predictedGrade >= 70 ? 'Satisfactory' : 'Needs Improvement',
         gpaImpact: predictedGrade >= 90 ? '+0.2' : predictedGrade >= 80 ? '+0.1' : predictedGrade >= 70 ? '0.0' : '-0.1',
-        overallGPA: '3.45',
+        overallGPA: calculateNewGPA(predictedGrade),
         probability: 65,
         requirements: [
           { category: 'Exams', requirement: 'Maintain 75% average', icon: 'BookOpen' },
@@ -193,7 +229,7 @@ const GradePredictor = () => {
         letterGrade: 'A',
         gradeDescription: 'Excellent',
         gpaImpact: '+0.3',
-        overallGPA: '3.65',
+        overallGPA: calculateNewGPA(predictedGrade + 8),
         probability: 25,
         requirements: [
           { category: 'Exams', requirement: 'Score 90%+ on remaining', icon: 'BookOpen' },
@@ -219,7 +255,7 @@ const GradePredictor = () => {
         letterGrade: predictedGrade - 5 >= 80 ? 'B' : predictedGrade - 5 >= 70 ? 'C' : predictedGrade - 5 >= 60 ? 'D' : 'F',
         gradeDescription: predictedGrade - 5 >= 70 ? 'Satisfactory' : 'Needs Improvement',
         gpaImpact: '-0.1',
-        overallGPA: '3.25',
+        overallGPA: calculateNewGPA(predictedGrade - 5),
         probability: 35,
         requirements: [
           { category: 'Exams', requirement: 'Minimum 65% average', icon: 'BookOpen' },
@@ -245,6 +281,8 @@ const GradePredictor = () => {
     setIsLoading(true);
     setShowResults(false);
     setApiError(null);
+
+    let resultData = null;
 
     try {
       // Prefer backend prediction if server is available
@@ -405,10 +443,12 @@ const GradePredictor = () => {
           }
         };
 
+        resultData = transformedData;
         setPredictionData(transformedData);
       } else {
         // Fallback to mock data if backend not available
         const mockData = generatePredictionData(formData);
+        resultData = mockData;
         setPredictionData(mockData);
       }
     } catch (error) {
@@ -416,15 +456,39 @@ const GradePredictor = () => {
       setApiError(error?.message || 'Prediction service is unavailable. Using demo results.');
       // Fallback to mock data if AI fails
       const mockData = generatePredictionData(formData);
+      resultData = mockData;
       setPredictionData(mockData);
     } finally {
       setIsLoading(false);
       setShowResults(true);
+
+      // Save to offline database
+      try {
+        if (resultData) {
+          await db.predictions.add({
+            date: new Date(),
+            courseName: formData?.courseName || 'Unknown Course',
+            currentGrade: parseFloat(formData?.currentGrade),
+            predictedGrade: resultData.predictedGrade,
+            data: resultData // Store full object for retrieval
+          });
+          console.log('Prediction saved to offline database');
+        }
+      } catch (dbError) {
+        console.error('Failed to save to offline database:', dbError);
+      }
     }
   };
 
   const handleSidebarToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  const handleSave = () => {
+    // Prediction is already auto-saved to DB in handlePredict
+    // Just show a success message to the user
+    setToastMessage("Prediction saved successfully!");
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
@@ -456,18 +520,6 @@ const GradePredictor = () => {
                 </div>
               </div>
 
-              {/* AI Chat Toggle */}
-              <Button
-                onClick={() => setShowAIChat(!showAIChat)}
-                iconName="MessageCircle"
-                variant="outline"
-                className="relative"
-              >
-                AI Tutor
-                {serverAvailable && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                )}
-              </Button>
             </div>
 
             {/* Backend Status */}
@@ -504,14 +556,26 @@ const GradePredictor = () => {
           </motion.div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             {/* Left Column - Form */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
+              className="xl:col-span-4"
             >
-              <CourseSelectionForm onPredict={handlePredict} isLoading={isLoading} />
+              <CourseSelectionForm
+                onPredict={handlePredict}
+                isLoading={isLoading}
+                initialData={selectedHistory}
+              />
+
+              <div className="mt-8 h-[500px]">
+                <PredictionHistory
+                  onLoad={handleLoadHistory}
+                  selectedId={selectedHistory?.id}
+                />
+              </div>
             </motion.div>
 
             {/* Right Column - Chart */}
@@ -519,26 +583,28 @@ const GradePredictor = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
+              className="xl:col-span-8"
             >
               <PredictionChart predictionData={predictionData} isVisible={showResults} />
+
+              {/* Results Section moved here for better layout */}
+              {showResults && predictionData && (
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="mt-8 space-y-8"
+                >
+                  <PredictionBreakdown
+                    predictionData={predictionData}
+                    isVisible={showResults}
+                    onSave={handleSave}
+                  />
+                  <ScenarioTabs predictionData={predictionData} isVisible={showResults} />
+                </motion.div>
+              )}
             </motion.div>
           </div>
-
-          {/* Results Section */}
-          {showResults && predictionData && (
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-8 space-y-8"
-            >
-              {/* Prediction Breakdown */}
-              <PredictionBreakdown predictionData={predictionData} isVisible={showResults} />
-
-              {/* Scenario Tabs */}
-              <ScenarioTabs predictionData={predictionData} isVisible={showResults} />
-            </motion.div>
-          )}
 
           {/* Loading State */}
           {isLoading && (
@@ -569,14 +635,23 @@ const GradePredictor = () => {
           {/* Quick Actions */}
 
         </div>
-      </main>
-      {/* AI Chat Component */}
-      <AIChat
-        subject="academic planning"
-        isOpen={showAIChat}
-        onClose={() => setShowAIChat(false)}
-      />
-    </div>
+      </main >
+
+      {/* Toast Notification */}
+      {
+        toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-foreground text-background px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-2"
+          >
+            <Icon name="CheckCircle" size={20} className="text-green-500" />
+            <span className="font-medium">{toastMessage}</span>
+          </motion.div>
+        )
+      }
+    </div >
   );
 };
 

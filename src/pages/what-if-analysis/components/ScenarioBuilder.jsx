@@ -4,25 +4,14 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 
-const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCourse, onRemoveCourse, onUpdateCourse }) => {
+import { getGradeOptions } from '../../../utils/gradeScale';
+
+const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCourse, onRemoveCourse, onUpdateCourse, gpaScale }) => {
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseCredits, setNewCourseCredits] = useState('');
   const [newCourseGrade, setNewCourseGrade] = useState('');
 
-  const gradeOptions = [
-    { value: 'A+', label: 'A+ (4.0)' },
-    { value: 'A', label: 'A (4.0)' },
-    { value: 'A-', label: 'A- (3.7)' },
-    { value: 'B+', label: 'B+ (3.3)' },
-    { value: 'B', label: 'B (3.0)' },
-    { value: 'B-', label: 'B- (2.7)' },
-    { value: 'C+', label: 'C+ (2.3)' },
-    { value: 'C', label: 'C (2.0)' },
-    { value: 'C-', label: 'C- (1.7)' },
-    { value: 'D+', label: 'D+ (1.3)' },
-    { value: 'D', label: 'D (1.0)' },
-    { value: 'F', label: 'F (0.0)' }
-  ];
+  const gradeOptions = getGradeOptions(gpaScale);
 
   const creditOptions = [
     { value: '1', label: '1 Credit' },
@@ -65,10 +54,9 @@ const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCou
           <button
             key={scenario?.id}
             onClick={() => onScenarioChange(scenario?.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-academic border-b-2 ${
-              activeScenario === scenario?.id
-                ? 'text-primary border-primary bg-primary/5' :'text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/50'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-academic border-b-2 ${activeScenario === scenario?.id
+              ? 'text-primary border-primary bg-primary/5' : 'text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/50'
+              }`}
           >
             {scenario?.name}
           </button>

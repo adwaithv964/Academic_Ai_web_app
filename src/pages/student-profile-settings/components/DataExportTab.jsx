@@ -98,21 +98,49 @@ const DataExportTab = () => {
 
   const handleExportData = async () => {
     const selectedCategories = dataCategories?.filter(cat => exportSettings?.[cat?.key]);
-    
+
     if (selectedCategories?.length === 0) {
       alert('Please select at least one data category to export.');
       return;
     }
 
     setIsExporting(true);
-    
-    // Simulate export process
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+
+    // Gather data from localStorage
+    const exportData = {};
+
+    if (exportSettings.includeSettings) {
+      exportData.profile = JSON.parse(localStorage.getItem('studentProfile') || 'null');
+      exportData.academicSettings = JSON.parse(localStorage.getItem('academicSettings') || 'null');
+      exportData.preferences = JSON.parse(localStorage.getItem('userPreferences') || 'null');
+    }
+
+    if (exportSettings.includeGrades) {
+      // In a real app, this would fetch grades. For now, we'll include a placeholder or any stored grade data
+      exportData.grades = JSON.parse(localStorage.getItem('grades') || '[]');
+    }
+
+    if (exportSettings.includeStudySessions) {
+      exportData.tasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
+    }
+
+    // Simulate delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Create downloadable file
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = `academic_data_export_${new Date().toISOString().split('T')[0]}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+
     setIsExporting(false);
-    
-    // In a real app, this would trigger a download
-    alert(`Data export completed! Your ${exportSettings?.format?.toUpperCase()} file has been prepared for download.`);
+
+    alert(`Data export completed! Your JSON file has been downloaded.`);
   };
 
   const handleDeleteAccount = async () => {
@@ -122,14 +150,18 @@ const DataExportTab = () => {
     }
 
     setIsDeletingAccount(true);
-    
+
     // Simulate account deletion process
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
+    // Clear all app data
+    localStorage.clear();
+
     setIsDeletingAccount(false);
-    alert('Account deletion request has been submitted. You will receive a confirmation email within 24 hours.');
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationText('');
+    alert('Your account and all associated data have been deleted.');
+
+    // Redirect to home/login
+    window.location.href = '/';
   };
 
   return (
@@ -147,7 +179,7 @@ const DataExportTab = () => {
           <Icon name="Download" size={20} className="text-primary" />
           Export Your Data
         </h3>
-        
+
         <p className="text-sm text-muted-foreground mb-6">
           Download a copy of your academic data. This includes all the information associated with your account.
         </p>
@@ -233,7 +265,7 @@ const DataExportTab = () => {
           <Icon name="AlertTriangle" size={20} className="text-error" />
           Delete Account
         </h3>
-        
+
         <div className="space-y-4">
           <div className="p-4 bg-error/5 border border-error/20 rounded-lg">
             <h4 className="font-medium text-error mb-2">Warning: This action cannot be undone</h4>
@@ -304,7 +336,7 @@ const DataExportTab = () => {
           <Icon name="Info" size={20} className="text-secondary" />
           Data Retention Policy
         </h3>
-        
+
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
             <strong className="text-foreground">Academic Data:</strong> Grades and progress data are retained for 7 years after graduation or account deletion for academic record purposes.

@@ -6,7 +6,7 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 
 const AcademicSettingsTab = () => {
-  const [academicSettings, setAcademicSettings] = useState({
+  const defaultSettings = {
     currentGPA: "3.7",
     gpaScale: "4.0",
     targetGPA: "3.8",
@@ -16,6 +16,11 @@ const AcademicSettingsTab = () => {
     gradeWeighting: "standard",
     semesterSystem: "semester",
     academicYear: "2024-2025"
+  };
+
+  const [academicSettings, setAcademicSettings] = useState(() => {
+    const saved = localStorage.getItem('academicSettings');
+    return saved ? JSON.parse(saved) : defaultSettings;
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -52,7 +57,7 @@ const AcademicSettingsTab = () => {
       ...prev,
       [field]: value
     }));
-    
+
     if (errors?.[field]) {
       setErrors(prev => ({
         ...prev,
@@ -63,31 +68,33 @@ const AcademicSettingsTab = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!academicSettings?.currentGPA || isNaN(academicSettings?.currentGPA)) {
       newErrors.currentGPA = 'Please enter a valid GPA';
     }
-    
+
     if (!academicSettings?.targetGPA || isNaN(academicSettings?.targetGPA)) {
       newErrors.targetGPA = 'Please enter a valid target GPA';
     }
-    
+
     if (!academicSettings?.creditHours || isNaN(academicSettings?.creditHours)) {
       newErrors.creditHours = 'Please enter valid credit hours';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
   };
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    
+
     setIsSaving(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    localStorage.setItem('academicSettings', JSON.stringify(academicSettings));
+
     setIsSaving(false);
     alert('Academic settings updated successfully!');
   };
@@ -125,7 +132,7 @@ const AcademicSettingsTab = () => {
           <Icon name="TrendingUp" size={20} className="text-primary" />
           GPA Configuration
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Input
@@ -195,7 +202,7 @@ const AcademicSettingsTab = () => {
           <Icon name="BookOpen" size={20} className="text-secondary" />
           Credit Hours Progress
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Input
@@ -255,7 +262,7 @@ const AcademicSettingsTab = () => {
           <Icon name="Settings" size={20} className="text-accent" />
           Integration Settings
         </h3>
-        
+
         <div className="space-y-4">
           <Checkbox
             label="Course Catalog Integration"

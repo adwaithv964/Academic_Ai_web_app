@@ -5,7 +5,7 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 
 const PreferencesTab = () => {
-  const [preferences, setPreferences] = useState({
+  const defaultPreferences = {
     // Notification preferences
     deadlineReminders: true,
     gradeUpdates: true,
@@ -15,25 +15,30 @@ const PreferencesTab = () => {
     emailNotifications: true,
     pushNotifications: true,
     smsNotifications: false,
-    
+
     // Display preferences
     language: "en",
     timezone: "America/New_York",
     dateFormat: "MM/DD/YYYY",
     timeFormat: "12",
-    
+
     // Dashboard preferences
     defaultView: "overview",
     showQuickStats: true,
     showUpcomingDeadlines: true,
     showRecentGrades: true,
     compactMode: false,
-    
+
     // Privacy preferences
     profileVisibility: "friends",
     progressSharing: true,
     studyGroupVisibility: true,
     allowPeerMessages: true
+  };
+
+  const [preferences, setPreferences] = useState(() => {
+    const saved = localStorage.getItem('userPreferences');
+    return saved ? JSON.parse(saved) : defaultPreferences;
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -88,38 +93,20 @@ const PreferencesTab = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+
     setIsSaving(false);
     alert('Preferences updated successfully!');
   };
 
   const resetToDefaults = () => {
-    setPreferences({
-      deadlineReminders: true,
-      gradeUpdates: true,
-      peerHelpResponses: true,
-      studySessionReminders: true,
-      weeklyProgressReports: false,
-      emailNotifications: true,
-      pushNotifications: true,
-      smsNotifications: false,
-      language: "en",
-      timezone: "America/New_York",
-      dateFormat: "MM/DD/YYYY",
-      timeFormat: "12",
-      defaultView: "overview",
-      showQuickStats: true,
-      showUpcomingDeadlines: true,
-      showRecentGrades: true,
-      compactMode: false,
-      profileVisibility: "friends",
-      progressSharing: true,
-      studyGroupVisibility: true,
-      allowPeerMessages: true
-    });
+    setPreferences(defaultPreferences);
+    localStorage.removeItem('userPreferences');
+    alert('Preferences reset to defaults.');
   };
 
   return (
@@ -160,11 +147,11 @@ const PreferencesTab = () => {
           <Icon name="Bell" size={20} className="text-primary" />
           Notification Preferences
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <h4 className="font-medium text-foreground">Academic Notifications</h4>
-            
+
             <Checkbox
               label="Deadline Reminders"
               description="Get notified about upcoming assignment deadlines"
@@ -196,7 +183,7 @@ const PreferencesTab = () => {
 
           <div className="space-y-4">
             <h4 className="font-medium text-foreground">Delivery Methods</h4>
-            
+
             <Checkbox
               label="Email Notifications"
               description="Receive notifications via email"
@@ -233,7 +220,7 @@ const PreferencesTab = () => {
           <Icon name="Monitor" size={20} className="text-secondary" />
           Display Preferences
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Select
@@ -294,7 +281,7 @@ const PreferencesTab = () => {
           <Icon name="LayoutDashboard" size={20} className="text-accent" />
           Dashboard Preferences
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Checkbox
@@ -328,7 +315,7 @@ const PreferencesTab = () => {
           <Icon name="Shield" size={20} className="text-success" />
           Privacy Preferences
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <Select

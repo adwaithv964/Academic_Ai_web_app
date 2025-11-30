@@ -87,7 +87,16 @@ const Dashboard = () => {
                                     <Icon name="Award" size={16} className="text-warning" />
                                     <span className="text-sm font-medium text-muted-foreground">Current GPA</span>
                                 </div>
-                                <p className="text-2xl font-bold text-foreground">3.45</p>
+                                <p className="text-2xl font-bold text-foreground">
+                                    {(() => {
+                                        try {
+                                            const settings = localStorage.getItem('academicSettings');
+                                            return settings ? JSON.parse(settings).currentGPA : '3.45';
+                                        } catch (e) {
+                                            return '3.45';
+                                        }
+                                    })()}
+                                </p>
                             </div>
                         </div>
 
@@ -133,6 +142,16 @@ const Dashboard = () => {
                                     onClick={() => navigate('/study-planner')}
                                 >
                                     Study Planner
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    iconName="CheckSquare"
+                                    iconPosition="left"
+                                    fullWidth
+                                    onClick={() => navigate('/todo-list')}
+                                >
+                                    To-Do List
                                 </Button>
                             </div>
                         </div>
