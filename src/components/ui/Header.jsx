@@ -52,7 +52,7 @@ const Header = ({ sidebarCollapsed = false }) => {
     }
   ];
 
-  const notifications = [
+  const [notifications, setNotifications] = useState([
     {
       id: 1,
       title: 'Grade Update Available',
@@ -74,7 +74,17 @@ const Header = ({ sidebarCollapsed = false }) => {
       time: '1 day ago',
       unread: false
     }
-  ];
+  ]);
+
+  const markAsRead = (id) => {
+    setNotifications(notifications.map(n =>
+      n.id === id ? { ...n, unread: false } : n
+    ));
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
+  };
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -159,33 +169,51 @@ const Header = ({ sidebarCollapsed = false }) => {
 
             {/* Notifications Dropdown */}
             {isNotificationsOpen && (
-              <div className="absolute right-0 top-12 w-80 bg-popover border border-border rounded-lg academic-shadow-lg z-300">
-                <div className="p-4 border-b border-border">
+              <div className={`
+                fixed top-16 left-4 right-4 md:absolute md:top-12 md:right-0 md:left-auto md:w-80
+                bg-popover border border-border rounded-lg academic-shadow-lg z-300
+              `}>
+                <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={clearAll}
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  )}
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  {notifications?.map((notification) => (
-                    <div
-                      key={notification?.id}
-                      className={`
-                        p-4 border-b border-border last:border-b-0 hover:bg-muted/30 transition-academic cursor-pointer
-                        ${notification?.unread ? 'bg-primary/5' : ''}
-                      `}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification?.unread ? 'bg-primary' : 'bg-muted'}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-sm">{notification?.title}</p>
-                          <p className="text-muted-foreground text-sm mt-1">{notification?.message}</p>
-                          <p className="text-muted-foreground text-xs mt-2">{notification?.time}</p>
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification?.id}
+                        onClick={() => markAsRead(notification.id)}
+                        className={`
+                          p-4 border-b border-border last:border-b-0 hover:bg-muted/30 transition-academic cursor-pointer
+                          ${notification?.unread ? 'bg-primary/5' : ''}
+                        `}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification?.unread ? 'bg-primary' : 'bg-muted'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground text-sm">{notification?.title}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{notification?.message}</p>
+                            <p className="text-muted-foreground text-xs mt-2">{notification?.time}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
                 <div className="p-3 border-t border-border">
-                  <Button variant="ghost" size="sm" fullWidth>
-                    View All Notifications
+                  <Button variant="ghost" size="sm" fullWidth onClick={() => setIsNotificationsOpen(false)}>
+                    Close
                   </Button>
                 </div>
               </div>
