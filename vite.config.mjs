@@ -27,7 +27,7 @@ export default defineConfig({
       },
       manifest: {
         name: 'Academic Result Predictor',
-        short_name: 'GradePredictor',
+        short_name: 'StudyMate',
         description: 'Predict your academic results and analyze performance',
         theme_color: '#ffffff',
         icons: [
