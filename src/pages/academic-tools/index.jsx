@@ -34,6 +34,22 @@ const AcademicTools = () => {
             path: '/progress-tracker',
             color: 'text-success',
             bgColor: 'bg-success/10'
+        },
+        {
+            title: 'Study Planner',
+            description: 'Create and manage your study schedules effectively.',
+            icon: 'Calendar',
+            path: '/study-planner',
+            color: 'text-secondary',
+            bgColor: 'bg-secondary/10'
+        },
+        {
+            title: 'To-Do List',
+            description: 'Keep track of your tasks and deadlines.',
+            icon: 'ListTodo',
+            path: '/todo-list',
+            color: 'text-warning',
+            bgColor: 'bg-warning/10'
         }
     ];
 
