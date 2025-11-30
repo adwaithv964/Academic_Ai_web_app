@@ -4,6 +4,30 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// --- PATCH FETCH FOR API KEY REFERRER RESTRICTION ---
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (url, options = {}) => {
+  const newOptions = { ...options };
+
+  // Ensure headers exist
+  if (!newOptions.headers) {
+    newOptions.headers = {};
+  }
+
+  // Handle different header types safely
+  if (typeof Headers !== 'undefined' && newOptions.headers instanceof Headers) {
+    newOptions.headers.set('Referer', 'http://localhost:4028');
+  } else if (Array.isArray(newOptions.headers)) {
+    newOptions.headers.push(['Referer', 'http://localhost:4028']);
+  } else {
+    // Plain object
+    newOptions.headers = { ...newOptions.headers, 'Referer': 'http://localhost:4028' };
+  }
+
+  return originalFetch(url, newOptions);
+};
+// ----------------------------------------------------
+
 dotenv.config();
 
 const app = express();
@@ -19,8 +43,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
 // Prioritized list of models for fallback
-// STRICTLY Gemini 2.0 and above as requested.
-// Note: "2.5" models are included as requested, though availability depends on API access.
 const MODEL_HIERARCHY = [
   'gemini-2.5-pro-exp',        // 2.5 Pro (Complex Reasoning)
   'gemini-2.5-flash-exp',      // 2.5 Flash (Speed/Intelligence)
@@ -292,6 +314,10 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`API server listening on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`API server listening on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
