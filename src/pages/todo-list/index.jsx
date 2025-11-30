@@ -74,7 +74,7 @@ const TodoList = () => {
                         </div>
 
                         <div className="bg-card rounded-lg border border-border p-6 mb-8">
-                            <form onSubmit={addTask} className="flex gap-4">
+                            <form onSubmit={addTask} className="flex flex-col sm:flex-row gap-4">
                                 <input
                                     type="text"
                                     value={newTask}
@@ -82,7 +82,7 @@ const TodoList = () => {
                                     placeholder="Add a new task..."
                                     className="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                                 />
-                                <Button type="submit" iconName="Plus">
+                                <Button type="submit" iconName="Plus" className="w-full sm:w-auto justify-center">
                                     Add Task
                                 </Button>
                             </form>
