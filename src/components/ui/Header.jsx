@@ -5,6 +5,7 @@ import { db } from '../../services/db';
 import Icon from '../AppIcon';
 import Button from './Button';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useDateFormatter } from '../../hooks/useDateFormatter';
 
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
@@ -13,6 +14,7 @@ const Header = ({ sidebarCollapsed = false }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const { notifications, markAsRead, clearAll } = useNotifications();
+  const { formatDateTime } = useDateFormatter();
 
   const userProfile = useLiveQuery(() => db.userProfile.get(1));
   const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Student User';
@@ -173,7 +175,9 @@ const Header = ({ sidebarCollapsed = false }) => {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-foreground text-sm">{notification?.title}</p>
                             <p className="text-muted-foreground text-sm mt-1">{notification?.message}</p>
-                            <p className="text-muted-foreground text-xs mt-2">{notification?.time}</p>
+                            <p className="text-muted-foreground text-xs mt-2">
+                              {notification?.timestamp ? formatDateTime(notification.timestamp) : notification?.time}
+                            </p>
                           </div>
                         </div>
                       </div>

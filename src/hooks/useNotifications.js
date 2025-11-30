@@ -5,21 +5,21 @@ const DEFAULT_NOTIFICATIONS = [
         id: 1,
         title: 'Grade Update Available',
         message: 'Your Mathematics grade has been updated',
-        time: '2 hours ago',
+        timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
         unread: true
     },
     {
         id: 2,
         title: 'Study Session Reminder',
         message: 'Physics study session starts in 30 minutes',
-        time: '30 minutes ago',
+        timestamp: Date.now() - 30 * 60 * 1000, // 30 minutes ago
         unread: true
     },
     {
         id: 3,
         title: 'Assignment Due Soon',
         message: 'Chemistry lab report due tomorrow',
-        time: '1 day ago',
+        timestamp: Date.now() - 24 * 60 * 60 * 1000, // 1 day ago
         unread: false
     }
 ];

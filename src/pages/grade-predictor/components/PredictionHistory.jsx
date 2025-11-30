@@ -4,6 +4,7 @@ import { db } from '../../../services/db';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
 const PredictionHistory = ({ onLoad, selectedId }) => {
     // Fetch predictions from IndexedDB, ordered by date descending
@@ -18,14 +19,7 @@ const PredictionHistory = ({ onLoad, selectedId }) => {
         }
     };
 
-    const formatDate = (date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
-    };
+    const { formatDateTime } = useDateFormatter();
 
     if (!predictions || predictions.length === 0) {
         return (
@@ -80,7 +74,7 @@ const PredictionHistory = ({ onLoad, selectedId }) => {
                             <div className="flex justify-between items-start mb-2">
                                 <div>
                                     <h3 className="font-medium text-foreground">{prediction.courseName}</h3>
-                                    <p className="text-xs text-muted-foreground">{formatDate(prediction.date)}</p>
+                                    <p className="text-xs text-muted-foreground">{formatDateTime(prediction.date)}</p>
                                 </div>
                                 <div className={`
                   px-2 py-1 rounded text-xs font-bold

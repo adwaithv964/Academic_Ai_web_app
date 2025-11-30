@@ -3,6 +3,7 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
+import { useClock } from '../../../contexts/ClockContext';
 
 const PreferencesTab = () => {
   const defaultPreferences = {
@@ -18,7 +19,7 @@ const PreferencesTab = () => {
 
     // Display preferences
     language: "en",
-    timezone: "America/New_York",
+    timezone: "Asia/Kolkata",
     dateFormat: "MM/DD/YYYY",
     timeFormat: "12",
 
@@ -41,6 +42,25 @@ const PreferencesTab = () => {
     return saved ? JSON.parse(saved) : defaultPreferences;
   });
 
+
+  const { currentTime } = useClock();
+
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: preferences.timezone
+  }).format(currentTime);
+
+  const formattedTime = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: preferences.timeFormat === '12',
+    timeZone: preferences.timezone
+  }).format(currentTime);
+
   const [isSaving, setIsSaving] = useState(false);
 
   const languageOptions = [
@@ -52,6 +72,7 @@ const PreferencesTab = () => {
   ];
 
   const timezoneOptions = [
+    { value: "Asia/Kolkata", label: "India Standard Time (IST)" },
     { value: "America/New_York", label: "Eastern Time (ET)" },
     { value: "America/Chicago", label: "Central Time (CT)" },
     { value: "America/Denver", label: "Mountain Time (MT)" },
@@ -75,7 +96,9 @@ const PreferencesTab = () => {
     { value: "overview", label: "Overview Dashboard" },
     { value: "grades", label: "Grades View" },
     { value: "calendar", label: "Calendar View" },
-    { value: "progress", label: "Progress Tracker" }
+    { value: "progress", label: "Progress Tracker" },
+    { value: "study-planner", label: "Study Planner" },
+    { value: "todo-list", label: "To-Do List" }
   ];
 
   const profileVisibilityOptions = [
@@ -220,6 +243,27 @@ const PreferencesTab = () => {
           <Icon name="Monitor" size={20} className="text-secondary" />
           Display Preferences
         </h3>
+
+        <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border/50 flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-medium text-foreground">System Time</h4>
+            <p className="text-xs text-muted-foreground">Current time used for all calculations</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded border border-border">
+              <Icon name="Calendar" size={16} className="text-primary" />
+              <span className="font-mono text-sm font-medium text-foreground">
+                {formattedDate}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded border border-border">
+              <Icon name="Clock" size={16} className="text-primary" />
+              <span className="font-mono text-sm font-medium text-foreground">
+                {formattedTime}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">

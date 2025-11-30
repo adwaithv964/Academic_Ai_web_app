@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
+import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
 
 const CalendarGrid = ({
@@ -14,6 +15,7 @@ const CalendarGrid = ({
 }) => {
   const [draggedSession, setDraggedSession] = useState(null);
   const [resizingSession, setResizingSession] = useState(null);
+  const { formatDate } = useDateFormatter();
 
   const timeSlots = Array.from({ length: 24 }, (_, i) => {
     const hour = i;
@@ -83,7 +85,7 @@ const CalendarGrid = ({
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="p-4 border-b border-border">
           <h3 className="font-semibold text-foreground">{currentDayName} Schedule</h3>
-          <p className="text-sm text-muted-foreground">{currentDate?.toLocaleDateString()}</p>
+          <p className="text-sm text-muted-foreground">{formatDate(currentDate)}</p>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {timeSlots?.map((slot) => {

@@ -4,7 +4,10 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
+import { useDateFormatter } from '../../../hooks/useDateFormatter';
+
 const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) => {
+  const { formatDate } = useDateFormatter();
   const [expandedSections, setExpandedSections] = useState({
     pending: true,
     completed: false
@@ -72,11 +75,13 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
     const now = new Date();
     const diffTime = date?.getTime() - now?.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return 'Due tomorrow';
-    if (diffDays > 0) return `Due in ${diffDays} days`;
-    return `Overdue by ${Math.abs(diffDays)} days`;
+
+    const formattedDate = formatDate(dateString);
+
+    if (diffDays === 0) return `Due today (${formattedDate})`;
+    if (diffDays === 1) return `Due tomorrow (${formattedDate})`;
+    if (diffDays > 0) return `Due in ${diffDays} days (${formattedDate})`;
+    return `Overdue by ${Math.abs(diffDays)} days (${formattedDate})`;
   };
 
   const TaskItem = ({ task }) => (
@@ -93,7 +98,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
           onChange={(e) => onTaskToggle(task?.id, e?.target?.checked)}
           className="mt-1"
         />
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <Icon name={getTypeIcon(task?.type)} size={16} className="text-muted-foreground" />
@@ -104,21 +109,20 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
               {task?.priority}
             </span>
           </div>
-          
+
           {task?.subject && (
             <p className="text-sm text-muted-foreground mb-1">{task?.subject}</p>
           )}
-          
+
           {task?.dueDate && (
-            <p className={`text-xs ${
-              new Date(task.dueDate) < new Date() && !task?.completed 
-                ? 'text-error' :'text-muted-foreground'
-            }`}>
+            <p className={`text-xs ${new Date(task.dueDate) < new Date() && !task?.completed
+              ? 'text-error' : 'text-muted-foreground'
+              }`}>
               {formatDueDate(task?.dueDate)}
             </p>
           )}
         </div>
-        
+
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -172,7 +176,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                 onChange={(e) => setNewTask(prev => ({ ...prev, title: e?.target?.value }))}
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={newTask?.subject}
@@ -188,7 +192,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   <option value="History">History</option>
                   <option value="Computer Science">Computer Science</option>
                 </select>
-                
+
                 <select
                   value={newTask?.priority}
                   onChange={(e) => setNewTask(prev => ({ ...prev, priority: e?.target?.value }))}
@@ -199,7 +203,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   <option value="high">High Priority</option>
                 </select>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={newTask?.type}
@@ -212,7 +216,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   <option value="reading">Reading</option>
                   <option value="lab">Lab Work</option>
                 </select>
-                
+
                 <input
                   type="date"
                   value={newTask?.dueDate}
@@ -220,7 +224,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              
+
               <div className="flex gap-2">
                 <Button variant="default" size="sm" onClick={handleAddTask}>
                   Add Task
@@ -246,13 +250,13 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
               {pendingTasks?.length}
             </span>
           </div>
-          <Icon 
-            name={expandedSections?.pending ? 'ChevronUp' : 'ChevronDown'} 
-            size={16} 
-            className="text-muted-foreground" 
+          <Icon
+            name={expandedSections?.pending ? 'ChevronUp' : 'ChevronDown'}
+            size={16}
+            className="text-muted-foreground"
           />
         </button>
-        
+
         <AnimatePresence>
           {expandedSections?.pending && (
             <motion.div
@@ -290,13 +294,13 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
               {completedTasks?.length}
             </span>
           </div>
-          <Icon 
-            name={expandedSections?.completed ? 'ChevronUp' : 'ChevronDown'} 
-            size={16} 
-            className="text-muted-foreground" 
+          <Icon
+            name={expandedSections?.completed ? 'ChevronUp' : 'ChevronDown'}
+            size={16}
+            className="text-muted-foreground"
           />
         </button>
-        
+
         <AnimatePresence>
           {expandedSections?.completed && (
             <motion.div
