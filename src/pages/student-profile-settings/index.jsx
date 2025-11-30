@@ -69,7 +69,7 @@ const StudentProfileSettings = () => {
     <div className="min-h-screen bg-background">
       <Sidebar />
       {/* Mobile Header */}
-      <div className="lg:hidden bg-card border-b border-border p-4 relative z-50">
+      <div className="lg:hidden bg-card border-b border-border p-4 relative z-50 mt-16">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-foreground">Profile Settings</h1>
