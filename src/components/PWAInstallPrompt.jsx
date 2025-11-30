@@ -43,7 +43,7 @@ const PWAInstallPrompt = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+        <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
             <div className="flex items-start justify-between">
                 <div className="flex-1 mr-4">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Install App</h3>

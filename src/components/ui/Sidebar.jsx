@@ -40,15 +40,9 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       ]
     },
     {
-      label: 'Study Planner',
-      path: '/study-planner',
-      icon: 'Calendar',
-      description: 'Plan and organize study sessions'
-    },
-    {
       label: 'AI Assistant',
       path: '/ai-assistant',
-      icon: 'MessageCircle',
+      icon: 'Bot',
       description: 'Get help from your AI tutor'
     },
     {
@@ -56,6 +50,12 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       path: '/student-profile-settings',
       icon: 'Settings',
       description: 'Manage account and preferences'
+    },
+    {
+      label: 'Study Planner',
+      path: '/study-planner',
+      icon: 'Calendar',
+      description: 'Plan and organize study sessions'
     },
     {
       label: 'User Management',
@@ -220,7 +220,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-[150] lg:hidden">
         <div className="flex items-center justify-around py-2">
-          {navigationItems?.slice(0, 5)?.map((item) => {
+          {navigationItems?.slice(0, 4)?.map((item) => {
             const isActive = item?.children ? isParentActive(item?.children) : isActiveRoute(item?.path);
             return (
               <button
