@@ -37,6 +37,12 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
           path: '/progress-tracker',
           icon: 'BarChart3',
           description: 'Monitor academic progress over time'
+        },
+        {
+          label: 'To-Do List',
+          path: '/todo-list',
+          icon: 'CheckSquare',
+          description: 'Manage academic tasks and goals'
         }
       ]
     },

@@ -54,7 +54,7 @@ const TodoList = () => {
             <Sidebar isCollapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
             <Header sidebarCollapsed={sidebarCollapsed} />
             <main className={`
-                transition-academic-slow pt-16 pb-20 lg:pb-8
+                transition-academic-slow pt-16 pb-24 lg:pb-8
                 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'}
             `}>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
