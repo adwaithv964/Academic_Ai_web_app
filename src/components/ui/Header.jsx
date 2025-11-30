@@ -96,7 +96,7 @@ const Header = ({ sidebarCollapsed = false }) => {
   return (
     <header className={`
       fixed top-0 right-0 h-16 z-100 transition-academic-slow
-      lg:bg-card lg:border-b lg:border-border
+      bg-card border-b border-border
       ${sidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-72'}
     `}>
       <div className="flex items-center justify-end lg:justify-between h-full px-4 lg:px-6">

@@ -19,7 +19,7 @@ const MobileFooter = ({ navigationItems }) => {
     };
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-[200] lg:hidden pb-safe">
+        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-[1000] lg:hidden pb-safe">
             <div className="flex items-center justify-around py-2">
                 {navigationItems?.slice(0, 4)?.map((item) => {
                     const isActive = item?.children ? isParentActive(item?.children) : isActiveRoute(item?.path);

@@ -167,7 +167,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
         </div>
         {!isCollapsed && (
           <div>
-            <h1 className="text-lg font-semibold text-foreground">ARP</h1>
+            <h1 className="text-lg font-semibold text-foreground">StudyMate</h1>
             <p className="text-xs text-muted-foreground">Academic Result Predictor</p>
           </div>
         )}
@@ -185,12 +185,16 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
         />
       )}
       {/* Mobile Toggle Button */}
-      <button
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-4 left-4 z-[160] lg:hidden bg-card p-2 rounded-lg academic-shadow border border-border"
-      >
-        <Icon name="Menu" size={20} className="text-foreground" />
-      </button>
+      {/* Mobile Header Branding & Toggle */}
+      <div className="fixed top-0 left-0 h-16 z-[160] lg:hidden flex items-center px-4 gap-3">
+        <button
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="p-2 rounded-lg hover:bg-muted/50 transition-academic"
+        >
+          <Icon name="Menu" size={24} className="text-foreground" />
+        </button>
+        {!isMobileOpen && <span className="text-xl font-bold text-primary">StudyMate</span>}
+      </div>
       {/* Sidebar */}
       <aside className={`
         fixed left-0 top-0 h-full bg-card border-r border-border z-[150] transition-academic-slow
