@@ -3,6 +3,8 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
+import { db } from '../../../services/db';
+import { useEffect } from 'react';
 
 const ProfileTab = () => {
   const defaultProfileData = {
@@ -18,10 +20,30 @@ const ProfileTab = () => {
     address: "123 Campus Drive, University City, UC 12345"
   };
 
-  const [profileData, setProfileData] = useState(() => {
-    const saved = localStorage.getItem('studentProfile');
-    return saved ? JSON.parse(saved) : defaultProfileData;
-  });
+  const [profileData, setProfileData] = useState(defaultProfileData);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await db.userProfile.get(1);
+        if (profile) {
+          setProfileData(profile);
+        } else {
+          // Fallback to localStorage for migration
+          const saved = localStorage.getItem('studentProfile');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setProfileData(parsed);
+            // Migrate to DB
+            await db.userProfile.put({ id: 1, ...parsed });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,7 +123,8 @@ const ProfileTab = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    localStorage.setItem('studentProfile', JSON.stringify(profileData));
+    await db.userProfile.put({ id: 1, ...profileData });
+    localStorage.setItem('studentProfile', JSON.stringify(profileData)); // Keep sync for now or remove? Let's keep for safety but DB is primary.
 
     setIsSaving(false);
     setIsEditing(false);
@@ -110,10 +133,10 @@ const ProfileTab = () => {
     alert('Profile updated successfully!');
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     // Reset form data to saved values
-    const saved = localStorage.getItem('studentProfile');
-    setProfileData(saved ? JSON.parse(saved) : defaultProfileData);
+    const profile = await db.userProfile.get(1);
+    setProfileData(profile || defaultProfileData);
     setErrors({});
     setIsEditing(false);
   };

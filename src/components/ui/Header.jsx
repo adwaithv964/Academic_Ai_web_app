@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../services/db';
 import Icon from '../AppIcon';
 import Button from './Button';
 
@@ -8,6 +10,10 @@ const Header = ({ sidebarCollapsed = false }) => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const userProfile = useLiveQuery(() => db.userProfile.get(1));
+  const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Student User';
+  const displayEmail = userProfile?.email || 'student@university.edu';
 
   const primaryNavItems = [
     {
@@ -89,13 +95,13 @@ const Header = ({ sidebarCollapsed = false }) => {
 
   return (
     <header className={`
-      fixed top-0 right-0 h-16 bg-card border-b border-border z-100 transition-academic-slow
-      ${sidebarCollapsed ? 'left-16' : 'left-72 lg:left-72'}
-      lg:left-${sidebarCollapsed ? '16' : '72'}
+      fixed top-0 right-0 h-16 z-100 transition-academic-slow
+      lg:bg-card lg:border-b lg:border-border
+      ${sidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-72'}
     `}>
-      <div className="flex items-center justify-between h-full px-6">
+      <div className="flex items-center justify-end lg:justify-between h-full px-4 lg:px-6">
         {/* Left Section - Page Title and Breadcrumb */}
-        <div className="flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-4">
           <div>
             <h1 className="text-xl font-semibold text-foreground">{getPageTitle()}</h1>
             <p className="text-sm text-muted-foreground">Academic Result Predictor</p>
@@ -196,8 +202,8 @@ const Header = ({ sidebarCollapsed = false }) => {
                 <Icon name="User" size={16} className="text-primary-foreground" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground">Student User</p>
-                <p className="text-xs text-muted-foreground">student@university.edu</p>
+                <p className="text-sm font-medium text-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{displayEmail}</p>
               </div>
               <Icon name="ChevronDown" size={16} className="text-muted-foreground" />
             </button>
@@ -206,8 +212,8 @@ const Header = ({ sidebarCollapsed = false }) => {
             {isProfileOpen && (
               <div className="absolute right-0 top-12 w-56 bg-popover border border-border rounded-lg academic-shadow-lg z-300">
                 <div className="p-3 border-b border-border">
-                  <p className="font-medium text-foreground">Student User</p>
-                  <p className="text-sm text-muted-foreground">student@university.edu</p>
+                  <p className="font-medium text-foreground">{displayName}</p>
+                  <p className="text-sm text-muted-foreground">{displayEmail}</p>
                 </div>
                 <div className="py-2">
                   {secondaryNavItems?.map((item) => (

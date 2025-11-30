@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../services/db';
 import { motion } from 'framer-motion';
 import Icon from '../../components/AppIcon';
 import Sidebar from '../../components/ui/Sidebar';
@@ -11,6 +13,12 @@ import DataExportTab from './components/DataExportTab';
 const StudentProfileSettings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const userProfile = useLiveQuery(() => db.userProfile.get(1));
+  const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'John Smith';
+  const studentId = userProfile?.studentId || 'STU2024001';
+  const major = userProfile?.major || 'Computer Science';
+  const graduationYear = userProfile?.graduationYear || '2026';
 
   const tabs = [
     {
@@ -147,12 +155,12 @@ const StudentProfileSettings = () => {
                   <Icon name="User" size={20} className="text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">John Smith</p>
-                  <p className="text-sm text-muted-foreground">STU2024001</p>
+                  <p className="font-medium text-foreground">{displayName}</p>
+                  <p className="text-sm text-muted-foreground">{studentId}</p>
                 </div>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <p>Computer Science • Class of 2026</p>
+                <p>{major} • Class of {graduationYear}</p>
                 <p>Current GPA: 3.7 / 4.0</p>
               </div>
             </div>
