@@ -4,12 +4,15 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../services/db';
 import Icon from '../AppIcon';
 import Button from './Button';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const { notifications, markAsRead, clearAll } = useNotifications();
 
   const userProfile = useLiveQuery(() => db.userProfile.get(1));
   const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Student User';
@@ -51,40 +54,6 @@ const Header = ({ sidebarCollapsed = false }) => {
       adminOnly: true
     }
   ];
-
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Grade Update Available',
-      message: 'Your Mathematics grade has been updated',
-      time: '2 hours ago',
-      unread: true
-    },
-    {
-      id: 2,
-      title: 'Study Session Reminder',
-      message: 'Physics study session starts in 30 minutes',
-      time: '30 minutes ago',
-      unread: true
-    },
-    {
-      id: 3,
-      title: 'Assignment Due Soon',
-      message: 'Chemistry lab report due tomorrow',
-      time: '1 day ago',
-      unread: false
-    }
-  ]);
-
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, unread: false } : n
-    ));
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
 
   const handleNavigation = (path) => {
     navigate(path);
