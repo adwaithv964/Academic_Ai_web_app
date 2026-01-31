@@ -27,6 +27,11 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       icon: 'LayoutDashboard',
     },
     {
+      label: 'Menu',
+      path: '/menu',
+      icon: 'Grid', // Using Grid for Menu
+    },
+    {
       label: 'Sessions',
       path: '/study-planner',
       icon: 'Clock', // Or 'Timer'

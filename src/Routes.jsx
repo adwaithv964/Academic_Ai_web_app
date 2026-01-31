@@ -16,6 +16,16 @@ import AIAssistant from './pages/ai-assistant';
 import TodoList from './pages/todo-list';
 import Auth from './pages/auth/Auth';
 import Onboarding from './pages/onboarding/Onboarding';
+import Menu from './pages/menu/Menu';
+import Classes from './pages/classes/Classes';
+import Exams from './pages/exams/Exams';
+import Vacations from './pages/vacations/Vacations';
+import Xtra from './pages/xtra/Xtra';
+import FocusTimer from './pages/focus-timer/FocusTimer';
+import AiScheduleScan from './pages/ai-schedule-scan/AiScheduleScan';
+import CalendarSync from './pages/calendar-sync/CalendarSync';
+import ScheduleSetup from './pages/schedule-setup/ScheduleSetup';
+import Calendar from './pages/calendar/Calendar';
 import { useAuth } from './contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
@@ -41,6 +51,7 @@ const Routes = () => {
               <Onboarding />
             </PrivateRoute>
           } />
+
 
           <Route element={<MainLayout />}>
             <Route path="/" element={
@@ -91,6 +102,24 @@ const Routes = () => {
             <Route path="/todo-list" element={
               <PrivateRoute>
                 <TodoList />
+              </PrivateRoute>
+            } />
+            <Route path="/menu" element={
+              <PrivateRoute>
+                <Menu />
+              </PrivateRoute>
+            } />
+            <Route path="/classes" element={<PrivateRoute><Classes /></PrivateRoute>} />
+            <Route path="/exams" element={<PrivateRoute><Exams /></PrivateRoute>} />
+            <Route path="/vacations" element={<PrivateRoute><Vacations /></PrivateRoute>} />
+            <Route path="/xtra" element={<PrivateRoute><Xtra /></PrivateRoute>} />
+            <Route path="/timer" element={<PrivateRoute><FocusTimer /></PrivateRoute>} />
+            <Route path="/ai-scan" element={<PrivateRoute><AiScheduleScan /></PrivateRoute>} />
+            <Route path="/sync" element={<PrivateRoute><CalendarSync /></PrivateRoute>} />
+            <Route path="/schedule-setup" element={<PrivateRoute><ScheduleSetup /></PrivateRoute>} />
+            <Route path="/calendar" element={
+              <PrivateRoute>
+                <Calendar />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />

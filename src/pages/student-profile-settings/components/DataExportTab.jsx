@@ -3,6 +3,7 @@ import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DataExportTab = () => {
   const [exportSettings, setExportSettings] = useState({
@@ -143,6 +144,8 @@ const DataExportTab = () => {
     alert(`Data export completed! Your JSON file has been downloaded.`);
   };
 
+  const { deleteAccount } = useAuth();
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmationText !== 'DELETE MY ACCOUNT') {
       alert('Please type "DELETE MY ACCOUNT" to confirm account deletion.');
@@ -151,17 +154,26 @@ const DataExportTab = () => {
 
     setIsDeletingAccount(true);
 
-    // Simulate account deletion process
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      await deleteAccount();
 
-    // Clear all app data
-    localStorage.clear();
+      // Clear all app data
+      localStorage.clear();
 
-    setIsDeletingAccount(false);
-    alert('Your account and all associated data have been deleted.');
+      setIsDeletingAccount(false);
+      alert('Your account and all associated data have been deleted.');
 
-    // Redirect to home/login
-    window.location.href = '/';
+      // Redirect to home/login handled by AuthContext or Router but manual just in case
+      window.location.href = '/';
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      setIsDeletingAccount(false);
+      if (error.code === 'auth/requires-recent-login') {
+        alert("For security reasons, please log out and log back in before deleting your account.");
+      } else {
+        alert("Failed to delete account: " + error.message);
+      }
+    }
   };
 
   return (

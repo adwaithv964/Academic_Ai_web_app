@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { getAdditionalUserInfo } from "firebase/auth";
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -25,8 +26,10 @@ const Auth = () => {
         setError('');
         setLoading(true);
         try {
-            await googleSignIn();
-            if (!isLogin) {
+            const result = await googleSignIn();
+            const { isNewUser } = getAdditionalUserInfo(result);
+
+            if (isNewUser) {
                 navigate('/onboarding');
             } else {
                 navigate('/');

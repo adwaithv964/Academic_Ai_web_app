@@ -5,40 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const slides = [
     {
-        id: 'welcome',
-        title: "Your planner's ready to go",
-        description: "Organization & self-management aren't just helpful - they've been shown to increase academic progress by as much as 2.4×. With MyStudyLife, you've got the tools to make it happen.",
-        content: (
-            <div className="flex items-center justify-center p-8">
-                <motion.div
-                    initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                    className="relative w-48 h-48 flex items-center justify-center"
-                >
-                    {/* Party Popper Effect */}
-                    <div className="text-9xl filter drop-shadow-2xl">🎉</div>
-
-                    {/* Decorative elements */}
-                    <motion.div
-                        animate={{ y: [-10, 10, -10], rotate: [0, 10, -10, 0] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                        className="absolute -top-4 -right-4 text-4xl"
-                    >
-                        ✨
-                    </motion.div>
-                    <motion.div
-                        animate={{ y: [10, -10, 10], rotate: [0, -10, 10, 0] }}
-                        transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
-                        className="absolute -bottom-2 -left-2 text-4xl"
-                    >
-                        🎈
-                    </motion.div>
-                </motion.div>
-            </div>
-        )
-    },
-    {
         id: 'task',
         title: 'Task',
         description: 'Record tasks, set reminders, free up your mind, and effortlessly manage everything for enhanced productivity.',
@@ -255,6 +221,40 @@ const slides = [
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
+            </div>
+        )
+    },
+    {
+        id: 'welcome',
+        title: "Your planner's ready to go",
+        description: "Organization & self-management aren't just helpful - they've been shown to increase academic progress by as much as 2.4×. With MyStudyLife, you've got the tools to make it happen.",
+        content: (
+            <div className="flex items-center justify-center p-8">
+                <motion.div
+                    initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                    className="relative w-48 h-48 flex items-center justify-center"
+                >
+                    {/* Party Popper Effect */}
+                    <div className="text-9xl filter drop-shadow-2xl">🎉</div>
+
+                    {/* Decorative elements */}
+                    <motion.div
+                        animate={{ y: [-10, 10, -10], rotate: [0, 10, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className="absolute -top-4 -right-4 text-4xl"
+                    >
+                        ✨
+                    </motion.div>
+                    <motion.div
+                        animate={{ y: [10, -10, 10], rotate: [0, -10, 10, 0] }}
+                        transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
+                        className="absolute -bottom-2 -left-2 text-4xl"
+                    >
+                        🎈
+                    </motion.div>
+                </motion.div>
             </div>
         )
     }

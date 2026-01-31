@@ -37,7 +37,12 @@ const StudySession = require('./models/StudySession');
 const Prediction = require('./models/Prediction');
 const Course = require('./models/Course');
 const Scenario = require('./models/Scenario');
+
 const Document = require('./models/Document');
+const Exam = require('./models/Exam');
+const Vacation = require('./models/Vacation');
+const Term = require('./models/Term');
+const Event = require('./models/Event');
 
 
 dotenv.config();
@@ -363,6 +368,132 @@ app.post('/api/courses', async (req, res) => {
     const course = new Course(req.body);
     await course.save();
     res.json(course);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/courses/:id', async (req, res) => {
+  try {
+    await Course.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Course deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- EXAMS ---
+app.get('/api/exams', async (req, res) => {
+  try {
+    const exams = await Exam.find().sort({ date: 1 });
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/exams', async (req, res) => {
+  try {
+    const exam = new Exam(req.body);
+    await exam.save();
+    res.json(exam);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/exams/:id', async (req, res) => {
+  try {
+    await Exam.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Exam deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- VACATIONS ---
+app.get('/api/vacations', async (req, res) => {
+  try {
+    const vacations = await Vacation.find().sort({ startDate: 1 });
+    res.json(vacations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/vacations', async (req, res) => {
+  try {
+    const vacation = new Vacation(req.body);
+    await vacation.save();
+    res.json(vacation);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/vacations/:id', async (req, res) => {
+  try {
+    await Vacation.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Vacation deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- EVENTS (General) ---
+app.get('/api/events', async (req, res) => {
+  try {
+    const events = await Event.find().sort({ date: 1 });
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/events', async (req, res) => {
+  try {
+    const event = new Event(req.body);
+    await event.save();
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/events/:id', async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/events/:id', async (req, res) => {
+  try {
+    await Event.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Event deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- TERMS (Schedule Setup) ---
+app.get('/api/terms', async (req, res) => {
+  try {
+    const term = await Term.findOne().sort({ createdAt: -1 }); // Get latest config
+    res.json(term || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/terms', async (req, res) => {
+  try {
+    // Upsert logic could go here, or just save new
+    const term = new Term(req.body);
+    await term.save();
+    res.json(term);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

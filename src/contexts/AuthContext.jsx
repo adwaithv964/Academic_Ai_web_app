@@ -5,7 +5,9 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    signInWithPopup
+    signInWithPopup,
+    GoogleAuthProvider,
+    deleteUser
 } from "firebase/auth";
 
 const AuthContext = React.createContext();
@@ -34,6 +36,10 @@ export function AuthProvider({ children }) {
         return signOut(auth);
     }
 
+    function deleteAccount() {
+        return deleteUser(auth.currentUser);
+    }
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
@@ -48,7 +54,8 @@ export function AuthProvider({ children }) {
         signup,
         login,
         googleSignIn,
-        logout
+        logout,
+        deleteAccount
     };
 
     return (
