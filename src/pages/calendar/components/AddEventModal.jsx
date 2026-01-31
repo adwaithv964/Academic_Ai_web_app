@@ -5,22 +5,14 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 
 const COLORS = [
-    { value: 'bg-rose-100 text-rose-700 border-rose-200', label: 'Pastel Red', picker: 'bg-rose-400' },
-    { value: 'bg-orange-100 text-orange-700 border-orange-200', label: 'Pastel Orange', picker: 'bg-orange-400' },
-    { value: 'bg-amber-100 text-amber-700 border-amber-200', label: 'Pastel Yellow', picker: 'bg-amber-400' },
-    { value: 'bg-lime-100 text-lime-700 border-lime-200', label: 'Pastel Lime', picker: 'bg-lime-400' },
-    { value: 'bg-green-100 text-green-700 border-green-200', label: 'Pastel Green', picker: 'bg-green-400' },
-    { value: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'Pastel Emerald', picker: 'bg-emerald-400' },
-    { value: 'bg-teal-100 text-teal-700 border-teal-200', label: 'Pastel Teal', picker: 'bg-teal-400' },
-    { value: 'bg-cyan-100 text-cyan-700 border-cyan-200', label: 'Pastel Cyan', picker: 'bg-cyan-400' },
-    { value: 'bg-sky-100 text-sky-700 border-sky-200', label: 'Pastel Sky', picker: 'bg-sky-400' },
-    { value: 'bg-blue-100 text-blue-700 border-blue-200', label: 'Pastel Blue', picker: 'bg-blue-400' },
-    { value: 'bg-indigo-100 text-indigo-700 border-indigo-200', label: 'Pastel Indigo', picker: 'bg-indigo-400' },
-    { value: 'bg-violet-100 text-violet-700 border-violet-200', label: 'Pastel Violet', picker: 'bg-violet-400' },
-    { value: 'bg-purple-100 text-purple-700 border-purple-200', label: 'Pastel Purple', picker: 'bg-purple-400' },
-    { value: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200', label: 'Pastel Fuchsia', picker: 'bg-fuchsia-400' },
-    { value: 'bg-pink-100 text-pink-700 border-pink-200', label: 'Pastel Pink', picker: 'bg-pink-400' },
-    { value: 'bg-gray-100 text-gray-700 border-gray-200', label: 'Pastel Gray', picker: 'bg-gray-400' },
+    { value: '#AEC6CF', label: 'Pastel Blue' },
+    { value: '#FFB7B2', label: 'Pastel Pink' },
+    { value: '#FDFD96', label: 'Pastel Yellow' },
+    { value: '#B9E4C9', label: 'Pastel Green' },
+    { value: '#C3B1E1', label: 'Pastel Purple' },
+    { value: '#FFD1DC', label: 'Pastel Rose' },
+    { value: '#E6E6FA', label: 'Lavender' },
+    { value: '#FFDAC1', label: 'Peach' },
 ];
 
 const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
@@ -41,7 +33,7 @@ const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
                     date: new Date().toISOString().split('T')[0],
                     time: '',
                     description: '',
-                    color: COLORS[9].value
+                    color: COLORS[0].value
                 });
             }
         }
@@ -113,10 +105,10 @@ const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
                                                     type="button"
                                                     onClick={() => setValue('color', color.value)}
                                                     className={`
-                                                        w-10 h-10 rounded-full transition-all relative flex items-center justify-center
-                                                        ${color.picker}
+                                                        w-10 h-10 rounded-full transition-all relative flex items-center justify-center border border-gray-100
                                                         ${selectedColor === color.value ? 'ring-4 ring-offset-2 ring-gray-200 scale-110' : 'hover:scale-110 hover:shadow-md'}
                                                     `}
+                                                    style={{ backgroundColor: color.value }}
                                                     title={color.label}
                                                 >
                                                     {selectedColor === color.value && (

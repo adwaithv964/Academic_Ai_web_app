@@ -37,6 +37,7 @@ const StudySession = require('./models/StudySession');
 const Prediction = require('./models/Prediction');
 const Course = require('./models/Course');
 const Scenario = require('./models/Scenario');
+const EisenhowerTask = require('./models/EisenhowerTask');
 
 const Document = require('./models/Document');
 const Exam = require('./models/Exam');
@@ -255,12 +256,161 @@ async function analyzeContextAndSimulate(studentData) {
 
 // --- API ENDPOINTS ---
 
+const { STORE_ITEMS, ACHIEVEMENTS, DAILY_QUESTS_POOL } = require('./config/gamification');
+
+// --- GAMIFICATION: LEADERBOARD ---
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const topUsers = await User.find({}, 'firstName lastName points avatar').sort({ points: -1 }).limit(10);
+    res.json(topUsers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- GAMIFICATION: STORE ---
+app.get('/api/store/items', (req, res) => {
+  res.json(STORE_ITEMS);
+});
+
+app.post('/api/store/buy', async (req, res) => {
+  try {
+    const { userId, itemId } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const item = STORE_ITEMS.find(i => i.id === itemId);
+    if (!item) return res.status(400).json({ error: 'Item not found' });
+
+    // Check ownership
+    if (user.inventory && user.inventory.includes(itemId)) {
+      return res.status(400).json({ error: 'Item already owned' });
+    }
+
+    // Check balance
+    if (user.points < item.price) {
+      return res.status(400).json({ error: 'Not enough points' });
+    }
+
+    user.points -= item.price;
+    user.inventory.push(itemId);
+
+    // Handle specific item effects if needed (e.g., set theme immediately)
+    // For now, client handles the visual switch
+
+    await user.save();
+    res.json({ success: true, points: user.points, inventory: user.inventory });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- GAMIFICATION: QUESTS ---
+app.get('/api/quests', async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.json({ daily: DAILY_QUESTS_POOL }); // Fallback to generic if no user
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Ensure user has quest data initialized
+    if (!user.quests || !user.quests.daily || user.quests.daily.length === 0) {
+      // Initialize if empty (simple logic for now)
+      user.quests = {
+        daily: DAILY_QUESTS_POOL.map(q => ({ id: q.id, progress: 0, completed: false, claimed: false })),
+        lastGenerated: new Date()
+      };
+      await user.save();
+    }
+
+    // Merge Pool info with User Status
+    const dailyQuests = DAILY_QUESTS_POOL.map(poolItem => {
+      const userStatus = user.quests.daily.find(q => q.id === poolItem.id) || { progress: 0, completed: false, claimed: false };
+      return { ...poolItem, ...userStatus };
+    });
+
+    res.json({ daily: dailyQuests });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/quests/claim', async (req, res) => {
+  try {
+    const { userId, questId } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const questDef = DAILY_QUESTS_POOL.find(q => q.id === questId);
+    if (!questDef) return res.status(400).json({ error: 'Quest not found' });
+
+    // Check if quest exists in user list
+    let userQuest = user.quests.daily.find(q => q.id === questId);
+    if (!userQuest) {
+      // Should have been initialized by getQuests, but if not:
+      userQuest = { id: questId, progress: 0, completed: false, claimed: false };
+      user.quests.daily.push(userQuest);
+    }
+
+    if (userQuest.claimed) {
+      return res.status(400).json({ error: 'Quest already claimed' });
+    }
+
+    // Mark as claimed and completed
+    userQuest.claimed = true;
+    userQuest.completed = true; // Assuming claim implies completion for this simple flow at the moment
+
+    // Award points
+    user.points += questDef.reward;
+    user.totalPoints += questDef.reward;
+
+    await user.save();
+    res.json({ success: true, points: user.points, claimed: questId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- GAMIFICATION: GARDEN ---
+app.post('/api/garden/grow', async (req, res) => {
+  try {
+    const { userId, minutes } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Simple mechanism: 60 mins = 1 stage growth for first plant
+    // In real app, manage specific plants
+
+    if (!user.garden.plants.length) {
+      user.garden.plants.push({ type: 'sapling', stage: 1, plantedAt: new Date() });
+    }
+
+    // Just an example response for now
+    res.json({ success: true, message: 'Garden watered' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- USER PROFILE ---
 app.get('/api/user', async (req, res) => {
   try {
     // For now, assuming single user or getting the first one
-    const user = await User.findOne();
-    res.json(user || {});
+    let user = await User.findOne();
+    if (!user) {
+      console.log("No user found, creating default user...");
+      user = new User({
+        firstName: 'Student',
+        lastName: 'Scholar',
+        email: 'student@example.com',
+        points: 0,
+        totalPoints: 0,
+        quests: { daily: [] }
+      });
+      await user.save();
+    }
+    res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -373,6 +523,15 @@ app.post('/api/courses', async (req, res) => {
   }
 });
 
+app.put('/api/courses/:id', async (req, res) => {
+  try {
+    const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/courses/:id', async (req, res) => {
   try {
     await Course.findByIdAndDelete(req.params.id);
@@ -396,6 +555,15 @@ app.post('/api/exams', async (req, res) => {
   try {
     const exam = new Exam(req.body);
     await exam.save();
+    res.json(exam);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/exams/:id', async (req, res) => {
+  try {
+    const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(exam);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -514,6 +682,44 @@ app.post('/api/scenarios', async (req, res) => {
     const scenario = new Scenario(req.body);
     await scenario.save();
     res.json(scenario);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- EISENHOWER TASKS ---
+app.get('/api/eisenhower-tasks', async (req, res) => {
+  try {
+    const tasks = await EisenhowerTask.find().sort({ createdAt: -1 });
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/eisenhower-tasks', async (req, res) => {
+  try {
+    const task = new EisenhowerTask(req.body);
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/eisenhower-tasks/:id', async (req, res) => {
+  try {
+    const task = await EisenhowerTask.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/eisenhower-tasks/:id', async (req, res) => {
+  try {
+    await EisenhowerTask.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

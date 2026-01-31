@@ -87,7 +87,20 @@ const Calendar = () => {
                     date: new Date(e.date),
                     // Use saved color or default
                     color: e.color || 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
-                }))
+                })),
+                // MOCK EVENTS FOR DEMO
+                { _id: 'm1', title: 'Jogging', time: '07:00 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 2), color: '#FFB7B2', type: 'generic' },
+                { _id: 'm2', title: 'Marketing Strategy', time: '09:00 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 2), color: '#AEC6CF', type: 'generic' },
+                { _id: 'm3', title: 'Product Review', time: '01:00 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 2), color: '#B9E4C9', type: 'generic' },
+                { _id: 'm4', title: 'Coffee Break', time: '10:30 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 5), color: '#FDFD96', type: 'generic' },
+                { _id: 'm5', title: 'Team Meeting', time: '02:00 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 5), color: '#C3B1E1', type: 'generic' },
+                { _id: 'm6', title: 'Client Call', time: '11:00 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 8), color: '#E6E6FA', type: 'generic' },
+                { _id: 'm7', title: 'Project Planning', time: '09:00 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 12), color: '#FFDAC1', type: 'generic' },
+                { _id: 'm8', title: 'Design Review', time: '01:00 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 12), color: '#FFD1DC', type: 'generic' },
+                { _id: 'm9', title: 'Workshop', time: '10:00 AM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 15), color: '#B9E4C9', type: 'generic' },
+                { _id: 'm10', title: 'Lunch with Sarah', time: '12:30 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 18), color: '#AEC6CF', type: 'generic' },
+                { _id: 'm11', title: 'Gym Session', time: '06:00 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 20), color: '#FFB7B2', type: 'generic' },
+                { _id: 'm12', title: 'Reading Club', time: '08:00 PM', date: new Date(new Date().getFullYear(), new Date().getMonth(), 25), color: '#C3B1E1', type: 'generic' }
             ];
 
             setEvents(normalizedEvents);

@@ -53,19 +53,19 @@ const MonthView = ({ currentDate, events, onDateClick, onEventClick }) => {
                                 key={idx}
                                 onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(evt); }}
                                 className={`
-                                    flex items-center gap-1.5 px-2 py-1 rounded-sm text-xs font-medium cursor-pointer truncate transition-all hover:opacity-90
-                                    ${evt.color || 'bg-blue-100 text-blue-700'}
+                                    flex items-center gap-2 w-[95%] mx-auto mb-1 px-2 py-1.5 rounded-[6px] text-xs font-semibold cursor-pointer truncate transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-[#333]
+                                    ${evt.color && evt.color.startsWith('bg-') ? evt.color : ''}
                                 `}
-                                title={evt.title}
+                                style={evt.color && !evt.color.startsWith('bg-') ? { backgroundColor: evt.color } : {}}
+                                title={`${evt.title} ${evt.time ? '- ' + evt.time : ''}`}
                             >
-                                <div className={`min-w-[12px] h-[12px] rounded-[3px] border border-current opacity-60 flex items-center justify-center`}>
-                                    {/* Simulate check - maybe specific data determines this? For now static or based on completed? */}
-                                    {/* Using a simple check if type is 'task' or similar, but generic for now */}
-                                    <svg className="w-2 h-2 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                <div className={`min-w-[14px] h-[14px] rounded-[4px] border border-[#333]/40 flex items-center justify-center flex-shrink-0`}>
+                                    <svg className="w-2.5 h-2.5 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="20 6 9 17 4 12"></polyline>
                                     </svg>
                                 </div>
-                                <span className="truncate">{evt.title}</span>
+                                <span className="truncate flex-1 text-left">{evt.title}</span>
+                                {evt.time && <span className="text-[10px] font-medium opacity-60 flex-shrink-0">{evt.time}</span>}
                             </div>
                         ))}
                     </div>
