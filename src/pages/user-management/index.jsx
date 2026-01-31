@@ -109,7 +109,7 @@ const UserManagement = () => {
     // Search filter
     if (filters?.search) {
       const searchTerm = filters?.search?.toLowerCase();
-      filtered = filtered?.filter(user => 
+      filtered = filtered?.filter(user =>
         user?.name?.toLowerCase()?.includes(searchTerm) ||
         user?.email?.toLowerCase()?.includes(searchTerm)
       );
@@ -133,8 +133,8 @@ const UserManagement = () => {
   };
 
   const handleUserSelect = (userId, isSelected) => {
-    setSelectedUsers(prev => 
-      isSelected 
+    setSelectedUsers(prev =>
+      isSelected
         ? [...prev, userId]
         : prev?.filter(id => id !== userId)
     );
@@ -173,7 +173,7 @@ const UserManagement = () => {
       };
       setUsers(prev => [...prev, newUser]);
     } else {
-      setUsers(prev => prev?.map(user => 
+      setUsers(prev => prev?.map(user =>
         user?.id === selectedUser?.id ? { ...user, ...userData } : user
       ));
     }
@@ -183,12 +183,12 @@ const UserManagement = () => {
   const handleBulkAction = (action, userIds) => {
     switch (action) {
       case 'activate':
-        setUsers(prev => prev?.map(user => 
+        setUsers(prev => prev?.map(user =>
           userIds?.includes(user?.id) ? { ...user, status: 'active' } : user
         ));
         break;
       case 'deactivate':
-        setUsers(prev => prev?.map(user => 
+        setUsers(prev => prev?.map(user =>
           userIds?.includes(user?.id) ? { ...user, status: 'inactive' } : user
         ));
         break;
@@ -211,9 +211,9 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-full bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-30">
+      <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">

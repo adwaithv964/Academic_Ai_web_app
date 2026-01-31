@@ -18,54 +18,54 @@ export default {
     },
     extend: {
       colors: {
-        border: "var(--color-border)", /* gray-200 */
-        input: "var(--color-input)", /* white */
-        ring: "var(--color-ring)", /* blue-700 */
-        background: "var(--color-background)", /* gray-50 */
-        foreground: "var(--color-foreground)", /* gray-900 */
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "var(--color-primary)", /* blue-700 */
-          foreground: "var(--color-primary-foreground)", /* white */
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "var(--color-secondary)", /* teal-700 */
-          foreground: "var(--color-secondary-foreground)", /* white */
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
-          DEFAULT: "var(--color-destructive)", /* red-600 */
-          foreground: "var(--color-destructive-foreground)", /* white */
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "var(--color-muted)", /* gray-100 */
-          foreground: "var(--color-muted-foreground)", /* gray-500 */
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "var(--color-accent)", /* amber-500 */
-          foreground: "var(--color-accent-foreground)", /* gray-900 */
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
-          DEFAULT: "var(--color-popover)", /* white */
-          foreground: "var(--color-popover-foreground)", /* gray-900 */
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "var(--color-card)", /* white */
-          foreground: "var(--color-card-foreground)", /* gray-900 */
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
         success: {
-          DEFAULT: "var(--color-success)", /* emerald-600 */
-          foreground: "var(--color-success-foreground)", /* white */
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
         },
         warning: {
-          DEFAULT: "var(--color-warning)", /* amber-600 */
-          foreground: "var(--color-warning-foreground)", /* white */
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         error: {
-          DEFAULT: "var(--color-error)", /* red-600 */
-          foreground: "var(--color-error-foreground)", /* white */
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        surface: "var(--color-surface)", /* white */
-        'text-primary': "var(--color-text-primary)", /* gray-900 */
-        'text-secondary': "var(--color-text-secondary)", /* gray-500 */
+        surface: "hsl(var(--card))", // Mapping surface to card for consistency
+        'text-primary': "hsl(var(--foreground))",
+        'text-secondary': "hsl(var(--muted-foreground))",
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

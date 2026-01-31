@@ -88,7 +88,7 @@ const ProgressTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-full bg-background">
       {/* Header Section */}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -99,7 +99,7 @@ const ProgressTracker = () => {
                 Monitor your academic performance with comprehensive analytics and insights
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
@@ -250,8 +250,8 @@ const ProgressTracker = () => {
                   key={index}
                   className={`
                     flex flex-col items-center gap-2 p-4 rounded-lg border transition-academic
-                    ${badge?.earned 
-                      ? 'bg-primary/5 border-primary/20 hover:bg-primary/10' :'bg-muted/20 border-muted/20 hover:bg-muted/30'
+                    ${badge?.earned
+                      ? 'bg-primary/5 border-primary/20 hover:bg-primary/10' : 'bg-muted/20 border-muted/20 hover:bg-muted/30'
                     }
                   `}
                 >

@@ -3,7 +3,7 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
-import { db } from '../../../services/db';
+import { user as userApi } from '../../../services/api';
 import { useEffect } from 'react';
 
 const ProfileTab = () => {
@@ -25,17 +25,18 @@ const ProfileTab = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const profile = await db.userProfile.get(1);
-        if (profile) {
-          setProfileData(profile);
+        // Fetch from MongoDB via API
+        const profile = await userApi.get();
+        if (profile && Object.keys(profile).length > 0) {
+          setProfileData(prev => ({ ...prev, ...profile }));
         } else {
-          // Fallback to localStorage for migration
+          // Fallback migration logic: check local storage if DB is empty
           const saved = localStorage.getItem('studentProfile');
           if (saved) {
             const parsed = JSON.parse(saved);
             setProfileData(parsed);
-            // Migrate to DB
-            await db.userProfile.put({ id: 1, ...parsed });
+            // Migrate to MongoDB
+            await userApi.update(parsed);
           }
         }
       } catch (error) {
@@ -123,7 +124,7 @@ const ProfileTab = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    await db.userProfile.put({ id: 1, ...profileData });
+    await userApi.update(profileData);
     localStorage.setItem('studentProfile', JSON.stringify(profileData)); // Keep sync for now or remove? Let's keep for safety but DB is primary.
 
     setIsSaving(false);
@@ -135,7 +136,7 @@ const ProfileTab = () => {
 
   const handleCancel = async () => {
     // Reset form data to saved values
-    const profile = await db.userProfile.get(1);
+    const profile = await userApi.get();
     setProfileData(profile || defaultProfileData);
     setErrors({});
     setIsEditing(false);

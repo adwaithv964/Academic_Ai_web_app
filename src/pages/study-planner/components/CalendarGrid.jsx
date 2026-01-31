@@ -67,15 +67,15 @@ const CalendarGrid = ({
 
   const getSubjectColor = (subject) => {
     const colors = {
-      'Mathematics': 'bg-blue-100 border-blue-300 text-blue-800',
-      'Physics': 'bg-green-100 border-green-300 text-green-800',
-      'Chemistry': 'bg-purple-100 border-purple-300 text-purple-800',
-      'Biology': 'bg-orange-100 border-orange-300 text-orange-800',
-      'English': 'bg-pink-100 border-pink-300 text-pink-800',
-      'History': 'bg-yellow-100 border-yellow-300 text-yellow-800',
-      'Computer Science': 'bg-indigo-100 border-indigo-300 text-indigo-800'
+      'Mathematics': 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300',
+      'Physics': 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+      'Chemistry': 'bg-violet-500/10 border-violet-500/20 text-violet-700 dark:text-violet-300',
+      'Biology': 'bg-orange-500/10 border-orange-500/20 text-orange-700 dark:text-orange-300',
+      'English': 'bg-pink-500/10 border-pink-500/20 text-pink-700 dark:text-pink-300',
+      'History': 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
+      'Computer Science': 'bg-indigo-500/10 border-indigo-500/20 text-indigo-700 dark:text-indigo-300'
     };
-    return colors?.[subject] || 'bg-gray-100 border-gray-300 text-gray-800';
+    return colors?.[subject] || 'bg-muted border-border text-foreground';
   };
 
   if (currentView === 'daily') {

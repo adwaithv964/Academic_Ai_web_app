@@ -9,6 +9,7 @@ import ScenarioComparison from './components/ScenarioComparison';
 import GoalSetting from './components/GoalSetting';
 
 import { calculateGPA, getStoredGpaScale } from '../../utils/gradeScale';
+import { scenarios as scenariosApi } from '../../services/api';
 
 const WhatIfAnalysis = () => {
   const navigate = useNavigate();
@@ -22,44 +23,37 @@ const WhatIfAnalysis = () => {
     setGpaScale(storedScale);
   }, []);
 
-  const [scenarios, setScenarios] = useState([
-    {
-      id: 1,
-      name: 'Optimistic Scenario',
-      description: 'Best case academic performance',
-      projectedGPA: 3.75,
-      courses: [
-        { id: 1, name: 'Advanced Calculus', credits: 4, grade: 'B+', isNew: false },
-        { id: 2, name: 'Physics II', credits: 4, grade: 'A-', isNew: false },
-        { id: 3, name: 'Computer Science', credits: 3, grade: 'A', isNew: false },
-        { id: 4, name: 'Statistics', credits: 3, grade: 'B', isNew: false }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Conservative Scenario',
-      description: 'Cautious academic approach',
-      projectedGPA: 3.45,
-      courses: [
-        { id: 1, name: 'Advanced Calculus', credits: 4, grade: 'B', isNew: false },
-        { id: 2, name: 'Physics II', credits: 4, grade: 'B-', isNew: false },
-        { id: 3, name: 'Computer Science', credits: 3, grade: 'B+', isNew: false },
-        { id: 4, name: 'Statistics', credits: 3, grade: 'C+', isNew: false }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Realistic Scenario',
-      description: 'Balanced performance expectations',
-      projectedGPA: 3.68,
-      courses: [
-        { id: 1, name: 'Advanced Calculus', credits: 4, grade: 'B+', isNew: false },
-        { id: 2, name: 'Physics II', credits: 4, grade: 'A-', isNew: false },
-        { id: 3, name: 'Computer Science', credits: 3, grade: 'A-', isNew: false },
-        { id: 4, name: 'Statistics', credits: 3, grade: 'B+', isNew: false }
-      ]
-    }
-  ]);
+  const [scenarios, setScenarios] = useState([]);
+
+  useEffect(() => {
+    const loadScenarios = async () => {
+      try {
+        const loaded = await scenariosApi.list();
+        if (loaded && loaded.length > 0) {
+          setScenarios(loaded);
+        } else {
+          // Default scenarios if DB is empty
+          setScenarios([
+            {
+              id: 1,
+              name: 'Optimistic Scenario',
+              description: 'Best case academic performance',
+              projectedGPA: 3.75,
+              courses: [
+                { id: 1, name: 'Advanced Calculus', credits: 4, grade: 'B+', isNewCourse: false },
+                { id: 2, name: 'Physics II', credits: 4, grade: 'A-', isNewCourse: false },
+                { id: 3, name: 'Computer Science', credits: 3, grade: 'A', isNewCourse: false },
+                { id: 4, name: 'Statistics', credits: 3, grade: 'B', isNewCourse: false }
+              ]
+            }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load scenarios:", err);
+      }
+    };
+    loadScenarios();
+  }, []);
 
   // Recalculate GPAs when scale changes or scenarios load
   useEffect(() => {
@@ -115,9 +109,13 @@ const WhatIfAnalysis = () => {
     }));
   };
 
-  const handleSaveScenario = (scenarioId) => {
-    // Mock save functionality
-    console.log('Saving scenario:', scenarioId);
+  const handleSaveScenario = async (scenarioId) => {
+    const scenarioToSave = scenarios.find(s => s.id === scenarioId);
+    if (scenarioToSave) {
+      // Strip temporary IDs if needed or transform
+      await scenariosApi.create(scenarioToSave);
+      alert('Scenario saved to database!');
+    }
   };
 
   const handleExportReport = () => {
@@ -166,7 +164,7 @@ const WhatIfAnalysis = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-full bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

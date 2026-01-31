@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../services/db';
 import Icon from '../AppIcon';
 import Button from './Button';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -10,251 +8,115 @@ import { useDateFormatter } from '../../hooks/useDateFormatter';
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { notifications, unreadCount, markAsRead, clearAll } = useNotifications();
+  const { formatDate } = useDateFormatter();
 
-  const { notifications, markAsRead, clearAll } = useNotifications();
-  const { formatDateTime } = useDateFormatter();
+  // Timer State (Mock for Global Header)
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [time, setTime] = useState(0);
 
-  const userProfile = useLiveQuery(() => db.userProfile.get(1));
-  const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Student User';
-  const displayEmail = userProfile?.email || 'student@university.edu';
-
-  const primaryNavItems = [
-    {
-      label: 'Grade Predictor',
-      path: '/grade-predictor',
-      icon: 'TrendingUp'
-    },
-    {
-      label: 'What-If Analysis',
-      path: '/what-if-analysis',
-      icon: 'Calculator'
-    },
-    {
-      label: 'Progress Tracker',
-      path: '/progress-tracker',
-      icon: 'BarChart3'
-    },
-    {
-      label: 'Study Planner',
-      path: '/study-planner',
-      icon: 'Calendar'
+  useEffect(() => {
+    let interval;
+    if (isTimerRunning) {
+      interval = setInterval(() => setTime(t => t + 1), 1000);
     }
-  ];
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
 
-  const secondaryNavItems = [
-    {
-      label: 'Profile Settings',
-      path: '/student-profile-settings',
-      icon: 'Settings'
-    },
-    {
-      label: 'User Management',
-      path: '/user-management',
-      icon: 'Users',
-      adminOnly: true
-    }
-  ];
-
-  const handleNavigation = (path) => {
-    navigate(path);
+  const formatTimer = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const isActiveRoute = (path) => {
-    return location?.pathname === path;
-  };
+  const getBreadcrumbs = () => {
+    // Mock breadcrumb logic based on design: "Date - Week - Context"
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }); // 04.10.24 style
+    const weekNumber = Math.ceil((today.getDate() - 1 + new Date(today.getFullYear(), 0, 1).getDay()) / 7);
 
-  const getPageTitle = () => {
-    const currentPath = location?.pathname;
-    const allItems = [...primaryNavItems, ...secondaryNavItems];
-    const currentItem = allItems?.find(item => item?.path === currentPath);
-    return currentItem?.label || 'Dashboard';
+    return (
+      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+        <span className="font-bold text-primary">{dateStr}</span>
+        <span>•</span>
+        <span>WEEK {weekNumber}</span>
+        <span>•</span>
+        <span className="uppercase tracking-wider">{location.pathname === '/' ? 'DASHBOARD' : location.pathname.substring(1).toUpperCase()}</span>
+      </div>
+    );
   };
-
-  const unreadCount = notifications?.filter(n => n?.unread)?.length;
 
   return (
     <header className={`
-      fixed top-0 right-0 h-16 z-100 transition-academic-slow
-      bg-card border-b border-border
-      ${sidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-72'}
+      fixed top-0 right-0 h-16 z-50 transition-all duration-300
+      bg-background/80 backdrop-blur-md border-b border-border
+      ${sidebarCollapsed ? 'left-0 lg:left-20' : 'left-0 lg:left-64'}
     `}>
-      <div className="flex items-center justify-end lg:justify-between h-full px-4 lg:px-6">
-        {/* Left Section - Page Title and Breadcrumb */}
-        <div className="hidden lg:flex items-center gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">{getPageTitle()}</h1>
-            <p className="text-sm text-muted-foreground">StudyMate</p>
-          </div>
+      <div className="flex items-center justify-between h-full px-6">
+        {/* Left Section - Breadcrumbs */}
+        <div className="hidden md:block">
+          {getBreadcrumbs()}
+          <h1 className="text-lg font-bold text-foreground mt-0.5">
+            {location.pathname === '/' ? 'Dashboard' :
+              location.pathname.split('/')[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+          </h1>
         </div>
 
-        {/* Center Section - Primary Navigation (Desktop) */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {primaryNavItems?.map((item) => {
-            const isActive = isActiveRoute(item?.path);
-            return (
-              <button
-                key={item?.path}
-                onClick={() => handleNavigation(item?.path)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-academic
-                  hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20
-                  ${isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}
-                `}
-              >
-                <Icon name={item?.icon} size={16} />
-                <span>{item?.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Mobile Title */}
+        <div className="md:hidden">
+          <span className="font-bold text-foreground">StudyMate</span>
+        </div>
 
-        {/* Right Section - Actions and Profile */}
-        <div className="flex items-center gap-3">
-          {/* Quick Actions */}
-          <div className="hidden md:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              iconName="Plus"
-              onClick={() => navigate('/study-planner')}
+        {/* Right Section - Timer & Actions */}
+        <div className="flex items-center gap-4">
+          {/* Timer Widget */}
+          <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full pl-4 pr-1 py-1">
+            <span className="font-mono text-sm text-white">{formatTimer(time)}</span>
+            <button
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              className={`
+                        h-7 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all
+                        ${isTimerRunning ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-primary/20 text-primary hover:bg-primary/30'}
+                    `}
             >
-              New Session
-            </Button>
+              <Icon name={isTimerRunning ? "Pause" : "Play"} size={12} fill="currentColor" />
+              {isTimerRunning ? 'Stop' : 'Start'}
+            </button>
           </div>
+
+          <div className="h-6 w-px bg-border hidden md:block" />
+
+          {/* Quick Actions */}
+          <Button
+            variant="default"
+            size="sm"
+            iconName="Plus"
+            onClick={() => navigate('/study-planner')}
+            className="hidden sm:flex"
+          >
+            Session
+          </Button>
 
           {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-academic focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <Icon name="Bell" size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-error text-error-foreground text-xs font-medium rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            {isNotificationsOpen && (
-              <div className={`
-                fixed top-16 left-4 right-4 md:absolute md:top-12 md:right-0 md:left-auto md:w-80
-                bg-popover border border-border rounded-lg academic-shadow-lg z-300
-              `}>
-                <div className="p-4 border-b border-border flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Notifications</h3>
-                  {notifications.length > 0 && (
-                    <button
-                      onClick={clearAll}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground text-sm">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification?.id}
-                        onClick={() => markAsRead(notification.id)}
-                        className={`
-                          p-4 border-b border-border last:border-b-0 hover:bg-muted/30 transition-academic cursor-pointer
-                          ${notification?.unread ? 'bg-primary/5' : ''}
-                        `}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification?.unread ? 'bg-primary' : 'bg-muted'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground text-sm">{notification?.title}</p>
-                            <p className="text-muted-foreground text-sm mt-1">{notification?.message}</p>
-                            <p className="text-muted-foreground text-xs mt-2">
-                              {notification?.timestamp ? formatDateTime(notification.timestamp) : notification?.time}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="p-3 border-t border-border">
-                  <Button variant="ghost" size="sm" fullWidth onClick={() => setIsNotificationsOpen(false)}>
-                    Close
-                  </Button>
-                </div>
-              </div>
+          <button
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all"
+          >
+            <Icon name="Bell" size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute 1.5 top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />
             )}
-          </div>
+          </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded-lg transition-academic focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <Icon name="User" size={16} className="text-primary-foreground" />
-              </div>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground">{displayName}</p>
-                <p className="text-xs text-muted-foreground">{displayEmail}</p>
-              </div>
-              <Icon name="ChevronDown" size={16} className="text-muted-foreground" />
-            </button>
-
-            {/* Profile Dropdown Menu */}
-            {isProfileOpen && (
-              <div className="absolute right-0 top-12 w-56 bg-popover border border-border rounded-lg academic-shadow-lg z-300">
-                <div className="p-3 border-b border-border">
-                  <p className="font-medium text-foreground">{displayName}</p>
-                  <p className="text-sm text-muted-foreground">{displayEmail}</p>
-                </div>
-                <div className="py-2">
-                  {secondaryNavItems?.map((item) => (
-                    <button
-                      key={item?.path}
-                      onClick={() => {
-                        handleNavigation(item?.path);
-                        setIsProfileOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-academic"
-                    >
-                      <Icon name={item?.icon} size={16} className="text-muted-foreground" />
-                      {item?.label}
-                    </button>
-                  ))}
-                  <hr className="my-2 border-border" />
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-left text-sm text-foreground hover:bg-muted/50 transition-academic">
-                    <Icon name="HelpCircle" size={16} className="text-muted-foreground" />
-                    Help & Support
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-left text-sm text-error hover:bg-muted/50 transition-academic">
-                    <Icon name="LogOut" size={16} className="text-error" />
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Avatar / Profile */}
+          <div
+            className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-fuchsia-500 ring-2 ring-background cursor-pointer"
+            onClick={() => navigate('/student-profile-settings')}
+          />
         </div>
       </div>
-      {/* Click outside handlers */}
-      {(isProfileOpen || isNotificationsOpen) && (
-        <div
-          className="fixed inset-0 z-200"
-          onClick={() => {
-            setIsProfileOpen(false);
-            setIsNotificationsOpen(false);
-          }}
-        />
-      )}
     </header>
   );
 };

@@ -1,170 +1,123 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Sidebar from '../../components/ui/Sidebar';
-import Header from '../../components/ui/Header';
+import React from 'react';
+import { SharePriceCard, MedalsCard, StreaksCard } from './components/DashboardWidgets';
 import Icon from '../../components/AppIcon';
-import Button from '../../components/ui/Button';
-import AIChat from '../../components/AIChat';
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [showAIChat, setShowAIChat] = useState(false);
-    const navigate = useNavigate();
+    // Mock Data for "Goals"
+    const totalGoal = 784;
+    const currentStudied = 741; // 95%
 
-    const handleSidebarToggle = () => {
-        setSidebarCollapsed(!sidebarCollapsed);
-    };
+    // Mock Data for "Courses"
+    const courses = [
+        { name: 'Personal Development', studied: '375h/333h', progress: 112, color: 'text-green-500', bar: 'bg-green-500' },
+        { name: 'Gesundheit', studied: '160h/175h', progress: 91, color: 'text-green-500', bar: 'bg-green-500' },
+        { name: 'Unterhaltung', studied: '77h/100h', progress: 77, color: 'text-yellow-500', bar: 'bg-yellow-500' },
+        { name: 'Kultur', studied: '60h/100h', progress: 60, color: 'text-yellow-500', bar: 'bg-yellow-500' },
+        { name: 'StudyMate', studied: '36h/52h', progress: 69, color: 'text-yellow-500', bar: 'bg-yellow-500' },
+    ];
+
+    // Mock Data for Activities Pie Chart
+    const pieData = [
+        { name: 'Studying', value: 65, color: '#4b5563' }, // gray-600
+        { name: 'Reading', value: 20, color: '#9ca3af' }, // gray-400
+        { name: 'Writing', value: 10, color: '#d1d5db' }, // gray-300
+        { name: 'Other', value: 5, color: '#f3f4f6' }, // gray-100
+    ];
 
     return (
-        <div className="min-h-screen bg-background">
-            <Sidebar isCollapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
-            <Header sidebarCollapsed={sidebarCollapsed} />
-            <main className={`
-        transition-academic-slow pt-16 pb-20 lg:pb-8
-        ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'}
-      `}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Page Header */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="mb-8"
-                    >
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                                    <Icon name="LayoutDashboard" size={24} className="text-primary" />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-                                    <p className="text-muted-foreground">
-                                        Welcome back! Here's your academic overview.
-                                    </p>
-                                </div>
-                            </div>
+        <div className="h-full space-y-6">
 
-                            {/* AI Chat Toggle */}
-                            <Button
-                                onClick={() => setShowAIChat(!showAIChat)}
-                                iconName="MessageCircle"
-                                variant="outline"
-                                className="relative"
-                            >
-                                AI Tutor
-                            </Button>
-                        </div>
+            {/* Top Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <SharePriceCard />
+                <MedalsCard />
+                <StreaksCard />
+            </div>
 
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-card rounded-lg border border-border p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Icon name="BookOpen" size={16} className="text-primary" />
-                                    <span className="text-sm font-medium text-muted-foreground">Active Courses</span>
-                                </div>
-                                <p className="text-2xl font-bold text-foreground">6</p>
-                            </div>
+            {/* Middle Row: Goals & Calendar? Or Goals and Activities? */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                            <div className="bg-card rounded-lg border border-border p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Icon name="Target" size={16} className="text-success" />
-                                    <span className="text-sm font-medium text-muted-foreground">Predictions Made</span>
-                                </div>
-                                <p className="text-2xl font-bold text-foreground">23</p>
-                            </div>
-
-                            <div className="bg-card rounded-lg border border-border p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Icon name="TrendingUp" size={16} className="text-accent" />
-                                    <span className="text-sm font-medium text-muted-foreground">Avg Accuracy</span>
-                                </div>
-                                <p className="text-2xl font-bold text-foreground">87%</p>
-                            </div>
-
-                            <div className="bg-card rounded-lg border border-border p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Icon name="Award" size={16} className="text-warning" />
-                                    <span className="text-sm font-medium text-muted-foreground">Current GPA</span>
-                                </div>
-                                <p className="text-2xl font-bold text-foreground">
-                                    {(() => {
-                                        try {
-                                            const settings = localStorage.getItem('academicSettings');
-                                            return settings ? JSON.parse(settings).currentGPA : '3.45';
-                                        } catch (e) {
-                                            return '3.45';
-                                        }
-                                    })()}
-                                </p>
+                {/* Goals Card */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 className="text-gray-500 font-medium text-sm">Goals</h3>
+                            <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-3xl font-bold text-gray-900 text-blue-600">{currentStudied}h</span>
+                                <span className="text-sm text-gray-400">/ {totalGoal}h</span>
                             </div>
                         </div>
-
-                        {/* Quick Actions */}
-                        <div className="bg-card rounded-lg border border-border p-6">
-                            <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <Button
-                                    variant="outline"
-                                    iconName="TrendingUp"
-                                    iconPosition="left"
-                                    fullWidth
-                                    onClick={() => navigate('/grade-predictor')}
-                                >
-                                    Grade Predictor
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    iconName="Calculator"
-                                    iconPosition="left"
-                                    fullWidth
-                                    onClick={() => navigate('/what-if-analysis')}
-                                >
-                                    What-If Analysis
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    iconName="BarChart3"
-                                    iconPosition="left"
-                                    fullWidth
-                                    onClick={() => navigate('/progress-tracker')}
-                                >
-                                    Progress Tracker
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    iconName="Calendar"
-                                    iconPosition="left"
-                                    fullWidth
-                                    onClick={() => navigate('/study-planner')}
-                                >
-                                    Study Planner
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    iconName="CheckSquare"
-                                    iconPosition="left"
-                                    fullWidth
-                                    onClick={() => navigate('/todo-list')}
-                                >
-                                    To-Do List
-                                </Button>
-                            </div>
+                        <div className="text-right">
+                            <span className="text-xs text-gray-400">Total</span>
+                            <div className="text-2xl font-bold text-gray-900">1.640</div>
+                            <span className="text-xs text-gray-400">SESSIONS</span>
                         </div>
-                    </motion.div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex justify-between text-sm">
+                            <span className="font-medium text-blue-600">Study 28m every day to achieve goal</span>
+                            <span className="font-bold">95%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-600 w-[95%]" />
+                        </div>
+                    </div>
                 </div>
-            </main>
 
-            {/* AI Chat Component */}
-            <AIChat
-                subject="academic planning"
-                isOpen={showAIChat}
-                onClose={() => setShowAIChat(false)}
-            />
+                {/* Courses List */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-1">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-gray-900">Courses · 5 &gt;</h3>
+                        <div className="flex gap-4 text-xs text-gray-400">
+                            <span>Chart</span>
+                            <span className="text-gray-900 font-medium">Table</span>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        {courses.map((course, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600 truncate w-32">{course.name}</span>
+                                <span className="text-gray-400 text-xs">{course.studied}</span>
+                                <div className={`font-bold ${course.color}`}>{course.progress}%</div>
+                                <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className={`h-full ${course.bar}`} style={{ width: `${Math.min(course.progress, 100)}%` }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Activities Pie Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-gray-900">Activities · 17 &gt;</h3>
+                    </div>
+                    <div className="h-48 relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={pieData}
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                                    ))}
+                                </Pie>
+                            </PieChart>
+                        </ResponsiveContainer>
+                        {/* Centered Text */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-3xl font-bold text-gray-700">67%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };

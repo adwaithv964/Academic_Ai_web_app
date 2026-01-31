@@ -4,7 +4,7 @@ const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const client = axios.create({
   baseURL: apiBase,
-  timeout: 30000,
+  timeout: 60000,
 });
 
 export async function chat(message, subject = 'general') {

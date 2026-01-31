@@ -28,7 +28,20 @@ globalThis.fetch = async (url, options = {}) => {
 };
 // ----------------------------------------------------
 
+const connectDB = require('./db');
+
+// Models
+const User = require('./models/User');
+const Task = require('./models/Task');
+const StudySession = require('./models/StudySession');
+const Prediction = require('./models/Prediction');
+const Course = require('./models/Course');
+const Scenario = require('./models/Scenario');
+const Document = require('./models/Document');
+
+
 dotenv.config();
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -42,20 +55,17 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Gemini SDK configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-// Prioritized list of models for fallback
+// --- FIX 1: SIMPLIFIED MODEL LIST ---
+// Only use stable, production-ready models to reduce errors.
 const MODEL_HIERARCHY = [
-  'gemini-2.5-pro-exp',        // 2.5 Pro (Complex Reasoning)
-  'gemini-2.5-flash-exp',      // 2.5 Flash (Speed/Intelligence)
-  'gemini-2.5-flash-lite-exp', // 2.5 Flash-Lite (High Throughput)
-  'gemini-2.0-flash-exp',      // 2.0 Flash (Multimodal)
-  'gemini-2.0-flash-lite-preview-02-05', // 2.0 Flash-Lite (Multimodal)
-  'gemini-2.0-flash-lite-preview',        // 2.0 Flash-Lite (Generic)
-  'gemini-exp-1206'            // Fallback: Reliable high-reasoning experimental model
+  'gemini-1.5-flash', // Priority: Fastest & Cheapest
+  'gemini-1.5-pro',   // Fallback: Smarter
+  'gemini-2.0-flash'  // Latest stable (optional)
 ];
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// Helper: Safe generation with recursive fallback
+// --- FIX 2: IMPROVED ERROR HANDLING ---
 async function generateContentSafe(input) {
   if (!GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
 
@@ -64,18 +74,29 @@ async function generateContentSafe(input) {
   for (const modelName of MODEL_HIERARCHY) {
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(input);
+
+      // Handle array input (multimodal) vs string input
+      const content = Array.isArray(input) ? input : [input];
+
+      const result = await model.generateContent(content);
       const response = await result.response;
       return response.text();
     } catch (error) {
       const isRateLimit = error.message.includes('429') || (error.response && error.response.status === 429);
       const isNotFound = error.message.includes('404') || (error.response && error.response.status === 404);
 
-      console.warn(`[Gemini] Model ${modelName} failed (RateLimit: ${isRateLimit}, NotFound: ${isNotFound}). Trying next...`);
+      console.warn(`[Gemini] Model ${modelName} failed (RateLimit: ${isRateLimit}, NotFound: ${isNotFound})`);
       lastError = error;
 
-      // Continue to next model on failure
-      continue;
+      // CRITICAL FIX: If we hit a Rate Limit (429), stop trying other models. 
+      // The quota is usually on the API Key, not the model, so switching won't help.
+      if (isRateLimit) {
+        console.error('[Gemini] Quota exceeded. Stopping retries to prevent spam.');
+        break;
+      }
+
+      // If it's just a 404 (model not found) or 500 (server hiccup), wait briefly and try the next model
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
@@ -88,168 +109,358 @@ async function geminiGenerate(text) {
   return generateContentSafe(text);
 }
 
-// --- LOGIC FUNCTIONS ---
+// --- LOGIC FUNCTIONS (Unchanged) ---
 
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
+// --- NEW LOGIC: Monte Carlo + Gemini AI ---
 
-function letterFromGrade(g) {
-  if (g >= 90) return 'A';
-  if (g >= 80) return 'B';
-  if (g >= 70) return 'C';
-  if (g >= 60) return 'D';
-  return 'F';
-}
+/**
+ * Runs a Monte Carlo simulation to predict future grades statistically.
+ * @param {Object} data - Student input data
+ * @returns {Object} Statistical results (median, confidence intervals, distribution)
+ */
+/**
+ * Monte Carlo Simulation using dynamic parameters
+ */
+function runSmartMonteCarlo(currentGrade, params) {
+  const iterations = 2000;
+  const startGrade = Number(currentGrade);
+  const { remainingWeight, volatility, trend, difficultyAdjust } = params;
 
-function buildPrediction(payload) {
-  const currentGrade = Number(payload?.currentGrade ?? 75);
-  const difficulty = String(payload?.difficulty ?? 'medium');
-  const remainingAssignments = Number(payload?.remainingAssignments ?? 3);
-  const examWeight = Number(payload?.examWeight ?? 40);
-  const homeworkWeight = Number(payload?.homeworkWeight ?? 40);
-  const participationWeight = Number(payload?.participationWeight ?? 20);
-  const historicalPerformance = String(payload?.historicalPerformance ?? 'average');
-  const studyHours = Number(payload?.studyHours ?? 10);
-  const attendanceRate = Number(payload?.attendanceRate ?? 95);
+  // Map string volatility to standard deviation
+  let stdDev = 5;
+  if (volatility === 'low') stdDev = 2;
+  if (volatility === 'high') stdDev = 10;
 
-  const difficultyPenalty = difficulty === 'hard' ? -5 : difficulty === 'medium' ? -2 : 0;
-  const historyAdj = historicalPerformance === 'below-average' ? -3 : historicalPerformance === 'above-average' ? 3 : 0;
-  const studyAdj = (studyHours - 10) * 0.6;
-  const attendanceAdj = (attendanceRate - 90) * 0.2;
-  const workloadVolatility = clamp(10 - remainingAssignments * 1.5, 2, 10);
+  // Fallback defaults if params are missing/null
+  if (!remainingWeight) remainingWeight = 0.3;
 
-  let predicted = currentGrade + difficultyPenalty + historyAdj + studyAdj + attendanceAdj;
-  predicted = clamp(predicted, 0, 100);
+  const results = [];
 
-  const confidence = clamp((workloadVolatility + (100 - Math.abs(predicted - currentGrade)) / 10) / 20, 0.3, 0.9);
-  const letterGrade = letterFromGrade(predicted);
+  for (let i = 0; i < iterations; i++) {
+    // Random performance on remaining work
+    // Box-Muller transform for normal distribution
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 
-  const distA = clamp((predicted - 88) / 20, 0, 0.5);
-  const distB = clamp((predicted - 78) / 20, 0, 0.5);
-  const distC = clamp((predicted - 68) / 20, 0, 0.5);
-  const distD = clamp((predicted - 58) / 20, 0, 0.5);
-  let raw = [distA, distB, distC, distD, 0.2];
-  const sum = raw.reduce((a, b) => a + b, 0) || 1;
-  raw = raw.map((v) => v / sum);
-  const probabilityDistribution = [
-    { grade: 'A (90-100)', probability: raw[0] },
-    { grade: 'B (80-89)', probability: raw[1] },
-    { grade: 'C (70-79)', probability: raw[2] },
-    { grade: 'D (60-69)', probability: raw[3] },
-    { grade: 'F (0-59)', probability: raw[4] },
-  ];
+    let performance = startGrade + (trend || 0) + (z * stdDev);
 
-  const recommendations = [
-    {
-      title: 'Focus on High-Weight Assessments',
-      description: `Prioritize exam preparation (${examWeight}% weight). A 10% improvement here has strong impact.`,
-      impact: 'High',
-      effort: 'High',
-      timeline: '2-3 weeks',
-      priority: 'high',
-    },
-    {
-      title: 'Improve Homework Consistency',
-      description: `Maintain regular homework performance (${homeworkWeight}% weight).`,
-      impact: 'Medium',
-      effort: 'Medium',
-      timeline: 'Ongoing',
-      priority: 'medium',
-    },
-    {
-      title: 'Increase Class Participation',
-      description: `Engage in discussions and ask questions (${participationWeight}% weight).`,
-      impact: 'Low',
-      effort: 'Low',
-      timeline: 'Immediate',
-      priority: 'low',
-    },
-  ];
+    // Apply difficulty adjustment
+    if (difficultyAdjust) performance *= (1 / difficultyAdjust); // Higher difficulty = lower performance
 
-  const riskFactors = [
-    {
-      category: 'Assignment Load',
-      level: remainingAssignments > 4 ? 'high' : remainingAssignments > 2 ? 'medium' : 'low',
-      description: `${remainingAssignments} assignments remaining may impact quality.`,
-      mitigation: 'Start early and plan weekly milestones.',
-    },
-    {
-      category: 'Course Difficulty',
-      level: difficulty === 'hard' ? 'high' : difficulty === 'medium' ? 'medium' : 'low',
-      description: `Course difficulty rated as ${difficulty}.`,
-      mitigation: 'Seek support, use study groups, and tutorials.',
-    },
-    {
-      category: 'Historical Performance',
-      level: historicalPerformance === 'below-average' ? 'high' : historicalPerformance === 'average' ? 'medium' : 'low',
-      description: `Past performance indicates ${historicalPerformance}.`,
-      mitigation: 'Address gaps with targeted practice and feedback.',
-    },
-  ];
+    // Cap performance
+    performance = Math.max(0, Math.min(100, performance));
 
-  const targetGrades = [
-    {
-      letter: 'A',
-      grade: 90,
-      requiredAverage: clamp(90 + (100 - examWeight - homeworkWeight - participationWeight) * 0.1, 60, 100),
-      difficulty: predicted >= 85 ? 'Easy' : predicted >= 75 ? 'Moderate' : 'Challenging',
-      description: 'Excellent performance',
-    },
-    {
-      letter: 'B',
-      grade: 80,
-      requiredAverage: clamp(80 + (100 - examWeight - homeworkWeight - participationWeight) * 0.08, 55, 95),
-      difficulty: predicted >= 75 ? 'Easy' : predicted >= 65 ? 'Moderate' : 'Challenging',
-      description: 'Good performance',
-    },
-    {
-      letter: 'C',
-      grade: 70,
-      requiredAverage: clamp(70 + (100 - examWeight - homeworkWeight - participationWeight) * 0.06, 50, 90),
-      difficulty: predicted >= 65 ? 'Easy' : 'Moderate',
-      description: 'Satisfactory performance',
-    },
-  ];
+    // Calculate final grade
+    // Final = (Current * (1 - Weight)) + (Performance * Weight)
+    const finalGrade = (startGrade * (1 - (remainingWeight || 0.3))) + (performance * (remainingWeight || 0.3));
+    results.push(finalGrade);
+  }
 
-  const scenarios = {
-    optimistic: {
-      finalGrade: clamp(predicted + 8, 0, 100),
-      probability: 0.25,
-      requirements: ['Score 90%+ on remaining exams', 'Perfect homework completion', 'Active class engagement'],
-    },
-    realistic: {
-      finalGrade: clamp(predicted, 0, 100),
-      probability: 0.5,
-      requirements: ['Maintain current study pace', 'Complete all assignments', 'Regular attendance'],
-    },
-    conservative: {
-      finalGrade: clamp(predicted - 5, 0, 100),
-      probability: 0.25,
-      requirements: ['Meet minimum requirements', 'Submit 80% of assignments', 'Basic attendance'],
-    },
-  };
+  results.sort((a, b) => a - b);
+  const median = results[Math.floor(iterations * 0.5)];
+  const p10 = results[Math.floor(iterations * 0.1)]; // Worst case (conservative)
+  const p90 = results[Math.floor(iterations * 0.9)]; // Best case (optimistic)
+
+  // Generate distribution bucket data
+  const buckets = {};
+  results.forEach(g => {
+    const bucket = Math.floor(g / 2) * 2; // Bucket size 2
+    buckets[bucket] = (buckets[bucket] || 0) + 1;
+  });
+
+  const plotData = Object.keys(buckets).map(k => ({
+    grade: Number(k),
+    frequency: buckets[k]
+  })).sort((a, b) => a.grade - b.grade);
 
   return {
-    predictedGrade: Math.round(predicted * 100) / 100,
-    confidence,
-    letterGrade,
-    probabilityDistribution,
-    recommendations,
-    riskFactors,
-    targetGrades,
-    scenarios,
+    predictedGrade: Math.round(median * 10) / 10,
+    rangeLow: Math.round(p10 * 10) / 10,
+    rangeHigh: Math.round(p90 * 10) / 10,
+    distribution: plotData,
+    parametersUsed: params
   };
+}
+
+/**
+ * Generates qualitative insights using Gemini based on student data and simulation stats.
+ */
+/**
+ * Uses Gemini to parse student context into simulation parameters
+ */
+async function analyzeContextAndSimulate(studentData) {
+  const { currentGrade, courseName, context, studyData } = studentData;
+
+  // Safety check for keys
+  if (!GEMINI_API_KEY) throw new Error("Missing GEMINI_API_KEY");
+
+  const plannerSummary = studyData?.studySessions?.map(s =>
+    `${s.subject}: ${s.duration}h on ${new Date(s.date).toDateString()}`
+  ).join('; ') || "No planned sessions";
+
+  const todoSummary = studyData?.todoList?.map(t =>
+    `${t.title} (${t.priority}, ${t.completed ? 'Done' : 'Pending'})`
+  ).join('; ') || "No tasks";
+
+  const prompt = `
+    Role: Senior Academic Data Scientist.
+    Task: Analyze student context, study habits, and task list to infer statistical parameters for a grade simulation.
+    
+    Input:
+    - Course: ${courseName}
+    - Current Grade: ${currentGrade}%
+    - Student Context: "${context || 'No specific context provided.'}"
+    - Study Schedule: [${plannerSummary}]
+    - To-Do List: [${todoSummary}]
+    
+    Output JSON ONLY:
+    {
+      "parameters": {
+        "remainingWeight": <number 0.1 to 0.7>,
+        "volatility": <"low" | "medium" | "high">,
+        "trend": <number -5 to +5>,
+        "difficultyAdjust": <number 0.8 to 1.2>
+      },
+      "insights": {
+        "analysis": "<Short analysis citing specific tasks or study sessions if relevant>",
+        "actionPlan": ["<Step 1>", "<Step 2>"],
+        "riskAssessment": "<Risk based on overdue tasks or lack of study time>"
+      }
+    }
+    `;
+
+  try {
+    const text = await geminiGenerate(prompt);
+    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("AI Analysis Failed:", e);
+    // Fallback params
+    return {
+      parameters: { remainingWeight: 0.3, volatility: 'medium', trend: 0 },
+      insights: {
+        analysis: "Could not analyze context. Using defaults.",
+        actionPlan: ["Study hard"],
+        riskAssessment: "Unknown"
+      }
+    };
+  }
 }
 
 // --- API ENDPOINTS ---
 
-app.post('/api/predict', (req, res) => {
+// --- USER PROFILE ---
+app.get('/api/user', async (req, res) => {
   try {
-    const result = buildPrediction(req.body || {});
-    res.json(result);
+    // For now, assuming single user or getting the first one
+    const user = await User.findOne();
+    res.json(user || {});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/user', async (req, res) => {
+  try {
+    const { email, ...updateData } = req.body;
+    // Upsert user based on email or create new if not exists (handling singleton logic for now)
+    const user = await User.findOneAndUpdate({}, req.body, { new: true, upsert: true });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- TASKS ---
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const tasks = await Task.find().sort({ createdAt: -1 });
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/tasks', async (req, res) => {
+  try {
+    const task = new Task(req.body);
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/tasks/:id', async (req, res) => {
+  try {
+    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Task deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- STUDY SESSIONS ---
+app.get('/api/study-sessions', async (req, res) => {
+  try {
+    const sessions = await StudySession.find().sort({ date: -1 });
+    res.json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/study-sessions', async (req, res) => {
+  try {
+    const session = new StudySession(req.body);
+    await session.save();
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/study-sessions/:id', async (req, res) => {
+  try {
+    const session = await StudySession.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/study-sessions/:id', async (req, res) => {
+  try {
+    await StudySession.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Session deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- COURSES ---
+app.get('/api/courses', async (req, res) => {
+  try {
+    const courses = await Course.find().sort({ createdAt: -1 });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/courses', async (req, res) => {
+  try {
+    const course = new Course(req.body);
+    await course.save();
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- SCENARIOS (Data Room) ---
+app.get('/api/scenarios', async (req, res) => {
+  try {
+    const scenarios = await Scenario.find().sort({ createdAt: -1 });
+    res.json(scenarios);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/scenarios', async (req, res) => {
+  try {
+    const scenario = new Scenario(req.body);
+    await scenario.save();
+    res.json(scenario);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- DOCUMENTS ---
+app.get('/api/documents', async (req, res) => {
+  try {
+    const documents = await Document.find().sort({ uploadDate: -1 });
+    res.json(documents);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- PREDICTION ---
+app.get('/api/predictions', async (req, res) => {
+  try {
+    const predictions = await Prediction.find().sort({ timestamp: -1 });
+    res.json(predictions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/predict', async (req, res) => {
+  try {
+    const studentData = req.body || {};
+
+    // 1. Analyze Context & Infer Parameters via Gemini
+    const aiAnalysis = await analyzeContextAndSimulate(studentData);
+
+    // 2. Run Monte Carlo Simulation using AI-derived parameters
+    const simulationStats = runSmartMonteCarlo(studentData.currentGrade, aiAnalysis.parameters);
+
+    // 3. Merge Results
+    const responseData = {
+      stats: simulationStats,
+      aiAnalysis: aiAnalysis.insights,
+      parameters: aiAnalysis.parameters,
+      timestamp: new Date().toISOString()
+    };
+
+    // 4. SAVE TO MONGODB
+    try {
+      const newPrediction = new Prediction({
+        courseName: studentData.courseName,
+        currentGrade: studentData.currentGrade,
+        predictedGrade: simulationStats.predictedGrade,
+        rangeLow: simulationStats.rangeLow,
+        rangeHigh: simulationStats.rangeHigh,
+        studyDataSummary: studentData.studyData,
+        aiAnalysis: aiAnalysis.insights
+      });
+      await newPrediction.save();
+      console.log('Prediction saved to DB:', newPrediction._id);
+    } catch (dbErr) {
+      console.error('Failed to save prediction:', dbErr);
+    }
+
+    res.json(responseData);
   } catch (e) {
-    res.status(400).json({ error: 'Invalid input' });
+
+    console.error("Prediction API Error:", e);
+
+    // Fallback attempt
+    try {
+      const defaultParams = { remainingWeight: 0.3, volatility: 'medium', trend: 0 };
+      const fallbackStats = runSmartMonteCarlo(req.body.currentGrade || 80, defaultParams);
+      res.json({
+        stats: fallbackStats,
+        aiAnalysis: { analysis: "Error connecting to AI.", actionPlan: [], riskAssessment: "System Error" },
+        parameters: defaultParams,
+        timestamp: new Date().toISOString()
+      });
+    } catch (finalError) {
+      res.status(500).json({ error: 'Failed to generate prediction' });
+    }
   }
 });
 
@@ -270,9 +481,15 @@ app.post('/api/ai/chat', async (req, res) => {
     const text = await geminiGenerate(prompt);
     return res.json({ text });
   } catch (err) {
-    console.error('Gemini chat error:', err?.response?.data || err?.message || err);
-    const status = err?.response?.status || 500;
-    return res.status(status).json({ error: 'AI chat failed. Check server logs.' });
+    // Better error Logging
+    console.error('Gemini chat error:', err.message);
+
+    // If it's a rate limit, send a specific error to the client
+    if (err.message.includes('429')) {
+      return res.status(429).json({ error: 'AI Quota Exceeded. Please try again later.' });
+    }
+
+    return res.status(500).json({ error: 'AI chat failed. Check server logs.' });
   }
 });
 
@@ -302,15 +519,17 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
     const textPrompt = `${prompts[analysisType] || prompts.general}\nFocus: ${analysisType}`;
 
     // 2. Call generateContent with BOTH text and image
-    // Note: We bypass the 'geminiGenerate' helper here to support arrays (multimodal)
-    // UPDATED: Use generateContentSafe for fallback support
     const analysis = await generateContentSafe([textPrompt, imagePart]);
 
     return res.json({ analysis, analysisType });
   } catch (err) {
-    console.error('Gemini image analysis error:', err?.response?.data || err?.message || err);
-    const status = err?.response?.status || 500;
-    return res.status(status).json({ error: 'AI image analysis failed. Check server logs.' });
+    console.error('Gemini image analysis error:', err.message);
+
+    if (err.message.includes('429')) {
+      return res.status(429).json({ error: 'AI Quota Exceeded. Please try again later.' });
+    }
+
+    return res.status(500).json({ error: 'AI image analysis failed. Check server logs.' });
   }
 });
 

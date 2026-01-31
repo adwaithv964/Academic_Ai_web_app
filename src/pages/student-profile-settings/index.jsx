@@ -3,7 +3,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../services/db';
 import { motion } from 'framer-motion';
 import Icon from '../../components/AppIcon';
-import Sidebar from '../../components/ui/Sidebar';
 import ProfileTab from './components/ProfileTab';
 import AcademicSettingsTab from './components/AcademicSettingsTab';
 import PreferencesTab from './components/PreferencesTab';
@@ -66,10 +65,9 @@ const StudentProfileSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
+    <div className="h-full bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-card border-b border-border p-4 relative z-50 mt-16">
+      <div className="lg:hidden bg-card border-b border-border p-4 relative z-50">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-foreground">Profile Settings</h1>
@@ -114,7 +112,7 @@ const StudentProfileSettings = () => {
           </motion.div>
         )}
       </div>
-      <div className="flex lg:ml-72 pb-20 lg:pb-0">
+      <div className="flex pb-20 lg:pb-0">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-80 bg-card border-r border-border min-h-screen">
           <div className="p-6 border-b border-border">

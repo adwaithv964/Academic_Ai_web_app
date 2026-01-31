@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
+import CourseGradeCalculator from './CourseGradeCalculator';
 
 import { getGradeOptions } from '../../../utils/gradeScale';
 
@@ -10,6 +11,9 @@ const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCou
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseCredits, setNewCourseCredits] = useState('');
   const [newCourseGrade, setNewCourseGrade] = useState('');
+
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calcTargetCourse, setCalcTargetCourse] = useState(null);
 
   const gradeOptions = getGradeOptions(gpaScale);
 
@@ -35,6 +39,19 @@ const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCou
       setNewCourseCredits('');
       setNewCourseGrade('');
     }
+  };
+
+  const openCalculator = (course) => {
+    setCalcTargetCourse(course);
+    setCalculatorOpen(true);
+  };
+
+  const handleCalculatorSave = (grade) => {
+    if (calcTargetCourse) {
+      onUpdateCourse(activeScenario, calcTargetCourse.id, { grade });
+    }
+    setCalculatorOpen(false);
+    setCalcTargetCourse(null);
   };
 
   const currentScenario = scenarios?.find(s => s?.id === activeScenario);
@@ -82,11 +99,19 @@ const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCou
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  iconName="Calculator"
+                  onClick={() => openCalculator(course)}
+                  className="h-9 px-2 text-muted-foreground hover:text-primary"
+                  title="Calculate Grade"
+                />
                 <Select
                   options={gradeOptions}
                   value={course?.grade}
                   onChange={(value) => onUpdateCourse(activeScenario, course?.id, { grade: value })}
-                  className="w-32"
+                  className="w-28"
                 />
                 <Button
                   variant="ghost"
@@ -175,6 +200,13 @@ const ScenarioBuilder = ({ scenarios, activeScenario, onScenarioChange, onAddCou
           </div>
         </div>
       </div>
+
+      <CourseGradeCalculator
+        isOpen={calculatorOpen}
+        onClose={() => setCalculatorOpen(false)}
+        onSave={handleCalculatorSave}
+        courseName={calcTargetCourse?.name || 'Course'}
+      />
     </div>
   );
 };

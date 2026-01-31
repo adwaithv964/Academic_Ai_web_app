@@ -1,6 +1,5 @@
 import React from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../../services/db';
+import { predictions as predictionsApi } from '../../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
@@ -8,15 +7,29 @@ import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
 const PredictionHistory = ({ onLoad, selectedId }) => {
     // Fetch predictions from IndexedDB, ordered by date descending
-    const predictions = useLiveQuery(
-        () => db.predictions.orderBy('date').reverse().toArray()
-    );
+    const [predictions, setPredictions] = React.useState([]);
+
+    React.useEffect(() => {
+        const fetchPredictions = async () => {
+            try {
+                const data = await predictionsApi.list();
+                setPredictions(data);
+            } catch (err) {
+                console.error("Failed to load history:", err);
+            }
+        };
+        fetchPredictions();
+    }, [selectedId]); // Refresh when selection changes (e.g. after new prediction)
 
     const handleDelete = async (e, id) => {
         e.stopPropagation();
+        alert("Delete functionality coming soon via API.");
+        /*
         if (window.confirm('Are you sure you want to delete this prediction?')) {
-            await db.predictions.delete(id);
+            // await api.predictions.delete(id); // TODO: Implement delete endpoint
+            // setPredictions(prev => prev.filter(p => p._id !== id));
         }
+        */
     };
 
     const { formatDateTime } = useDateFormatter();
