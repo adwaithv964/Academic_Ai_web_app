@@ -44,6 +44,7 @@ const Exam = require('./models/Exam');
 const Vacation = require('./models/Vacation');
 const Term = require('./models/Term');
 const Event = require('./models/Event');
+const WebReference = require('./models/WebReference');
 
 
 dotenv.config();
@@ -804,6 +805,90 @@ app.delete('/api/events/:id', async (req, res) => {
   }
 });
 
+// --- DOCUMENTS (Digital Backpack) ---
+app.get('/api/documents', async (req, res) => {
+  try {
+    // Return metadata only, not the full buffer to keep it light
+    const documents = await Document.find({}, '-data').sort({ uploadDate: -1 });
+    res.json(documents);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { subject, type } = req.body;
+
+    // Calculate readable size
+    const sizeBytes = req.file.size;
+    let sizeStr = sizeBytes + ' B';
+    if (sizeBytes > 1024 * 1024) sizeStr = (sizeBytes / (1024 * 1024)).toFixed(1) + ' MB';
+    else if (sizeBytes > 1024) sizeStr = (sizeBytes / 1024).toFixed(1) + ' KB';
+
+    const newDoc = new Document({
+      name: req.file.originalname,
+      subject: subject || 'General',
+      type: type || 'other',
+      size: sizeStr,
+      contentType: req.file.mimetype,
+      data: req.file.buffer // Store binary
+    });
+
+    await newDoc.save();
+
+    // Return doc without buffer
+    const docResponse = newDoc.toObject();
+    delete docResponse.data;
+
+    res.json(docResponse);
+  } catch (err) {
+    console.error("Upload Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/documents/:id/download', async (req, res) => {
+  try {
+    const doc = await Document.findById(req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Document not found' });
+
+    res.set('Content-Type', doc.contentType);
+    res.set('Content-Disposition', `attachment; filename="${doc.name}"`);
+    res.send(doc.data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/documents/:id', async (req, res) => {
+  try {
+    const { name, subject, type } = req.body;
+    const doc = await Document.findByIdAndUpdate(
+      req.params.id,
+      { name, subject, type },
+      { new: true, select: '-data' }
+    );
+    res.json(doc);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/documents/:id', async (req, res) => {
+  try {
+    await Document.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Document deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // --- TERMS (Schedule Setup) ---
 app.get('/api/terms', async (req, res) => {
   try {
@@ -1026,6 +1111,44 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
     }
 
     return res.status(500).json({ error: 'AI image analysis failed. Check server logs.' });
+  }
+});
+
+// --- WEB REFERENCES ---
+app.get('/api/web-references', async (req, res) => {
+  try {
+    const refs = await WebReference.find().sort({ dateAdded: -1 });
+    res.json(refs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/web-references', async (req, res) => {
+  try {
+    const ref = new WebReference(req.body);
+    await ref.save();
+    res.json(ref);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/web-references/:id', async (req, res) => {
+  try {
+    const ref = await WebReference.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(ref);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/web-references/:id', async (req, res) => {
+  try {
+    await WebReference.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Reference deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
