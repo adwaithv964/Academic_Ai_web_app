@@ -35,7 +35,7 @@ const ProgressTracker = () => {
       label: 'What-If Analysis',
       description: 'Explore scenarios',
       icon: 'Calculator',
-      path: '/what-if-analysis',
+      path: '/data-room',
       color: 'bg-secondary/10 text-secondary border-secondary/20'
     },
     {

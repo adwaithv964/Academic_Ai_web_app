@@ -5,7 +5,7 @@ import ErrorBoundary from "components/ErrorBoundary";
 import MainLayout from "components/layout/MainLayout";
 import NotFound from "pages/NotFound";
 import ProgressTracker from './pages/progress-tracker';
-import WhatIfAnalysis from './pages/what-if-analysis';
+import DataRoom from './pages/data-room';
 import StudyPlanner from './pages/study-planner';
 import Dashboard from './pages/dashboard';
 import GradePredictor from './pages/grade-predictor';
@@ -69,9 +69,9 @@ const Routes = () => {
                 <ProgressTracker />
               </PrivateRoute>
             } />
-            <Route path="/what-if-analysis" element={
+            <Route path="/data-room" element={
               <PrivateRoute>
-                <WhatIfAnalysis />
+                <DataRoom />
               </PrivateRoute>
             } />
             <Route path="/study-planner" element={

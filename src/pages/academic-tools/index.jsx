@@ -20,7 +20,7 @@ const AcademicTools = () => {
             title: 'What-If Analysis',
             description: 'Explore different scenarios to see how exam scores and assignments affect your GPA.',
             icon: 'Calculator',
-            path: '/what-if-analysis',
+            path: '/data-room',
             color: 'text-accent',
             bgColor: 'bg-accent/10'
         },

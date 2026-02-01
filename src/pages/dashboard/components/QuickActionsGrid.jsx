@@ -8,7 +8,7 @@ const QuickActionsGrid = () => {
 
     const actions = [
         { label: 'Grade Predictor', icon: 'TrendingUp', path: '/grade-predictor', color: 'text-primary', bg: 'bg-primary/10' },
-        { label: 'What-If Analysis', icon: 'Calculator', path: '/what-if-analysis', color: 'text-accent', bg: 'bg-accent/10' },
+        { label: 'Data Room', icon: 'Database', path: '/data-room', color: 'text-accent', bg: 'bg-accent/10' },
         { label: 'Progress Tracker', icon: 'BarChart3', path: '/progress-tracker', color: 'text-success', bg: 'bg-success/10' },
         { label: 'Study Planner', icon: 'Calendar', path: '/study-planner', color: 'text-secondary', bg: 'bg-secondary/10' },
     ];

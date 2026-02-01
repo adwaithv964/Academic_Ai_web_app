@@ -53,7 +53,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
     },
     {
       label: 'Data Room',
-      path: '/what-if-analysis', // Mapping "Data Room" to Analysis tools
+      path: '/data-room', // Mapping "Data Room" to Analysis tools
       icon: 'Database', // or BarChart3
     },
     {

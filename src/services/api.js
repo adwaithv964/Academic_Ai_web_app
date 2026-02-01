@@ -47,6 +47,13 @@ export const courses = {
   create: (data) => client.post('/courses', data).then(r => r.data),
 };
 
+export const exams = {
+  list: () => client.get('/exams').then(r => r.data),
+  create: (data) => client.post('/exams', data).then(r => r.data),
+  update: (id, data) => client.put(`/exams/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/exams/${id}`).then(r => r.data),
+};
+
 export const scenarios = {
   list: () => client.get('/scenarios').then(r => r.data),
   create: (data) => client.post('/scenarios', data).then(r => r.data),
@@ -54,6 +61,13 @@ export const scenarios = {
 
 export const documents = {
   list: () => client.get('/documents').then(r => r.data),
+};
+
+export const webReferences = {
+  list: () => client.get('/web-references').then(r => r.data),
+  create: (data) => client.post('/web-references', data).then(r => r.data),
+  update: (id, data) => client.put(`/web-references/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/web-references/${id}`).then(r => r.data),
 };
 
 export const predictions = {
@@ -81,9 +95,11 @@ export default {
   tasks,
   sessions,
   courses,
+  exams,
   scenarios,
   documents,
   documents,
+  webReferences,
   predictions,
   predictions,
   eisenhowerTasks,
