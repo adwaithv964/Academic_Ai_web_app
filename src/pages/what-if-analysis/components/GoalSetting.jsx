@@ -52,10 +52,43 @@ const GoalSetting = ({ onSetGoal, onCalculateRequirements }) => {
     }
   ];
 
+  /* 
+   * Goal-Seek Logic
+   * Formula: (TargetGPA * TotalCredits - CurrentGPA * CompletedCredits) / RemainingCredits = RequiredTermGPA
+   */
   const handleCalculateGoal = () => {
     if (targetGPA && goalType) {
+      const currentGPA = 3.60;
+      const creditsCompleted = 96;
+      // Estimate remaining credits based on target date (assuming 16 per semester)
+      let semCount = 0;
+      if (targetDate === 'spring_2025') semCount = 1;
+      if (targetDate === 'fall_2025') semCount = 2;
+      if (targetDate === 'spring_2026') semCount = 3;
+      if (targetDate === 'fall_2026') semCount = 4;
+
+      const creditsRemaining = semCount * 16 || 32; // Default to 32 if no date
+      const totalCredits = creditsCompleted + creditsRemaining;
+
+      const targetPoints = parseFloat(targetGPA) * totalCredits;
+      const currentPoints = currentGPA * creditsCompleted;
+      const requiredPoints = targetPoints - currentPoints;
+
+      let requiredTermGPA = requiredPoints / creditsRemaining;
+
+      // Cap at 4.0 or 0.0 for logical bounds display
+      if (requiredTermGPA > 4.0) requiredTermGPA = 4.01; // Flag as impossible
+      if (requiredTermGPA < 0) requiredTermGPA = 0;
+
       setShowRecommendations(true);
-      onCalculateRequirements({ targetGPA, goalType, targetDate });
+      // Pass calculated requirement to parent or local state
+      onCalculateRequirements({
+        targetGPA,
+        goalType,
+        targetDate,
+        requiredTermGPA: requiredTermGPA.toFixed(2),
+        creditsRemaining
+      });
     }
   };
 

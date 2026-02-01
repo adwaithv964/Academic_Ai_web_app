@@ -41,7 +41,7 @@ const PrivateRoute = ({ children }) => {
 
 const Routes = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ErrorBoundary>
         <ScrollToTop />
         <RouterRoutes>

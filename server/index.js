@@ -254,6 +254,164 @@ async function analyzeContextAndSimulate(studentData) {
   }
 }
 
+// --- AI SCHEDULE SCAN ---
+app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Gemini API Key missing' });
+    }
+
+    // Convert buffer to base64
+    const mimeType = req.file.mimetype;
+    const imageBase64 = req.file.buffer.toString('base64');
+
+    const prompt = `
+        Role: Academic Schedule Parser.
+        Task: Extract calendar events from the provided image/document.
+        
+        Input: A schedule image (class timetable, exam schedule, or syllabus).
+        
+        Output JSON ONLY:
+        [
+            {
+                "title": "Course Name / Event Title",
+                "date": "YYYY-MM-DD",
+                "time": "HH:MM (24h format) or range HH:MM-HH:MM",
+                "description": "Room number, Professor, or extra details",
+                "type": "class" | "exam" | "deadline" | "other"
+            }
+        ]
+
+        Rules:
+        - If the date is not specified (e.g. "Mondays"), assume the NEXT occurrence of that day from today (${new Date().toISOString().split('T')[0]}).
+        - If it's a semester schedule, generate the first week's events only, or if possible, a few occurrences.
+        - STRICTLY return valid JSON array. No markdown formatting.
+        `;
+
+    const parts = [
+      { text: prompt },
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: imageBase64
+        }
+      }
+    ];
+
+    // Use generateContentSafe to handle model fallbacks (flash -> pro)
+    let text = "";
+    try {
+      text = await generateContentSafe(parts);
+      // Clean up markdown if present
+      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    } catch (genErr) {
+      console.error("Gemini Generation Failed:", genErr);
+      return res.status(500).json({ error: `AI Error: ${genErr.message || genErr}` });
+    }
+
+    let events = [];
+    try {
+      events = JSON.parse(text);
+    } catch (parseErr) {
+      console.error("Failed to parse AI response:", text);
+      return res.status(500).json({ error: 'Failed to parse AI response', raw: text });
+    }
+
+    res.json({ success: true, events });
+
+  } catch (err) {
+    console.error("AI Scan Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- GOOGLE CALENDAR SYNC (OAuth) ---
+const { google } = require('googleapis');
+
+// OAuth 2.0 Client Setup
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5002/api/auth/google/callback'
+);
+
+// Scopes for Calendar API
+const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+
+// 1. Redirect to Google Consent Screen
+app.get('/api/auth/google', (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(500).send('Google Client ID/Secret missing in .env');
+  }
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline', // Request refresh token
+    scope: SCOPES,
+  });
+  res.redirect(url);
+});
+
+// 2. Handle Callback and Fetch Events
+app.get('/api/auth/google/callback', async (req, res) => {
+  const { code } = req.query;
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    // Fetch Calendar Events
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const now = new Date();
+    const nextMonth = new Date();
+    nextMonth.setDate(now.getDate() + 30);
+
+    const response = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: now.toISOString(),
+      timeMax: nextMonth.toISOString(),
+      maxResults: 20,
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    const googleEvents = response.data.items || [];
+
+    // Save to MongoDB
+    const savePromises = googleEvents.map(gEvent => {
+      if (!gEvent.start) return null; // Skip if no time (unlikely for main events)
+
+      // Map Google Event to our Schema
+      const newEvent = {
+        title: gEvent.summary || 'No Title',
+        description: gEvent.description || 'Imported from Google Calendar',
+        date: new Date(gEvent.start.dateTime || gEvent.start.date),
+        time: gEvent.start.dateTime ? new Date(gEvent.start.dateTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : 'All Day',
+        color: 'bg-green-100 text-green-700 border-green-200' // Distinguish Google events
+      };
+
+      // Simple "Upsert" check by title+date (Improve logic for real prod)
+      return Event.findOneAndUpdate(
+        { title: newEvent.title, date: newEvent.date },
+        newEvent,
+        { upsert: true, new: true }
+      );
+    });
+
+    await Promise.all(savePromises);
+
+    // Redirect back to frontend with success
+    res.redirect('http://localhost:4028/sync?status=success&provider=google');
+
+  } catch (error) {
+    console.error('Google OAuth/Sync Error:', error);
+    res.redirect('http://localhost:4028/sync?status=error&provider=google');
+  }
+});
+
+
 // --- API ENDPOINTS ---
 
 const { STORE_ITEMS, ACHIEVEMENTS, DAILY_QUESTS_POOL } = require('./config/gamification');
@@ -652,6 +810,7 @@ app.get('/api/terms', async (req, res) => {
     const term = await Term.findOne().sort({ createdAt: -1 }); // Get latest config
     res.json(term || {});
   } catch (err) {
+    console.error("Error in GET /api/terms:", err);
     res.status(500).json({ error: err.message });
   }
 });

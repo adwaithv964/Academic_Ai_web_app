@@ -31,26 +31,32 @@ const DayView = ({ currentDate, events, onEventClick }) => {
                                 {format(currentTimestamp, 'h a')}
                             </div>
                             <div className="flex-1 pt-2 border-t border-gray-100 relative">
-                                {hourEvents.map((evt, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(evt); }}
-                                        className={`mb-2 p-3 rounded-lg border-l-4 flex items-start gap-3 cursor-pointer transition-all hover:brightness-95
-                                        ${evt.color || 'bg-blue-50 border-blue-500 text-blue-700'}
-                                        ${evt.color ? evt.color.replace('text-', 'border-').replace('700', '400') : 'border-blue-400'}
-                                        `}
-                                    >
-                                        <div className={`mt-1 min-w-[16px] h-[16px] rounded-[4px] border border-current opacity-60 flex items-center justify-center`}>
-                                            <svg className="w-3 h-3 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
+                                {hourEvents.map((evt, idx) => {
+                                    const isTailwind = evt.color && evt.color.startsWith('bg-');
+                                    const eventStyle = !isTailwind && evt.color ? { backgroundColor: evt.color, borderColor: evt.color } : {};
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(evt); }}
+                                            className={`mb-2 p-3 rounded-lg border-l-4 flex items-start gap-3 cursor-pointer transition-all hover:brightness-95 shadow-sm
+                                                    ${isTailwind ? evt.color : 'text-gray-800'} 
+                                                    ${isTailwind ? evt.color.replace('text-', 'border-').replace('700', '400') : ''}
+                                                    `}
+                                            style={eventStyle}
+                                        >
+                                            <div className={`mt-1 min-w-[16px] h-[16px] rounded-[4px] border border-current opacity-60 flex items-center justify-center`}>
+                                                <svg className="w-3 h-3 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-sm">{evt.title}</div>
+                                                {evt.time && <div className="text-xs opacity-70 mt-0.5">{evt.time} - {evt.location}</div>}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-sm">{evt.title}</div>
-                                            {evt.time && <div className="text-xs opacity-70 mt-0.5">{evt.time} - {evt.location}</div>}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     );

@@ -28,8 +28,8 @@ const YearView = ({ currentDate, events, onMonthClick }) => {
                     <h3 className="font-bold text-gray-900 mb-4">{format(month, 'MMMM')}</h3>
 
                     <div className="grid grid-cols-7 gap-1 text-center">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                            <div key={d} className="text-xs text-gray-400 font-medium mb-1">{d}</div>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                            <div key={d} className="text-xs text-gray-400 font-medium mb-1">{d.charAt(0)}</div>
                         ))}
 
                         {eachDayOfInterval({

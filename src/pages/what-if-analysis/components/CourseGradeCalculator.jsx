@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import { getCalicutGrade, calculateCalicutGP } from '../../../utils/gradeScale';
 
 const CourseGradeCalculator = ({ isOpen, onClose, onSave, courseName }) => {
     const [currentGrade, setCurrentGrade] = useState(85);
@@ -21,22 +22,17 @@ const CourseGradeCalculator = ({ isOpen, onClose, onSave, courseName }) => {
         return (currentPart + finalPart).toFixed(1);
     };
 
-    const getLetterGrade = (score) => {
-        if (score >= 93) return 'A';
-        if (score >= 90) return 'A-';
-        if (score >= 87) return 'B+';
-        if (score >= 83) return 'B';
-        if (score >= 80) return 'B-';
-        if (score >= 77) return 'C+';
-        if (score >= 73) return 'C';
-        if (score >= 70) return 'C-';
-        if (score >= 67) return 'D+';
-        if (score >= 60) return 'D';
-        return 'F';
-    };
-
     const finalGrade = calculateFinalGrade();
-    const letterGrade = getLetterGrade(finalGrade);
+    const letterGrade = getCalicutGrade(finalGrade);
+    const gradePoint = calculateCalicutGP(finalGrade);
+
+    const handleSave = () => {
+        onSave({
+            grade: letterGrade,
+            gp: gradePoint,
+            score: parseFloat(finalGrade)
+        });
+    };
 
     if (!isOpen) return null;
 
@@ -101,14 +97,17 @@ const CourseGradeCalculator = ({ isOpen, onClose, onSave, courseName }) => {
                             <p className="text-sm text-muted-foreground mb-1">Projected Course Grade</p>
                             <div className="flex items-center justify-center gap-2">
                                 <span className="text-4xl font-bold text-primary">{finalGrade}%</span>
-                                <span className="text-xl font-semibold text-foreground/70">({letterGrade})</span>
+                                <div className="flex flex-col items-start">
+                                    <span className="text-xl font-semibold text-foreground/70">{letterGrade}</span>
+                                    <span className="text-xs text-muted-foreground">GP: {gradePoint}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="p-4 border-t border-border bg-muted/20 flex justify-end gap-3">
                         <Button variant="ghost" onClick={onClose}>Cancel</Button>
-                        <Button onClick={() => onSave(letterGrade)}>Use this Grade</Button>
+                        <Button onClick={handleSave}>Use this Grade</Button>
                     </div>
                 </motion.div>
             </div>

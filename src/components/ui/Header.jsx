@@ -4,6 +4,7 @@ import Icon from '../AppIcon';
 import Button from './Button';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
+import { sessions as sessionsApi } from '../../services/api';
 
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
@@ -75,13 +76,47 @@ const Header = ({ sidebarCollapsed = false }) => {
           <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full pl-4 pr-1 py-1">
             <span className="font-mono text-sm text-white">{formatTimer(time)}</span>
             <button
-              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              onClick={async () => {
+                if (isTimerRunning) {
+                  // Stop Timer
+                  setIsTimerRunning(false);
+
+                  // Save Session if significant time elapsed (> 1 min)
+                  if (time > 60) {
+                    try {
+                      const now = new Date();
+                      const startTime = new Date(now.getTime() - time * 1000);
+
+                      await sessionsApi.create({
+                        subject: 'Uncategorized',
+                        topic: 'Timed Session',
+                        startTime: startTime?.toTimeString()?.substring(0, 5),
+                        duration: Number((time / 3600).toFixed(2)),
+                        date: now.toISOString(),
+                        type: 'study',
+                        priority: 'medium',
+                        notes: `Auto-saved session: ${formatTimer(time)}`
+                      });
+
+                      // Optional: Trigger a refresh or notify
+                      console.log('Session saved from timer');
+                      window.dispatchEvent(new CustomEvent('session-created'));
+                    } catch (error) {
+                      console.error('Failed to save timer session:', error);
+                    }
+                  }
+
+                  setTime(0);
+                } else {
+                  setIsTimerRunning(true);
+                }
+              }}
               className={`
                         h-7 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all
                         ${isTimerRunning ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-primary/20 text-primary hover:bg-primary/30'}
                     `}
             >
-              <Icon name={isTimerRunning ? "Pause" : "Play"} size={12} fill="currentColor" />
+              <Icon name={isTimerRunning ? "Square" : "Play"} size={12} fill="currentColor" />
               {isTimerRunning ? 'Stop' : 'Start'}
             </button>
           </div>

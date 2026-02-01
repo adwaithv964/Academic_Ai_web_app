@@ -167,8 +167,53 @@ const ScenarioComparison = ({ scenarios, onSaveScenario, onExportReport }) => {
             </div>
           );
         })}
+
       </div>
-      {/* Impact Summary */}
+
+      {/* Side-by-Side Detailed Comparison Table */}
+      <div className="bg-card rounded-lg border border-border p-6 mb-6 overflow-hidden">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Detailed Course Comparison</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b border-border">
+              <tr>
+                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Course</th>
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">Credits</th>
+                {scenarios?.map(s => (
+                  <th key={s.id} className="text-center py-3 px-4 font-medium text-foreground border-l border-border">
+                    {s.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Extract unique course names from all scenarios to build rows */}
+              {Array.from(new Set(scenarios?.flatMap(s => s.courses.map(c => c.name)))).map((courseName, idx) => (
+                <tr key={idx} className="border-b border-border last:border-0 hover:bg-muted/20">
+                  <td className="py-3 px-4 font-medium text-foreground">{courseName}</td>
+                  <td className="text-center py-3 px-4 text-muted-foreground">
+                    {scenarios[0]?.courses?.find(c => c.name === courseName)?.credits || '-'}
+                  </td>
+                  {scenarios?.map(s => {
+                    const course = s.courses.find(c => c.name === courseName);
+                    return (
+                      <td key={s.id} className="text-center py-3 px-4 border-l border-border">
+                        {course ? (
+                          <span className={`font-medium ${course.grade === 'A' || course.grade === 'A-' ? 'text-success' : ''}`}>
+                            {course.grade}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs italic">Not taken</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div className="bg-muted/30 rounded-lg p-6 mb-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Impact Summary</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -226,7 +271,7 @@ const ScenarioComparison = ({ scenarios, onSaveScenario, onExportReport }) => {
           Schedule Advisor Meeting
         </Button>
       </div>
-    </div>
+    </div >
   );
 };
 

@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const ViewControls = ({ 
-  currentView, 
-  onViewChange, 
-  currentDate, 
-  onDateChange, 
-  onTodayClick 
+const ViewControls = ({
+  currentView,
+  onViewChange,
+  currentDate,
+  onDateChange,
+  onTodayClick
 }) => {
   const views = [
     { key: 'daily', label: 'Day', icon: 'Calendar' },
@@ -18,7 +18,7 @@ const ViewControls = ({
 
   const navigateDate = (direction) => {
     const newDate = new Date(currentDate);
-    
+
     if (currentView === 'daily') {
       newDate?.setDate(newDate?.getDate() + (direction === 'next' ? 1 : -1));
     } else if (currentView === 'weekly') {
@@ -26,7 +26,7 @@ const ViewControls = ({
     } else if (currentView === 'monthly') {
       newDate?.setMonth(newDate?.getMonth() + (direction === 'next' ? 1 : -1));
     }
-    
+
     onDateChange(newDate);
   };
 
@@ -36,19 +36,19 @@ const ViewControls = ({
       weekly: { year: 'numeric', month: 'long', day: 'numeric' },
       monthly: { year: 'numeric', month: 'long' }
     };
-    
+
     if (currentView === 'weekly') {
       const startOfWeek = new Date(currentDate);
       const dayOfWeek = startOfWeek?.getDay();
       const diff = startOfWeek?.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       startOfWeek?.setDate(diff);
-      
+
       const endOfWeek = new Date(startOfWeek);
       endOfWeek?.setDate(startOfWeek?.getDate() + 6);
-      
+
       return `${startOfWeek?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     }
-    
+
     return currentDate?.toLocaleDateString('en-US', options?.[currentView]);
   };
 
@@ -62,8 +62,8 @@ const ViewControls = ({
             onClick={() => onViewChange(view?.key)}
             className={`
               relative flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-academic
-              ${currentView === view?.key 
-                ? 'text-primary bg-card shadow-sm' 
+              ${currentView === view?.key
+                ? 'text-primary bg-card shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
               }
             `}
@@ -90,12 +90,12 @@ const ViewControls = ({
           onClick={() => navigateDate('prev')}
           className="h-9 w-9 p-0"
         />
-        
+
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground min-w-0">
             {formatDateDisplay()}
           </h2>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -105,7 +105,7 @@ const ViewControls = ({
             Today
           </Button>
         </div>
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -116,15 +116,8 @@ const ViewControls = ({
       </div>
       {/* Quick Actions */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          iconName="Download"
-          className="hidden md:flex"
-        >
-          Export
-        </Button>
-        
+
+
         <Button
           variant="ghost"
           size="sm"

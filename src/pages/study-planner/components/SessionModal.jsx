@@ -5,14 +5,16 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 
-const SessionModal = ({ 
-  isOpen, 
-  onClose, 
-  session, 
-  onSave, 
+const SessionModal = ({
+  isOpen,
+  onClose,
+  session,
+  onSave,
   onDelete,
   selectedDay,
-  selectedHour 
+  selectedHour,
+  courses = [],
+  onCourseCreate
 }) => {
   const [formData, setFormData] = useState({
     subject: '',
@@ -26,6 +28,9 @@ const SessionModal = ({
   });
 
   const [errors, setErrors] = useState({});
+  const [isAddingSubject, setIsAddingSubject] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [isCreatingCourse, setIsCreatingCourse] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -47,15 +52,18 @@ const SessionModal = ({
     }
   }, [session, selectedDay, selectedHour]);
 
-  const subjectOptions = [
-    { value: 'Mathematics', label: 'Mathematics' },
-    { value: 'Physics', label: 'Physics' },
-    { value: 'Chemistry', label: 'Chemistry' },
-    { value: 'Biology', label: 'Biology' },
-    { value: 'English', label: 'English' },
-    { value: 'History', label: 'History' },
-    { value: 'Computer Science', label: 'Computer Science' }
-  ];
+  // Use dynamic courses if available, otherwise fallback
+  const subjectOptions = courses.length > 0
+    ? courses.map(c => ({ value: c.name, label: c.name }))
+    : [
+      { value: 'Mathematics', label: 'Mathematics' },
+      { value: 'Physics', label: 'Physics' },
+      { value: 'Chemistry', label: 'Chemistry' },
+      { value: 'Biology', label: 'Biology' },
+      { value: 'English', label: 'English' },
+      { value: 'History', label: 'History' },
+      { value: 'Computer Science', label: 'Computer Science' }
+    ];
 
   const priorityOptions = [
     { value: 'low', label: 'Low Priority' },
@@ -83,26 +91,44 @@ const SessionModal = ({
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData?.subject?.trim()) {
       newErrors.subject = 'Subject is required';
     }
-    
+
     if (!formData?.topic?.trim()) {
       newErrors.topic = 'Topic is required';
     }
-    
+
     if (!formData?.startTime) {
       newErrors.startTime = 'Start time is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
   };
 
+  const handleCreateSubject = async () => {
+    if (!newSubjectName.trim()) return;
+
+    setIsCreatingCourse(true);
+    try {
+      if (onCourseCreate) {
+        await onCourseCreate(newSubjectName);
+        setFormData(prev => ({ ...prev, subject: newSubjectName }));
+        setIsAddingSubject(false);
+        setNewSubjectName('');
+      }
+    } catch (err) {
+      console.error("Failed to create subject", err);
+    } finally {
+      setIsCreatingCourse(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e?.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -131,7 +157,7 @@ const SessionModal = ({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors?.[field]) {
       setErrors(prev => ({
@@ -168,15 +194,56 @@ const SessionModal = ({
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Subject"
-                options={subjectOptions}
-                value={formData?.subject}
-                onChange={(value) => handleChange('subject', value)}
-                error={errors?.subject}
-                required
-              />
-              
+              <div className="space-y-2">
+                {isAddingSubject ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">New Subject</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newSubjectName}
+                        onChange={(e) => setNewSubjectName(e.target.value)}
+                        placeholder="Subject Name"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={handleCreateSubject}
+                        disabled={isCreatingCourse}
+                      >
+                        <Icon name="Check" size={16} />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setIsAddingSubject(false)}
+                      >
+                        <Icon name="X" size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Select
+                      label="Subject"
+                      options={subjectOptions}
+                      value={formData?.subject}
+                      onChange={(value) => handleChange('subject', value)}
+                      error={errors?.subject}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingSubject(true)}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
+                    >
+                      <Icon name="Plus" size={12} /> Add New Subject
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <Select
                 label="Session Type"
                 options={typeOptions}
@@ -204,7 +271,7 @@ const SessionModal = ({
                 error={errors?.startTime}
                 required
               />
-              
+
               <Select
                 label="Duration"
                 options={durationOptions}
@@ -220,7 +287,7 @@ const SessionModal = ({
                 value={formData?.priority}
                 onChange={(value) => handleChange('priority', value)}
               />
-              
+
               <Input
                 label="Location"
                 type="text"
@@ -254,7 +321,7 @@ const SessionModal = ({
                   </Button>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Button
                   type="button"

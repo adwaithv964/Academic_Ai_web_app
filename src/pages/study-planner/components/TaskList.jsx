@@ -6,13 +6,15 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 
 import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
-const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) => {
+const TaskList = ({ tasks, courses = [], onTaskToggle, onTaskAdd, onTaskUpdate, onTaskDelete }) => {
   const { formatDate } = useDateFormatter();
   const [expandedSections, setExpandedSections] = useState({
     pending: true,
     completed: false
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+
   const [newTask, setNewTask] = useState({
     title: '',
     subject: '',
@@ -31,14 +33,35 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
     }));
   };
 
-  const handleAddTask = () => {
+  const startEditing = (task) => {
+    setEditingTaskId(task._id);
+    setNewTask({
+      title: task.title || '',
+      subject: task.subject || '',
+      priority: task.priority || 'medium',
+      dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+      type: task.type || 'assignment'
+    });
+    setShowAddForm(true);
+  };
+
+  const handleSubmit = () => {
     if (newTask?.title?.trim()) {
-      onTaskAdd({
-        ...newTask,
-        id: Date.now(),
-        completed: false,
-        createdAt: new Date()?.toISOString()
-      });
+      if (editingTaskId) {
+        // Update existing task
+        onTaskUpdate(editingTaskId, newTask);
+        setEditingTaskId(null);
+      } else {
+        // Add new task
+        onTaskAdd({
+          ...newTask,
+          id: Date.now(), // Temp ID
+          completed: false,
+          createdAt: new Date()?.toISOString()
+        });
+      }
+
+      // Reset form
       setNewTask({
         title: '',
         subject: '',
@@ -95,7 +118,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
       <div className="flex items-start gap-3">
         <Checkbox
           checked={task?.completed}
-          onChange={(e) => onTaskToggle(task?.id, e?.target?.checked)}
+          onChange={(e) => onTaskToggle(task?._id, e?.target?.checked)}
           className="mt-1"
         />
 
@@ -127,7 +150,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onTaskEdit(task)}
+            onClick={() => startEditing(task)}
             className="h-8 w-8"
           >
             <Icon name="Edit2" size={14} />
@@ -135,7 +158,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onTaskDelete(task?.id)}
+            onClick={() => onTaskDelete(task?._id)}
             className="h-8 w-8 text-error hover:text-error"
           >
             <Icon name="Trash2" size={14} />
@@ -184,13 +207,9 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">Select subject</option>
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Biology">Biology</option>
-                  <option value="English">English</option>
-                  <option value="History">History</option>
-                  <option value="Computer Science">Computer Science</option>
+                  {courses.map(course => (
+                    <option key={course._id} value={course.name}>{course.name}</option>
+                  ))}
                 </select>
 
                 <select
@@ -226,10 +245,20 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
               </div>
 
               <div className="flex gap-2">
-                <Button variant="default" size="sm" onClick={handleAddTask}>
-                  Add Task
+                <Button variant="default" size="sm" onClick={handleSubmit}>
+                  {editingTaskId ? 'Update Task' : 'Add Task'}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  setShowAddForm(false);
+                  setEditingTaskId(null);
+                  setNewTask({
+                    title: '',
+                    subject: '',
+                    priority: 'medium',
+                    dueDate: '',
+                    type: 'assignment'
+                  });
+                }}>
                   Cancel
                 </Button>
               </div>
@@ -273,7 +302,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   </div>
                 ) : (
                   pendingTasks?.map((task) => (
-                    <TaskItem key={task?.id} task={task} />
+                    <TaskItem key={task?._id} task={task} />
                   ))
                 )}
               </div>
@@ -317,7 +346,7 @@ const TaskList = ({ tasks, onTaskToggle, onTaskAdd, onTaskEdit, onTaskDelete }) 
                   </div>
                 ) : (
                   completedTasks?.map((task) => (
-                    <TaskItem key={task?.id} task={task} />
+                    <TaskItem key={task?._id} task={task} />
                   ))
                 )}
               </div>

@@ -9,6 +9,7 @@ const Input = React.forwardRef(({
     error,
     required = false,
     id,
+    textarea, // Destructure to remove from ...props
     ...props
 }, ref) => {
     // Generate unique ID if not provided
@@ -49,6 +50,8 @@ const Input = React.forwardRef(({
         );
     }
 
+    const Comp = textarea ? "textarea" : "input";
+
     // For regular inputs with wrapper structure
     return (
         <div className="space-y-2">
@@ -65,10 +68,12 @@ const Input = React.forwardRef(({
                 </label>
             )}
 
-            <input
-                type={type}
+            <Comp
+                type={textarea ? undefined : type}
                 className={cn(
                     baseInputClasses,
+                    // Different height for textarea
+                    textarea && "h-auto min-h-[80px]",
                     error && "border-destructive focus-visible:ring-destructive",
                     className
                 )}

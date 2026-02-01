@@ -25,14 +25,14 @@ const GPAChart = ({ scenarios, chartType = 'line' }) => {
           <p className="font-medium text-foreground mb-2">{label}</p>
           {payload?.map((entry, index) => (
             <div key={index} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-3 h-3 rounded-full" 
+              <div
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry?.color }}
               />
               <span className="text-muted-foreground capitalize">
-                {entry?.dataKey === 'current' ? 'Current GPA' : 
-                 entry?.dataKey === 'scenario1' ? 'Optimistic Scenario' :
-                 entry?.dataKey === 'scenario2'? 'Conservative Scenario' : 'Realistic Scenario'}:
+                {entry?.dataKey === 'current' ? 'Current GPA' :
+                  entry?.dataKey === 'scenario1' ? 'Optimistic Scenario' :
+                    entry?.dataKey === 'scenario2' ? 'Conservative Scenario' : 'Realistic Scenario'}:
               </span>
               <span className="font-medium text-foreground">
                 {entry?.value ? entry?.value?.toFixed(2) : 'N/A'}
@@ -50,39 +50,39 @@ const GPAChart = ({ scenarios, chartType = 'line' }) => {
       return (
         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-          <XAxis 
-            dataKey="semester" 
+          <XAxis
+            dataKey="semester"
             stroke="var(--color-muted-foreground)"
             fontSize={12}
           />
-          <YAxis 
+          <YAxis
             domain={[0, 4.0]}
             stroke="var(--color-muted-foreground)"
             fontSize={12}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Bar 
-            dataKey="current" 
-            fill={scenarioColors?.current} 
+          <Bar
+            dataKey="current"
+            fill={scenarioColors?.current}
             name="Current GPA"
             radius={[2, 2, 0, 0]}
           />
-          <Bar 
-            dataKey="scenario1" 
-            fill={scenarioColors?.scenario1} 
+          <Bar
+            dataKey="scenario1"
+            fill={scenarioColors?.scenario1}
             name="Optimistic Scenario"
             radius={[2, 2, 0, 0]}
           />
-          <Bar 
-            dataKey="scenario2" 
-            fill={scenarioColors?.scenario2} 
+          <Bar
+            dataKey="scenario2"
+            fill={scenarioColors?.scenario2}
             name="Conservative Scenario"
             radius={[2, 2, 0, 0]}
           />
-          <Bar 
-            dataKey="scenario3" 
-            fill={scenarioColors?.scenario3} 
+          <Bar
+            dataKey="scenario3"
+            fill={scenarioColors?.scenario3}
             name="Realistic Scenario"
             radius={[2, 2, 0, 0]}
           />
@@ -93,48 +93,48 @@ const GPAChart = ({ scenarios, chartType = 'line' }) => {
     return (
       <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-        <XAxis 
-          dataKey="semester" 
+        <XAxis
+          dataKey="semester"
           stroke="var(--color-muted-foreground)"
           fontSize={12}
         />
-        <YAxis 
+        <YAxis
           domain={[0, 4.0]}
           stroke="var(--color-muted-foreground)"
           fontSize={12}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
-        <Line 
-          type="monotone" 
-          dataKey="current" 
+        <Line
+          type="monotone"
+          dataKey="current"
           stroke={scenarioColors?.current}
           strokeWidth={3}
           dot={{ fill: scenarioColors?.current, strokeWidth: 2, r: 4 }}
           name="Current GPA"
           connectNulls={false}
         />
-        <Line 
-          type="monotone" 
-          dataKey="scenario1" 
+        <Line
+          type="monotone"
+          dataKey="scenario1"
           stroke={scenarioColors?.scenario1}
           strokeWidth={2}
           dot={{ fill: scenarioColors?.scenario1, strokeWidth: 2, r: 4 }}
           name="Optimistic Scenario"
           strokeDasharray="5 5"
         />
-        <Line 
-          type="monotone" 
-          dataKey="scenario2" 
+        <Line
+          type="monotone"
+          dataKey="scenario2"
           stroke={scenarioColors?.scenario2}
           strokeWidth={2}
           dot={{ fill: scenarioColors?.scenario2, strokeWidth: 2, r: 4 }}
           name="Conservative Scenario"
           strokeDasharray="10 5"
         />
-        <Line 
-          type="monotone" 
-          dataKey="scenario3" 
+        <Line
+          type="monotone"
+          dataKey="scenario3"
           stroke={scenarioColors?.scenario3}
           strokeWidth={2}
           dot={{ fill: scenarioColors?.scenario3, strokeWidth: 2, r: 4 }}
@@ -204,22 +204,49 @@ const GPAChart = ({ scenarios, chartType = 'line' }) => {
       <div className="mt-6 p-4 bg-accent/5 rounded-lg border border-accent/20">
         <div className="flex items-center gap-2 mb-3">
           <Icon name="Lightbulb" size={16} className="text-accent" />
-          <span className="text-sm font-medium text-accent">Key Insights</span>
+          <span className="text-sm font-medium text-accent">Smart Insights (AI)</span>
         </div>
-        <ul className="space-y-2 text-sm text-foreground">
-          <li className="flex items-start gap-2">
-            <Icon name="ArrowUp" size={14} className="text-success mt-0.5" />
-            <span>Optimistic scenario shows +0.15 GPA improvement by graduation</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Icon name="Target" size={14} className="text-primary mt-0.5" />
-            <span>Realistic scenario maintains strong academic standing above 3.6</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Icon name="AlertTriangle" size={14} className="text-warning mt-0.5" />
-            <span>Conservative scenario requires attention to maintain current GPA</span>
-          </li>
-        </ul>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* ROI Widget */}
+          <div className="bg-background/50 rounded p-3 border border-border/50">
+            <div className="flex items-center gap-2 mb-1">
+              <Icon name="Zap" size={14} className="text-yellow-500" />
+              <span className="font-semibold text-sm">ROI Update</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Raising <span className="font-medium text-foreground">Statistics</span> from B to B+ yields the highest GPA boost (+0.08) for the least effort.
+            </p>
+          </div>
+
+          {/* Risk Alert */}
+          <div className="bg-error/10 rounded p-3 border border-error/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Icon name="AlertTriangle" size={14} className="text-error" />
+              <span className="font-semibold text-sm text-error">Risk Check</span>
+            </div>
+            <p className="text-sm text-foreground/80">
+              Conservative scenario projects a term GPA of 1.9, which is below the Academic Probation threshold (2.0).
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-accent/20">
+          <h4 className="text-sm font-medium text-foreground mb-2">Key Takeaways</h4>
+          <ul className="space-y-2 text-sm text-foreground">
+            <li className="flex items-start gap-2">
+              <Icon name="ArrowUp" size={14} className="text-success mt-0.5" />
+              <span>Optimistic scenario shows +0.15 GPA improvement by graduation</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icon name="Target" size={14} className="text-primary mt-0.5" />
+              <span>Realistic scenario maintains strong academic standing above 3.6</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icon name="AlertTriangle" size={14} className="text-warning mt-0.5" />
+              <span>Conservative scenario requires attention to maintain current GPA</span>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

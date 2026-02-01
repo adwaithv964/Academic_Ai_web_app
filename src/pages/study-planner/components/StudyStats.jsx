@@ -6,40 +6,66 @@ const StudyStats = ({ studySessions, tasks }) => {
   const calculateStats = () => {
     const now = new Date();
     const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+
     // Study sessions stats
     const totalSessions = studySessions?.length;
-    const weekSessions = studySessions?.filter(session => 
+    const weekSessions = studySessions?.filter(session =>
       new Date(session.date) >= thisWeek
     )?.length;
-    
-    const totalStudyHours = studySessions?.reduce((total, session) => 
+
+    const totalStudyHours = studySessions?.reduce((total, session) =>
       total + (session?.duration || 0), 0
     );
-    
+
     const weekStudyHours = studySessions?.filter(session => new Date(session.date) >= thisWeek)?.reduce((total, session) => total + (session?.duration || 0), 0);
-    
+
     // Task stats
     const totalTasks = tasks?.length;
     const completedTasks = tasks?.filter(task => task?.completed)?.length;
     const pendingTasks = totalTasks - completedTasks;
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-    
+
     // Overdue tasks
-    const overdueTasks = tasks?.filter(task => 
+    const overdueTasks = tasks?.filter(task =>
       !task?.completed && task?.dueDate && new Date(task.dueDate) < now
     )?.length;
-    
+
     // Subject distribution
     const subjectHours = {};
     studySessions?.forEach(session => {
       const subject = session?.subject || 'Other';
       subjectHours[subject] = (subjectHours?.[subject] || 0) + (session?.duration || 0);
     });
-    
-    const topSubject = Object.entries(subjectHours)?.reduce((top, [subject, hours]) => 
+
+    const topSubject = Object.entries(subjectHours)?.reduce((top, [subject, hours]) =>
       hours > (top?.hours || 0) ? { subject, hours } : top, {}
     );
+
+    // Calculate Study Streak
+    let streak = 0;
+    const sortedDates = [...new Set(studySessions?.map(s => new Date(s.date).toDateString()))]
+      .sort((a, b) => new Date(b) - new Date(a)); // Sort descending
+
+    if (sortedDates.length > 0) {
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+      // Check if streak is active (studied today or yesterday)
+      if (sortedDates[0] === today || sortedDates[0] === yesterday) {
+        streak = 1;
+        for (let i = 0; i < sortedDates.length - 1; i++) {
+          const current = new Date(sortedDates[i]);
+          const next = new Date(sortedDates[i + 1]);
+          const diffDays = (current - next) / (1000 * 60 * 60 * 24);
+
+          if (diffDays === 1) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      }
+    }
 
     return {
       totalSessions,
@@ -51,7 +77,8 @@ const StudyStats = ({ studySessions, tasks }) => {
       pendingTasks,
       completionRate,
       overdueTasks,
-      topSubject
+      topSubject,
+      streak
     };
   };
 
@@ -67,18 +94,17 @@ const StudyStats = ({ studySessions, tasks }) => {
           <Icon name={icon} size={20} className={`text-${color}`} />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs ${
-            trend > 0 ? 'text-success' : trend < 0 ? 'text-error' : 'text-muted-foreground'
-          }`}>
-            <Icon 
-              name={trend > 0 ? 'TrendingUp' : trend < 0 ? 'TrendingDown' : 'Minus'} 
-              size={12} 
+          <div className={`flex items-center gap-1 text-xs ${trend > 0 ? 'text-success' : trend < 0 ? 'text-error' : 'text-muted-foreground'
+            }`}>
+            <Icon
+              name={trend > 0 ? 'TrendingUp' : trend < 0 ? 'TrendingDown' : 'Minus'}
+              size={12}
             />
             <span>{Math.abs(trend)}%</span>
           </div>
         )}
       </div>
-      
+
       <div>
         <p className="text-2xl font-bold text-foreground">{value}</p>
         <p className="text-sm text-muted-foreground">{title}</p>
@@ -98,7 +124,7 @@ const StudyStats = ({ studySessions, tasks }) => {
         </div>
       </div>
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <StatCard
           icon="Clock"
           title="Study Hours"
@@ -107,7 +133,7 @@ const StudyStats = ({ studySessions, tasks }) => {
           color="primary"
           trend={12}
         />
-        
+
         <StatCard
           icon="BookOpen"
           title="Study Sessions"
@@ -116,7 +142,7 @@ const StudyStats = ({ studySessions, tasks }) => {
           color="secondary"
           trend={8}
         />
-        
+
         <StatCard
           icon="CheckCircle"
           title="Tasks Completed"
@@ -125,7 +151,7 @@ const StudyStats = ({ studySessions, tasks }) => {
           color="success"
           trend={5}
         />
-        
+
         <StatCard
           icon="AlertCircle"
           title="Pending Tasks"
@@ -148,7 +174,7 @@ const StudyStats = ({ studySessions, tasks }) => {
               <p className="text-sm text-muted-foreground">This week</p>
             </div>
           </div>
-          
+
           {stats?.topSubject?.subject ? (
             <div>
               <p className="text-lg font-semibold text-foreground">
@@ -174,11 +200,11 @@ const StudyStats = ({ studySessions, tasks }) => {
               <p className="text-sm text-muted-foreground">Consecutive days</p>
             </div>
           </div>
-          
+
           <div>
-            <p className="text-lg font-semibold text-foreground">5 days</p>
+            <p className="text-lg font-semibold text-foreground">{stats?.streak} days</p>
             <p className="text-sm text-muted-foreground">
-              Keep it up! 🔥
+              {stats?.streak > 0 ? "Keep it up! 🔥" : "Start studying today!"}
             </p>
           </div>
         </div>
@@ -186,7 +212,7 @@ const StudyStats = ({ studySessions, tasks }) => {
       {/* Progress Bars */}
       <div className="bg-card border border-border rounded-lg p-4">
         <h4 className="font-medium text-foreground mb-4">Weekly Progress</h4>
-        
+
         <div className="space-y-4">
           {/* Study Hours Progress */}
           <div>

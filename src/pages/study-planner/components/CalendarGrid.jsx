@@ -11,7 +11,8 @@ const CalendarGrid = ({
   onSessionClick,
   onTimeSlotClick,
   onSessionDrop,
-  onSessionResize
+  onSessionResize,
+  courses = []
 }) => {
   const [draggedSession, setDraggedSession] = useState(null);
   const [resizingSession, setResizingSession] = useState(null);
@@ -65,17 +66,56 @@ const CalendarGrid = ({
     setResizingSession(null);
   };
 
-  const getSubjectColor = (subject) => {
-    const colors = {
-      'Mathematics': 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300',
-      'Physics': 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300',
-      'Chemistry': 'bg-violet-500/10 border-violet-500/20 text-violet-700 dark:text-violet-300',
-      'Biology': 'bg-orange-500/10 border-orange-500/20 text-orange-700 dark:text-orange-300',
-      'English': 'bg-pink-500/10 border-pink-500/20 text-pink-700 dark:text-pink-300',
-      'History': 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300',
-      'Computer Science': 'bg-indigo-500/10 border-indigo-500/20 text-indigo-700 dark:text-indigo-300'
+  const getStickyNoteStyle = (subject, courseColor) => {
+    // Helper to generate sticky note classes from a color name
+    const getStyle = (colorName) => {
+      // Ensure we map red to rose if it comes through here
+      if (colorName === 'red') colorName = 'rose';
+      return `bg-${colorName}-100 border-2 border-${colorName}-200 text-${colorName}-800 shadow-sm hover:shadow-md dark:bg-${colorName}-900/30 dark:border-${colorName}-700 dark:text-${colorName}-100`;
     };
-    return colors?.[subject] || 'bg-muted border-border text-foreground';
+
+    // 1. Try to extract color from course settings
+    if (courseColor) {
+      const match = courseColor.match(/bg-(\w+)-/);
+      if (match && match[1]) {
+        return getStyle(match[1]);
+      }
+    }
+
+    // 2. Fallback map for common subjects
+    const subjectColors = {
+      'Mathematics': 'blue',
+      'Physics': 'emerald',
+      'Chemistry': 'violet',
+      'Biology': 'orange',
+      'English': 'pink',
+      'History': 'amber',
+      'Computer Science': 'indigo',
+      'Geography': 'cyan',
+      'Art': 'fuchsia',
+      'Music': 'rose',
+      // Map legacy colors if needed
+      'red': 'rose'
+    };
+
+    // 3. deterministic fallback for unknown subjects
+    if (!subjectColors[subject]) {
+      const fallbacks = ['yellow', 'lime', 'green', 'teal', 'sky', 'purple'];
+      // Simple hash to pick a color based on subject string length/chars
+      const hash = subject?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0;
+      return getStyle(fallbacks[hash % fallbacks.length]);
+    }
+
+    let color = subjectColors[subject];
+    // specific fix for legacy 'red' which might be missing from new palette safelist
+    if (color === 'red') color = 'rose';
+
+    return getStyle(color);
+  };
+
+  const getSubjectColor = (subject) => {
+    const course = courses.find(c => c.name === subject);
+    return getStickyNoteStyle(subject, course?.color);
   };
 
   if (currentView === 'daily') {
@@ -109,18 +149,18 @@ const CalendarGrid = ({
                       <Icon name="Plus" size={16} />
                     </button>
                   ) : (
-                    sessions?.map((session) => (
+                    sessions?.map((session, index) => (
                       <motion.div
-                        key={session?.id}
+                        key={session?._id || session?.id || index}
                         draggable
                         onDragStart={(e) => handleDragStart(e, session)}
                         onClick={() => onSessionClick(session)}
                         className={`
-                          p-2 rounded border-l-4 cursor-pointer mb-1 last:mb-0
+                          p-3 rounded-lg cursor-pointer mb-2 last:mb-0
                           ${getSubjectColor(session?.subject)}
-                          hover:shadow-sm transition-academic
+                          transition-all duration-200
                         `}
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: 1.02, rotate: 1 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center justify-between">
@@ -146,7 +186,7 @@ const CalendarGrid = ({
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden overflow-x-auto">
-      <div className="min-w-[800px]">
+      <div className="min-w-[600px]">
         <div className="grid grid-cols-8 border-b border-border">
           <div className="p-3 text-sm font-medium text-muted-foreground border-r border-border sticky left-0 bg-card z-10">
             Time
@@ -180,18 +220,18 @@ const CalendarGrid = ({
                         <Icon name="Plus" size={14} />
                       </button>
                     ) : (
-                      sessions?.map((session) => (
+                      sessions?.map((session, index) => (
                         <motion.div
-                          key={session?.id}
+                          key={session?._id || session?.id || index}
                           draggable
                           onDragStart={(e) => handleDragStart(e, session)}
                           onClick={() => onSessionClick(session)}
                           className={`
-                          p-1 rounded text-xs cursor-pointer mb-1 last:mb-0 border-l-2
+                          p-1.5 rounded-md text-xs cursor-pointer mb-1 last:mb-0
                           ${getSubjectColor(session?.subject)}
-                          hover:shadow-sm transition-academic
+                          transition-all duration-200
                         `}
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, rotate: 1 }}
                           whileTap={{ scale: 0.95 }}
                         >
                           <p className="font-medium truncate">{session?.subject}</p>
