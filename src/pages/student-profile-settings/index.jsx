@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../services/db';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../components/AppIcon';
 import ProfileTab from './components/ProfileTab';
@@ -8,16 +6,42 @@ import AcademicSettingsTab from './components/AcademicSettingsTab';
 import PreferencesTab from './components/PreferencesTab';
 import SecurityTab from './components/SecurityTab';
 import DataExportTab from './components/DataExportTab';
+import { user as userApi } from '../../services/api';
 
 const StudentProfileSettings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [gpa, setGpa] = useState('N/A');
 
-  const userProfile = useLiveQuery(() => db.userProfile.get(1));
-  const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'John Smith';
-  const studentId = userProfile?.studentId || 'STU2024001';
-  const major = userProfile?.major || 'Computer Science';
-  const graduationYear = userProfile?.graduationYear || '2026';
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const profile = await userApi.get();
+        setUserProfile(profile);
+
+        // Get GPA from academicSettings in localStorage or set default
+        try {
+          const settings = localStorage.getItem('academicSettings');
+          if (settings) {
+            const parsed = JSON.parse(settings);
+            setGpa(parsed.currentGPA || 'N/A');
+          }
+        } catch (e) {
+          console.error('Failed to load GPA:', e);
+        }
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const displayName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Loading...';
+  const studentId = userProfile?.studentId || 'N/A';
+  const major = userProfile?.major || 'N/A';
+  const graduationYear = userProfile?.graduationYear || 'N/A';
 
   const tabs = [
     {
@@ -159,7 +183,7 @@ const StudentProfileSettings = () => {
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>{major} • Class of {graduationYear}</p>
-                <p>Current GPA: 3.7 / 4.0</p>
+                <p>Current GPA: {gpa} / 4.0</p>
               </div>
             </div>
           </div>

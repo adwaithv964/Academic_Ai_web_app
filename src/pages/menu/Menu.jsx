@@ -10,7 +10,7 @@ const menuItems = [
     { label: 'Xtra', icon: '⚡', path: '/xtra', color: 'bg-yellow-100', text: 'text-yellow-600' },
     { label: 'Focus Timer', icon: '⏳', path: '/timer', color: 'bg-rose-100', text: 'text-rose-600' },
     { label: 'Ai Schedule Scan', icon: '📸', path: '/ai-scan', color: 'bg-blue-100', text: 'text-blue-600' },
-    { label: 'Calendar Sync', icon: '🔗', path: '/sync', color: 'bg-indigo-100', text: 'text-indigo-600' },
+
     { label: 'Settings', icon: '🛠️', path: '/student-profile-settings', color: 'bg-slate-100', text: 'text-slate-600' },
     { label: 'Schedule Set Up', icon: '🗓️', path: '/schedule-setup', color: 'bg-orange-50', text: 'text-orange-500' },
 ];

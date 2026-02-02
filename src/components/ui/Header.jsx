@@ -4,7 +4,7 @@ import Icon from '../AppIcon';
 import Button from './Button';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
-import { sessions as sessionsApi } from '../../services/api';
+import { sessions as sessionsApi, user as userApi } from '../../services/api';
 
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
@@ -12,6 +12,8 @@ const Header = ({ sidebarCollapsed = false }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, clearAll, addNotification } = useNotifications();
   const { formatDate } = useDateFormatter();
+  const [userProfile, setUserProfile] = useState(null);
+  const [showProfileTooltip, setShowProfileTooltip] = useState(false);
 
   // Timer State (Mock for Global Header)
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -24,6 +26,19 @@ const Header = ({ sidebarCollapsed = false }) => {
     }
     return () => clearInterval(interval);
   }, [isTimerRunning]);
+
+  // Load user profile
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const profile = await userApi.get();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+      }
+    };
+    loadUserProfile();
+  }, []);
 
   const formatTimer = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -203,12 +218,52 @@ const Header = ({ sidebarCollapsed = false }) => {
           </div>
 
           {/* Avatar / Profile */}
-          <div
-            className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-fuchsia-500 ring-2 ring-background cursor-pointer"
-            onClick={() => navigate('/student-profile-settings')}
-          />
+          <div className="relative"
+            onMouseEnter={() => setShowProfileTooltip(true)}
+            onMouseLeave={() => setShowProfileTooltip(false)}
+          >
+            <div
+              className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-fuchsia-500 ring-2 ring-background cursor-pointer flex items-center justify-center text-white font-semibold text-sm hover:ring-primary/50 transition-all"
+              onClick={() => navigate('/student-profile-settings')}
+              title="View Profile Settings"
+            >
+              {userProfile ?
+                `${userProfile.firstName?.[0] || ''}${userProfile.lastName?.[0] || ''}`.toUpperCase()
+                : '?'
+              }
+            </div>
+
+            {/* Profile Tooltip */}
+            {showProfileTooltip && userProfile && (
+              <div className="absolute right-0 mt-2 w-64 bg-card border border-border shadow-lg rounded-xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg">
+                    {`${userProfile.firstName?.[0] || ''}${userProfile.lastName?.[0] || ''}`.toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{userProfile.firstName} {userProfile.lastName}</p>
+                    <p className="text-xs text-muted-foreground">{userProfile.studentId || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-3">
+                  <p>{userProfile.major || 'N/A'} • Class of {userProfile.graduationYear || 'N/A'}</p>
+                  <p className="text-[10px] text-primary hover:underline cursor-pointer" onClick={() => navigate('/student-profile-settings')}>
+                    View Profile Settings →
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Overlay for closing notifications */}
+      {isNotificationsOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsNotificationsOpen(false)}
+        />
+      )}
     </header>
   );
 };

@@ -23,7 +23,6 @@ const SessionModal = ({
     duration: 1,
     priority: 'medium',
     notes: '',
-    location: '',
     type: 'study'
   });
 
@@ -41,7 +40,6 @@ const SessionModal = ({
         duration: session?.duration || 1,
         priority: session?.priority || 'medium',
         notes: session?.notes || '',
-        location: session?.location || '',
         type: session?.type || 'study'
       });
     } else if (selectedDay && selectedHour !== undefined) {
@@ -280,22 +278,12 @@ const SessionModal = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Priority"
-                options={priorityOptions}
-                value={formData?.priority}
-                onChange={(value) => handleChange('priority', value)}
-              />
-
-              <Input
-                label="Location"
-                type="text"
-                value={formData?.location}
-                onChange={(e) => handleChange('location', e?.target?.value)}
-                placeholder="Library, Room 101, etc."
-              />
-            </div>
+            <Select
+              label="Priority"
+              options={priorityOptions}
+              value={formData?.priority}
+              onChange={(value) => handleChange('priority', value)}
+            />
 
             <Input
               label="Notes"
