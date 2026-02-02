@@ -299,36 +299,7 @@ const ProfileTab = () => {
           </div>
         </div>
       </div>
-      {/* Profile Stats */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4">Profile Statistics</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <Icon name="Calendar" size={24} className="text-primary mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-foreground">2.5</p>
-            <p className="text-sm text-muted-foreground">Years Enrolled</p>
-          </div>
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <Icon name="BookOpen" size={24} className="text-secondary mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-foreground">24</p>
-            <p className="text-sm text-muted-foreground">Courses Completed</p>
-          </div>
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <Icon name="Award" size={24} className="text-accent mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-foreground">
-              {(() => {
-                try {
-                  const settings = localStorage.getItem('academicSettings');
-                  return settings ? JSON.parse(settings).currentGPA : '3.7';
-                } catch (e) {
-                  return '3.7';
-                }
-              })()}
-            </p>
-            <p className="text-sm text-muted-foreground">Current GPA</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };

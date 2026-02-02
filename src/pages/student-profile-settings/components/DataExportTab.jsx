@@ -14,8 +14,7 @@ const DataExportTab = () => {
     includeStudySessions: true,
     includeSettings: false,
     includeLoginHistory: false,
-    format: 'json',
-    dateRange: 'all'
+    format: 'pdf'
   });
 
   const [isExporting, setIsExporting] = useState(false);
@@ -23,18 +22,9 @@ const DataExportTab = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
-  const formatOptions = [
-    { value: 'json', label: 'JSON Format' },
-    { value: 'csv', label: 'CSV Format' },
-    { value: 'pdf', label: 'PDF Report' }
-  ];
 
-  const dateRangeOptions = [
-    { value: 'all', label: 'All Time' },
-    { value: 'current-year', label: 'Current Academic Year' },
-    { value: 'last-semester', label: 'Last Semester' },
-    { value: 'last-30-days', label: 'Last 30 Days' }
-  ];
+
+
 
   const dataCategories = [
     {
@@ -219,16 +209,6 @@ const DataExportTab = () => {
 
       doc.save(`academic_data_export_${new Date().toISOString().split('T')[0]}.pdf`);
 
-    } else {
-      // JSON / Default Download
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      const exportFileDefaultName = `academic_data_export_${new Date().toISOString().split('T')[0]}.json`;
-
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
     }
 
     setIsExporting(false);
@@ -287,27 +267,7 @@ const DataExportTab = () => {
           Download a copy of your academic data. This includes all the information associated with your account.
         </p>
 
-        {/* Export Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <Select
-              label="Export Format"
-              options={formatOptions}
-              value={exportSettings?.format}
-              onChange={(value) => handleExportSettingChange('format', value)}
-              placeholder="Select format"
-            />
-          </div>
-          <div>
-            <Select
-              label="Date Range"
-              options={dateRangeOptions}
-              value={exportSettings?.dateRange}
-              onChange={(value) => handleExportSettingChange('dateRange', value)}
-              placeholder="Select date range"
-            />
-          </div>
-        </div>
+
 
         {/* Data Categories */}
         <div className="space-y-4 mb-6">
