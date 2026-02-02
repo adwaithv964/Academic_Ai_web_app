@@ -61,11 +61,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       path: '/achievements', // Placeholder
       icon: 'Trophy',
     },
-    {
-      label: 'Term Config',
-      path: '/term-config', // Placeholder
-      icon: 'Sliders',
-    },
+
     {
       label: 'Settings',
       path: '/student-profile-settings',

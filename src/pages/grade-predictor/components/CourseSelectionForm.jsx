@@ -5,20 +5,9 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
 const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
-  const defaultSubjects = [
-    { value: 'math', label: 'Mathematics' },
-    { value: 'physics', label: 'Physics' },
-    { value: 'chemistry', label: 'Chemistry' },
-    { value: 'biology', label: 'Biology' },
-    { value: 'cs', label: 'Computer Science' },
-    { value: 'literature', label: 'Literature' },
-    { value: 'history', label: 'History' },
-    { value: 'economics', label: 'Economics' }
-  ];
-
   const [subjects, setSubjects] = useState(() => {
     const saved = localStorage.getItem('grade_predictor_subjects');
-    return saved ? JSON.parse(saved) : defaultSubjects;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [isManaging, setIsManaging] = useState(false);
@@ -85,25 +74,25 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
   const isFormValid = formData.course && formData.currentGrade;
 
   return (
-    <div className="bg-card/50 backdrop-blur-md rounded-xl border border-white/10 p-6 shadow-2xl relative overflow-hidden">
-      {/* Decorative background glow */}
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="bg-card border border-border rounded-xl p-6 shadow-sm relative overflow-hidden">
+      {/* Decorative background glow - simplified for theme compatibility */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-primary to-violet-600 rounded-xl shadow-lg">
-              <Icon name="Sparkles" size={24} className="text-white" />
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Icon name="Sparkles" size={24} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">AI Forecast</h2>
-              <p className="text-sm text-gray-400">Smart prediction engine</p>
+              <h2 className="text-xl font-bold text-foreground">AI Forecast</h2>
+              <p className="text-sm text-muted-foreground">Smart prediction engine</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-muted-foreground hover:text-white"
+            className="text-xs text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
             onClick={() => setIsManaging(!isManaging)}
             iconName={isManaging ? "ChevronUp" : "Settings"}
           >
@@ -112,14 +101,14 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
         </div>
 
         {isManaging && (
-          <div className="mb-6 p-4 bg-black/40 rounded-xl border border-white/10 space-y-4 animate-in fade-in slide-in-from-top-2">
-            <h3 className="text-sm font-medium text-white">Manage Subjects</h3>
+          <div className="mb-6 p-4 bg-muted/50 rounded-xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
+            <h3 className="text-sm font-medium text-foreground">Manage Subjects</h3>
             <div className="flex gap-2">
               <Input
                 placeholder="New Subject Name..."
                 value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
-                className="bg-black/20 border-white/10 h-9 text-sm"
+                className="bg-background border-border h-9 text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSubject()}
               />
               <Button size="sm" onClick={handleAddSubject} iconName="Plus" disabled={!newSubject.trim()}>
@@ -128,11 +117,11 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
             </div>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
               {subjects.map(sub => (
-                <div key={sub.value} className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-md border border-white/10 text-xs text-gray-300 group hover:border-white/20">
+                <div key={sub.value} className="flex items-center gap-1 px-2 py-1 bg-background rounded-md border border-border text-xs text-foreground group hover:border-primary/50 transition-colors">
                   {sub.label}
                   <button
                     onClick={() => handleDeleteSubject(sub.value)}
-                    className="ml-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Icon name="X" size={12} />
                   </button>
@@ -151,7 +140,7 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
               value={formData.course}
               onChange={(value) => handleInputChange('course', value)}
               required
-              className="bg-black/20 border-white/10 text-white placeholder:text-gray-500"
+              className="bg-background border-border text-foreground"
             />
 
             <Input
@@ -163,22 +152,22 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
               min="0"
               max="100"
               required
-              className="bg-black/20 border-white/10 text-white placeholder:text-gray-500"
+              className="bg-background border-border text-foreground"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
               Context & Notes <span className="text-xs text-primary">(Optional)</span>
             </label>
             <textarea
               value={formData.context}
               onChange={(e) => handleInputChange('context', e.target.value)}
-              placeholder="e.g. 'I have a big final exam worth 40% coming up and I missed two weeks of class.'"
-              className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all resize-none"
+              placeholder="e.g. 'I have a big final exam worth 40% coming up...'"
+              className="w-full h-32 bg-background border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
             />
-            <p className="text-xs text-gray-500">
-              Our AI analyzes this text to adjust the simulation parameters (volatility, remaining weight, trends).
+            <p className="text-xs text-muted-foreground">
+              Our AI analyzes this text to adjust the simulation parameters.
             </p>
           </div>
 
@@ -188,7 +177,7 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
             size="lg"
             loading={isLoading}
             disabled={!isFormValid}
-            className="w-full bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white shadow-lg shadow-primary/25 border-none h-12 text-lg"
+            className="w-full shadow-lg shadow-primary/20 h-12 text-lg"
             iconName="Stars"
           >
             {isLoading ? 'Running Simulation...' : 'Generate Prediction'}

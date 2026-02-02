@@ -10,7 +10,7 @@ const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, clearAll } = useNotifications();
+  const { notifications, unreadCount, markAsRead, clearAll, addNotification } = useNotifications();
   const { formatDate } = useDateFormatter();
 
   // Timer State (Mock for Global Header)
@@ -101,6 +101,12 @@ const Header = ({ sidebarCollapsed = false }) => {
                       // Optional: Trigger a refresh or notify
                       console.log('Session saved from timer');
                       window.dispatchEvent(new CustomEvent('session-created'));
+
+                      addNotification({
+                        title: 'Session Saved',
+                        message: `Your ${formatTimer(time)} study session has been recorded.`,
+                        timestamp: Date.now()
+                      });
                     } catch (error) {
                       console.error('Failed to save timer session:', error);
                     }
@@ -135,15 +141,66 @@ const Header = ({ sidebarCollapsed = false }) => {
           </Button>
 
           {/* Notifications */}
-          <button
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all"
-          >
-            <Icon name="Bell" size={20} />
-            {unreadCount > 0 && (
-              <span className="absolute 1.5 top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all"
+            >
+              <Icon name="Bell" size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />
+              )}
+            </button>
+
+            {/* Notification Popup */}
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card border border-border shadow-lg rounded-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+                  <h3 className="font-semibold text-foreground">Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={clearAll}
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-[70vh] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <Icon name="BellOff" size={32} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No new notifications</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer flex gap-3 ${notification.unread ? 'bg-primary/5' : ''}`}
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${notification.unread ? 'bg-primary' : 'bg-transparent'}`} />
+                          <div className="flex-1 space-y-1">
+                            <p className={`text-sm ${notification.unread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                              {notification.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {notification.message}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                              {new Date(notification.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
           {/* Avatar / Profile */}
           <div

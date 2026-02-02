@@ -49,7 +49,6 @@ const WebReference = require('./models/WebReference');
 
 
 dotenv.config();
-connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -1021,7 +1020,7 @@ app.post('/api/predict', async (req, res) => {
     // 2. Run Monte Carlo Simulation using AI-derived parameters
     const simulationStats = runSmartMonteCarlo(studentData.currentGrade, aiAnalysis.parameters);
 
-    // 3. Merge Results
+    // 3. Merge Results (Initial)
     const responseData = {
       stats: simulationStats,
       aiAnalysis: aiAnalysis.insights,
@@ -1042,6 +1041,11 @@ app.post('/api/predict', async (req, res) => {
       });
       await newPrediction.save();
       console.log('Prediction saved to DB:', newPrediction._id);
+
+      // Include the ID in the response
+      responseData._id = newPrediction._id;
+      responseData.id = newPrediction._id; // standard alias
+
     } catch (dbErr) {
       console.error('Failed to save prediction:', dbErr);
     }
@@ -1175,8 +1179,11 @@ app.delete('/api/web-references/:id', async (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`API server listening on http://localhost:${PORT}`);
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`API server listening on http://localhost:${PORT}`);
+      console.log('Ensure you have a valid .env file with SERVER_MONGO_URI or MONGO_URI');
+    });
   });
 }
 

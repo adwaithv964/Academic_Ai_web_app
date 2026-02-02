@@ -69,6 +69,36 @@ const UserSchema = new mongoose.Schema({
         semesterSystem: String,
         academicYear: String,
         courseCatalogIntegration: Boolean
+    },
+
+    preferences: {
+        notifications: {
+            deadlineReminders: { type: Boolean, default: true },
+            gradeUpdates: { type: Boolean, default: true },
+            peerHelpResponses: { type: Boolean, default: true },
+            studySessionReminders: { type: Boolean, default: true },
+            weeklyProgressReports: { type: Boolean, default: false },
+            emailNotifications: { type: Boolean, default: true },
+            pushNotifications: { type: Boolean, default: true },
+            smsNotifications: { type: Boolean, default: false }
+        },
+        display: {
+            language: { type: String, default: "en" },
+            timezone: { type: String, default: "Asia/Kolkata" },
+            dateFormat: { type: String, default: "MM/DD/YYYY" },
+            timeFormat: { type: String, default: "12" },
+            defaultView: { type: String, default: "overview" },
+            showQuickStats: { type: Boolean, default: true },
+            showUpcomingDeadlines: { type: Boolean, default: true },
+            showRecentGrades: { type: Boolean, default: true },
+            compactMode: { type: Boolean, default: false }
+        },
+        privacy: {
+            profileVisibility: { type: String, default: "friends" },
+            progressSharing: { type: Boolean, default: true },
+            studyGroupVisibility: { type: Boolean, default: true },
+            allowPeerMessages: { type: Boolean, default: true }
+        }
     }
 });
 

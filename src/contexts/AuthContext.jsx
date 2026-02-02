@@ -20,16 +20,34 @@ export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    function signup(email, password) {
-        return createUserWithEmailAndPassword(auth, email, password);
+    async function signup(email, password) {
+        try {
+            return await createUserWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            console.error("Signup Error:", error);
+            throw error;
+        }
     }
 
-    function login(email, password) {
-        return signInWithEmailAndPassword(auth, email, password);
+    async function login(email, password) {
+        try {
+            return await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            if (error.message && error.message.includes("The database connection is closing")) {
+                console.warn("Firebase Auth: Transient IndexedDB error detected. This often happens during hot-reloading. Please refresh the page if this persists.");
+                // Optionally retry or just let the user know
+            }
+            throw error;
+        }
     }
 
-    function googleSignIn() {
-        return signInWithPopup(auth, googleProvider);
+    async function googleSignIn() {
+        try {
+            return await signInWithPopup(auth, googleProvider);
+        } catch (error) {
+            console.error("Google Sign-in Error:", error);
+            throw error;
+        }
     }
 
     function logout() {

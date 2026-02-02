@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,6 +11,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const auth = getAuth(app);
+
+// Explicitly set persistence (helps with some IndexedDB race conditions in dev/hot-reload)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error("Firebase Persistence Error:", error);
+});
+
+export { auth };
 export const googleProvider = new GoogleAuthProvider();
 export default app;

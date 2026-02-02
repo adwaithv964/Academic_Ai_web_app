@@ -4,13 +4,14 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
 import { useAuth } from '../../../contexts/AuthContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const DataExportTab = () => {
   const [exportSettings, setExportSettings] = useState({
     includeGrades: true,
     includeProgress: true,
     includeStudySessions: true,
-    includePeerHelp: false,
     includeSettings: false,
     includeLoginHistory: false,
     format: 'json',
@@ -58,13 +59,6 @@ const DataExportTab = () => {
       size: '0.9 MB'
     },
     {
-      key: 'includePeerHelp',
-      label: 'Peer Help Activity',
-      description: 'Forum posts, questions, answers, and peer interactions',
-      icon: 'MessageSquare',
-      size: '0.5 MB'
-    },
-    {
       key: 'includeSettings',
       label: 'Account Settings',
       description: 'Profile settings, preferences, and configuration data',
@@ -107,41 +101,138 @@ const DataExportTab = () => {
 
     setIsExporting(true);
 
-    // Gather data from localStorage
-    const exportData = {};
+    // Simulated Data Gathering (Replace with real API calls)
+    const exportData = {
+      generatedAt: new Date().toISOString(),
+      format: exportSettings.format,
+      data: {}
+    };
 
     if (exportSettings.includeSettings) {
-      exportData.profile = JSON.parse(localStorage.getItem('studentProfile') || 'null');
-      exportData.academicSettings = JSON.parse(localStorage.getItem('academicSettings') || 'null');
-      exportData.preferences = JSON.parse(localStorage.getItem('userPreferences') || 'null');
+      exportData.data.profile = JSON.parse(localStorage.getItem('studentProfile') || 'null') || { name: 'Student', email: 'student@example.com' };
+      exportData.data.preferences = JSON.parse(localStorage.getItem('userPreferences') || 'null');
     }
 
     if (exportSettings.includeGrades) {
-      // In a real app, this would fetch grades. For now, we'll include a placeholder or any stored grade data
-      exportData.grades = JSON.parse(localStorage.getItem('grades') || '[]');
+      exportData.data.grades = JSON.parse(localStorage.getItem('grades') || '[]');
+      if (exportData.data.grades.length === 0) {
+        // Mock data for PDF demonstration if empty
+        exportData.data.grades = [
+          { courseName: 'Mathematics', currentGrade: 85, credits: 4 },
+          { courseName: 'Physics', currentGrade: 78, credits: 3 },
+          { courseName: 'Computer Science', currentGrade: 92, credits: 4 }
+        ];
+      }
     }
 
     if (exportSettings.includeStudySessions) {
-      exportData.tasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
+      exportData.data.tasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
     }
 
     // Simulate delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Create downloadable file
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    if (exportSettings.format === 'pdf') {
+      const doc = new jsPDF();
 
-    const exportFileDefaultName = `academic_data_export_${new Date().toISOString().split('T')[0]}.json`;
+      // Title
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Academic Data Export", 14, 22);
 
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+      let yPos = 40;
+
+      // Profile Section
+      if (exportSettings.includeSettings && exportData.data.profile) {
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Student Profile", 14, yPos);
+        yPos += 10;
+
+        const profileData = [
+          ['Name', exportData.data.profile.name || 'N/A'],
+          ['Email', exportData.data.profile.email || 'N/A'],
+          ['University', exportData.data.profile.university || 'N/A']
+        ];
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Field', 'Value']],
+          body: profileData,
+          theme: 'striped',
+          headStyles: { fillColor: [63, 81, 181] }
+        });
+
+        yPos = doc.lastAutoTable.finalY + 15;
+      }
+
+      // Grades Section
+      if (exportSettings.includeGrades && exportData.data.grades) {
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Academic Grades", 14, yPos);
+        yPos += 10;
+
+        const gradesBody = exportData.data.grades.map(g => [
+          g.courseName || 'Unknown',
+          `${g.currentGrade || 0}%`,
+          g.credits || 0
+        ]);
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Course', 'Grade', 'Credits']],
+          body: gradesBody,
+          theme: 'grid',
+          headStyles: { fillColor: [63, 81, 181] }
+        });
+
+        yPos = doc.lastAutoTable.finalY + 15;
+      }
+
+      // Study Sessions/Tasks Section
+      if (exportSettings.includeStudySessions && exportData.data.tasks) {
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Study Tasks", 14, yPos);
+        yPos += 10;
+
+        const tasksBody = exportData.data.tasks.map(t => [
+          t.text || 'Task',
+          t.completed ? 'Yes' : 'No',
+          t.priority || 'Normal'
+        ]);
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Task', 'Completed', 'Priority']],
+          body: tasksBody,
+          theme: 'striped',
+          headStyles: { fillColor: [63, 81, 181] }
+        });
+        yPos = doc.lastAutoTable.finalY + 15;
+      }
+
+      doc.save(`academic_data_export_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    } else {
+      // JSON / Default Download
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      const exportFileDefaultName = `academic_data_export_${new Date().toISOString().split('T')[0]}.json`;
+
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
 
     setIsExporting(false);
-
-    alert(`Data export completed! Your JSON file has been downloaded.`);
+    alert(`Data export completed! Your ${exportSettings.format.toUpperCase()} file has been downloaded.`);
   };
 
   const { deleteAccount } = useAuth();

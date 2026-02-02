@@ -69,57 +69,59 @@ const PredictionHistory = ({ onLoad, selectedId }) => {
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar" style={{ maxHeight: '600px' }}>
                 <AnimatePresence>
-                    {predictions.map((prediction) => (
-                        <motion.div
-                            key={prediction.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            onClick={() => onLoad(prediction)}
-                            className={`
+                    {predictions.map((prediction) => {
+                        const id = prediction._id || prediction.id;
+                        return (
+                            <motion.div
+                                key={id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                onClick={() => onLoad(prediction)}
+                                className={`
                 group relative p-4 rounded-lg border cursor-pointer transition-all duration-200
-                ${selectedId === prediction.id
-                                    ? 'bg-primary/5 border-primary shadow-sm'
-                                    : 'bg-muted/30 border-transparent hover:bg-muted/50 hover:border-border'
-                                }
+                ${selectedId === id
+                                        ? 'bg-primary/5 border-primary shadow-sm'
+                                        : 'bg-muted/30 border-transparent hover:bg-muted/50 hover:border-border'
+                                    }
               `}
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div>
-                                    <h3 className="font-medium text-foreground">{prediction.courseName}</h3>
-                                    <p className="text-xs text-muted-foreground">{formatDateTime(prediction.date)}</p>
-                                </div>
-                                <div className={`
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 className="font-medium text-foreground">{prediction.courseName}</h3>
+                                        <p className="text-xs text-muted-foreground">{formatDateTime(prediction.date || prediction.timestamp)}</p>
+                                    </div>
+                                    <div className={`
                   px-2 py-1 rounded text-xs font-bold
                   ${prediction.predictedGrade >= 90 ? 'bg-green-100 text-green-700' :
-                                        prediction.predictedGrade >= 80 ? 'bg-blue-100 text-blue-700' :
-                                            prediction.predictedGrade >= 70 ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-red-100 text-red-700'}
+                                            prediction.predictedGrade >= 80 ? 'bg-blue-100 text-blue-700' :
+                                                prediction.predictedGrade >= 70 ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'}
                 `}>
-                                    {prediction.predictedGrade}%
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between mt-3">
-                                <div className="text-xs text-muted-foreground">
-                                    Current: {prediction.currentGrade}%
+                                        {prediction.predictedGrade}%
+                                    </div>
                                 </div>
 
-                                <button
-                                    onClick={(e) => handleDelete(e, prediction.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-100 text-muted-foreground hover:text-red-600 rounded-md transition-all"
-                                    title="Delete prediction"
-                                >
-                                    <Icon name="Trash2" size={14} />
-                                </button>
-                            </div>
+                                <div className="flex items-center justify-between mt-3">
+                                    <div className="text-xs text-muted-foreground">
+                                        Current: {prediction.currentGrade}%
+                                    </div>
 
-                            {selectedId === prediction.id && (
-                                <div className="absolute inset-x-0 -bottom-px h-px bg-primary animate-pulse" />
-                            )}
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+                                    <button
+                                        onClick={(e) => handleDelete(e, id)}
+                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-100 text-muted-foreground hover:text-red-600 rounded-md transition-all"
+                                        title="Delete prediction"
+                                    >
+                                        <Icon name="Trash2" size={14} />
+                                    </button>
+                                </div>
+
+                                {selectedId === id && (
+                                    <div className="absolute inset-x-0 -bottom-px h-px bg-primary animate-pulse" />
+                                )}
+                            </motion.div>
+                        );
+                    })}                </AnimatePresence>
             </div>
         </div>
     );

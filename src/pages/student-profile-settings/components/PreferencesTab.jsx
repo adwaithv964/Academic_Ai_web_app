@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 import { useClock } from '../../../contexts/ClockContext';
+
+import { user as userApi } from '../../../services/api';
 
 const PreferencesTab = () => {
   const defaultPreferences = {
@@ -37,11 +39,27 @@ const PreferencesTab = () => {
     allowPeerMessages: true
   };
 
-  const [preferences, setPreferences] = useState(() => {
-    const saved = localStorage.getItem('userPreferences');
-    return saved ? JSON.parse(saved) : defaultPreferences;
-  });
+  const [preferences, setPreferences] = useState(defaultPreferences);
 
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const userData = await userApi.get();
+        if (userData && userData.preferences) {
+          // Merge backend preferences into state
+          setPreferences(prev => ({
+            ...prev,
+            ...(userData.preferences.notifications || {}),
+            ...(userData.preferences.display || {}),
+            ...(userData.preferences.privacy || {})
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load preferences:", error);
+      }
+    };
+    fetchPreferences();
+  }, []);
 
   const { currentTime } = useClock();
 
@@ -116,20 +134,53 @@ const PreferencesTab = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
+    try {
+      // Construct the nested object matching User schema
+      const payload = {
+        preferences: {
+          notifications: {
+            deadlineReminders: preferences.deadlineReminders,
+            gradeUpdates: preferences.gradeUpdates,
+            peerHelpResponses: preferences.peerHelpResponses,
+            studySessionReminders: preferences.studySessionReminders,
+            weeklyProgressReports: preferences.weeklyProgressReports,
+            emailNotifications: preferences.emailNotifications,
+            pushNotifications: preferences.pushNotifications,
+            smsNotifications: preferences.smsNotifications
+          },
+          display: {
+            language: preferences.language,
+            timezone: preferences.timezone,
+            dateFormat: preferences.dateFormat,
+            timeFormat: preferences.timeFormat,
+            defaultView: preferences.defaultView,
+            showQuickStats: preferences.showQuickStats,
+            showUpcomingDeadlines: preferences.showUpcomingDeadlines,
+            showRecentGrades: preferences.showRecentGrades,
+            compactMode: preferences.compactMode
+          },
+          privacy: {
+            profileVisibility: preferences.profileVisibility,
+            progressSharing: preferences.progressSharing,
+            studyGroupVisibility: preferences.studyGroupVisibility,
+            allowPeerMessages: preferences.allowPeerMessages
+          }
+        }
+      };
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    localStorage.setItem('userPreferences', JSON.stringify(preferences));
-
-    setIsSaving(false);
-    alert('Preferences updated successfully!');
+      await userApi.update(payload);
+      alert('Preferences updated successfully!');
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      alert("Failed to save preferences. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const resetToDefaults = () => {
     setPreferences(defaultPreferences);
-    localStorage.removeItem('userPreferences');
-    alert('Preferences reset to defaults.');
+    alert('Preferences reset to defaults (not saved yet).');
   };
 
   return (
@@ -204,37 +255,7 @@ const PreferencesTab = () => {
             />
           </div>
 
-          <div className="space-y-4">
-            <h4 className="font-medium text-foreground">Delivery Methods</h4>
 
-            <Checkbox
-              label="Email Notifications"
-              description="Receive notifications via email"
-              checked={preferences?.emailNotifications}
-              onChange={(e) => handlePreferenceChange('emailNotifications', e?.target?.checked)}
-            />
-
-            <Checkbox
-              label="Push Notifications"
-              description="Get browser push notifications"
-              checked={preferences?.pushNotifications}
-              onChange={(e) => handlePreferenceChange('pushNotifications', e?.target?.checked)}
-            />
-
-            <Checkbox
-              label="SMS Notifications"
-              description="Receive important alerts via text message"
-              checked={preferences?.smsNotifications}
-              onChange={(e) => handlePreferenceChange('smsNotifications', e?.target?.checked)}
-            />
-
-            <Checkbox
-              label="Peer Help Responses"
-              description="Get notified when someone responds to your questions"
-              checked={preferences?.peerHelpResponses}
-              onChange={(e) => handlePreferenceChange('peerHelpResponses', e?.target?.checked)}
-            />
-          </div>
         </div>
       </div>
       {/* Display Preferences */}
@@ -319,82 +340,8 @@ const PreferencesTab = () => {
           </div>
         </div>
       </div>
-      {/* Dashboard Preferences */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-          <Icon name="LayoutDashboard" size={20} className="text-accent" />
-          Dashboard Preferences
-        </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Checkbox
-              label="Show Quick Stats"
-              description="Display GPA and progress statistics on dashboard"
-              checked={preferences?.showQuickStats}
-              onChange={(e) => handlePreferenceChange('showQuickStats', e?.target?.checked)}
-            />
 
-            <Checkbox
-              label="Show Upcoming Deadlines"
-              description="Display upcoming assignment deadlines"
-              checked={preferences?.showUpcomingDeadlines}
-              onChange={(e) => handlePreferenceChange('showUpcomingDeadlines', e?.target?.checked)}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <Checkbox
-              label="Show Recent Grades"
-              description="Display recently updated grades on dashboard"
-              checked={preferences?.showRecentGrades}
-              onChange={(e) => handlePreferenceChange('showRecentGrades', e?.target?.checked)}
-            />
-          </div>
-        </div>
-      </div>
-      {/* Privacy Preferences */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-          <Icon name="Shield" size={20} className="text-success" />
-          Privacy Preferences
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Select
-              label="Profile Visibility"
-              options={profileVisibilityOptions}
-              value={preferences?.profileVisibility}
-              onChange={(value) => handlePreferenceChange('profileVisibility', value)}
-              placeholder="Select visibility level"
-            />
-
-            <Checkbox
-              label="Progress Sharing"
-              description="Allow classmates to see your academic progress"
-              checked={preferences?.progressSharing}
-              onChange={(e) => handlePreferenceChange('progressSharing', e?.target?.checked)}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <Checkbox
-              label="Study Group Visibility"
-              description="Show your participation in study groups"
-              checked={preferences?.studyGroupVisibility}
-              onChange={(e) => handlePreferenceChange('studyGroupVisibility', e?.target?.checked)}
-            />
-
-            <Checkbox
-              label="Allow Peer Messages"
-              description="Let other students send you direct messages"
-              checked={preferences?.allowPeerMessages}
-              onChange={(e) => handlePreferenceChange('allowPeerMessages', e?.target?.checked)}
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
