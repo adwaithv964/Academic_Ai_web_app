@@ -26,11 +26,9 @@ const PreferencesTab = () => {
     timeFormat: "12",
 
     // Dashboard preferences
-    defaultView: "overview",
     showQuickStats: true,
     showUpcomingDeadlines: true,
     showRecentGrades: true,
-    compactMode: false,
 
     // Privacy preferences
     profileVisibility: "friends",
@@ -82,11 +80,7 @@ const PreferencesTab = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const languageOptions = [
-    { value: "en", label: "English" },
-    { value: "es", label: "Español" },
-    { value: "fr", label: "Français" },
-    { value: "de", label: "Deutsch" },
-    { value: "zh", label: "中文" }
+    { value: "en", label: "English" }
   ];
 
   const timezoneOptions = [
@@ -110,14 +104,7 @@ const PreferencesTab = () => {
     { value: "24", label: "24-hour (14:30)" }
   ];
 
-  const defaultViewOptions = [
-    { value: "overview", label: "Overview Dashboard" },
-    { value: "grades", label: "Grades View" },
-    { value: "calendar", label: "Calendar View" },
-    { value: "progress", label: "Progress Tracker" },
-    { value: "study-planner", label: "Study Planner" },
-    { value: "todo-list", label: "To-Do List" }
-  ];
+
 
   const profileVisibilityOptions = [
     { value: "public", label: "Public - Everyone can see" },
@@ -149,15 +136,12 @@ const PreferencesTab = () => {
             smsNotifications: preferences.smsNotifications
           },
           display: {
-            language: preferences.language,
             timezone: preferences.timezone,
             dateFormat: preferences.dateFormat,
             timeFormat: preferences.timeFormat,
-            defaultView: preferences.defaultView,
             showQuickStats: preferences.showQuickStats,
             showUpcomingDeadlines: preferences.showUpcomingDeadlines,
-            showRecentGrades: preferences.showRecentGrades,
-            compactMode: preferences.compactMode
+            showRecentGrades: preferences.showRecentGrades
           },
           privacy: {
             profileVisibility: preferences.profileVisibility,
@@ -322,26 +306,9 @@ const PreferencesTab = () => {
               onChange={(value) => handlePreferenceChange('timeFormat', value)}
               placeholder="Select time format"
             />
-
-            <Select
-              label="Default Dashboard View"
-              options={defaultViewOptions}
-              value={preferences?.defaultView}
-              onChange={(value) => handlePreferenceChange('defaultView', value)}
-              placeholder="Select default view"
-            />
-
-            <Checkbox
-              label="Compact Mode"
-              description="Use a more compact layout to show more information"
-              checked={preferences?.compactMode}
-              onChange={(e) => handlePreferenceChange('compactMode', e?.target?.checked)}
-            />
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };
