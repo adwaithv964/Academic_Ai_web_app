@@ -38,6 +38,7 @@ const Prediction = require('./models/Prediction');
 const Course = require('./models/Course');
 const Scenario = require('./models/Scenario');
 const EisenhowerTask = require('./models/EisenhowerTask');
+const ActivityLog = require('./models/ActivityLog');
 
 const Document = require('./models/Document');
 const Exam = require('./models/Exam');
@@ -427,6 +428,26 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
+const achievementsController = require('./controllers/achievementsController');
+
+// GET /api/achievements/stats - Hero Stats
+app.get('/api/achievements/stats', achievementsController.getStats);
+
+// GET /api/achievements - Badges & Level
+app.get('/api/achievements', achievementsController.getGamification);
+
+// GET /api/history - History of Glory
+app.get('/api/history', async (req, res) => {
+  try {
+    const logs = await ActivityLog.find().sort({ timestamp: -1 }).limit(50);
+    res.json(logs);
+  } catch (err) {
+    console.error("History Error Details:", err);
+    console.error(err.stack);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- GAMIFICATION: STORE ---
 app.get('/api/store/items', (req, res) => {
   res.json(STORE_ITEMS);
@@ -579,7 +600,8 @@ app.post('/api/user', async (req, res) => {
   try {
     const { email, ...updateData } = req.body;
     // Upsert user based on email or create new if not exists (handling singleton logic for now)
-    const user = await User.findOneAndUpdate({}, req.body, { new: true, upsert: true });
+    // Upsert user based on email or create new if not exists (handling singleton logic for now)
+    const user = await User.findOneAndUpdate({}, { $set: req.body }, { new: true, upsert: true });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });

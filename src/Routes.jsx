@@ -26,6 +26,7 @@ import AiScheduleScan from './pages/ai-schedule-scan/AiScheduleScan';
 import CalendarSync from './pages/calendar-sync/CalendarSync';
 import ScheduleSetup from './pages/schedule-setup/ScheduleSetup';
 import Calendar from './pages/calendar/Calendar';
+import Achievements from './pages/achievements/Achievements';
 import { useAuth } from './contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
@@ -114,6 +115,7 @@ const Routes = () => {
             <Route path="/vacations" element={<PrivateRoute><Vacations /></PrivateRoute>} />
             <Route path="/xtra" element={<PrivateRoute><Xtra /></PrivateRoute>} />
             <Route path="/timer" element={<PrivateRoute><FocusTimer /></PrivateRoute>} />
+            <Route path="/achievements" element={<PrivateRoute><Achievements /></PrivateRoute>} />
             <Route path="/ai-scan" element={<PrivateRoute><AiScheduleScan /></PrivateRoute>} />
             <Route path="/sync" element={<PrivateRoute><CalendarSync /></PrivateRoute>} />
             <Route path="/schedule-setup" element={<PrivateRoute><ScheduleSetup /></PrivateRoute>} />

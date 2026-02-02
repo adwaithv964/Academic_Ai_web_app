@@ -13,7 +13,12 @@ const UserSchema = new mongoose.Schema({
     address: String,
     createdAt: { type: Date, default: Date.now },
 
-    // Gamification
+    // Gamification - Core Stats
+    lastActiveDate: { type: Date }, // For streak calculation
+    level: { type: Number, default: 1 },
+    xp: { type: Number, default: 0 },
+
+    // Gamification - Config
     points: { type: Number, default: 0 },
     totalPoints: { type: Number, default: 0 },
 
@@ -52,6 +57,18 @@ const UserSchema = new mongoose.Schema({
             plantedAt: Date
         }],
         unlockedThemes: [{ type: String }] // 'default', 'night', etc.
+    },
+
+    academicSettings: {
+        currentGPA: String,
+        targetGPA: String,
+        gpaScale: { type: String, default: '10.0' },
+        creditHours: String,
+        completedHours: String,
+        gradeWeighting: String,
+        semesterSystem: String,
+        academicYear: String,
+        courseCatalogIntegration: Boolean
     }
 });
 

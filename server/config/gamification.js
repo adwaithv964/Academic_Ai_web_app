@@ -12,6 +12,26 @@ const STORE_ITEMS = [
 // Achievements
 const ACHIEVEMENTS = [
     {
+        id: 'marathoner',
+        title: 'Marathoner',
+        description: 'Studied for 4 hours in a single day.',
+        icon: 'runner_icon',
+        tiers: {
+            bronze: { threshold: 1, reward: 200 } // 1x 4 hour session? Usually boolean or count. Let's say count of days
+        },
+        condition: 'single_session_duration_minutes >= 240'
+    },
+    {
+        id: 'centurion',
+        title: 'Centurion',
+        description: 'Reach 100 total hours of study.',
+        icon: 'shield_icon',
+        tiers: {
+            gold: { threshold: 100, reward: 5000 }
+        },
+        condition: 'total_study_hours >= 100'
+    },
+    {
         id: 'focus_master',
         title: 'Focus Master',
         description: 'Complete Power Mode sessions.',
