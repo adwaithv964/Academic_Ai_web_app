@@ -1,46 +1,39 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { startTimer, pauseTimer, resetTimer, setTask, setTimeLeft } from '../../../store/slices/focusSlice';
 
 const ActiveFocusWidget = () => {
-    const [activeTask, setActiveTask] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
-    const [isActive, setIsActive] = useState(false);
+    const dispatch = useDispatch();
+    const { isActive, timeLeft, task: activeTask, mode } = useSelector(state => state.focus);
 
+    // We still load tasks to find a suggestion if none is selected
     useEffect(() => {
         // Load high priority task from local storage or find the first one
         const loadTask = () => {
+            if (activeTask) return; // Already have a task in global state
+
             try {
                 const savedTasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
                 // Find first high priority task that is not done
                 const highPriority = savedTasks.find(t => (t.priority === 'high' || t.tags?.includes('HIGH')) && t.status !== 'done');
                 const anyTask = savedTasks.find(t => t.status !== 'done');
 
-                setActiveTask(highPriority || anyTask || { title: 'No active tasks', id: 'none' });
+                const suggestedTask = highPriority || anyTask;
+                if (suggestedTask) {
+                    dispatch(setTask({ id: suggestedTask.id, title: suggestedTask.title }));
+                }
             } catch (e) {
                 console.error("Error loading tasks", e);
-                setActiveTask({ title: 'No active tasks', id: 'none' });
             }
         };
 
         loadTask();
         window.addEventListener('storage', loadTask);
         return () => window.removeEventListener('storage', loadTask);
-    }, []);
-
-    useEffect(() => {
-        let interval = null;
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft(timeLeft - 1);
-            }, 1000);
-        } else if (timeLeft === 0) {
-            setIsActive(false);
-            // Optionally play sound
-        }
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft]);
+    }, [activeTask, dispatch]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -48,11 +41,16 @@ const ActiveFocusWidget = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const toggleTimer = () => setIsActive(!isActive);
+    const handleToggle = () => {
+        if (isActive) {
+            dispatch(pauseTimer());
+        } else {
+            dispatch(startTimer());
+        }
+    };
 
-    const resetTimer = () => {
-        setIsActive(false);
-        setTimeLeft(25 * 60);
+    const handleReset = () => {
+        dispatch(resetTimer());
     };
 
     return (
@@ -67,9 +65,9 @@ const ActiveFocusWidget = () => {
                         <h4 className="font-bold text-gray-900 line-clamp-1" title={activeTask?.title}>
                             {activeTask?.title || "No Task Selected"}
                         </h4>
-                        {activeTask?.id !== 'none' && (
+                        {activeTask?.id && activeTask.id !== 'none' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">
-                                HIGH PRIORITY
+                                {mode === 'focus' ? 'FOCUS MODE' : Object.keys({ shortBreak: 'SHORT BREAK', longBreak: 'LONG BREAK' })[mode] || mode.toUpperCase()}
                             </span>
                         )}
                     </div>
@@ -84,7 +82,7 @@ const ActiveFocusWidget = () => {
                     <Button
                         size="sm"
                         variant="ghost"
-                        onClick={resetTimer}
+                        onClick={handleReset}
                         className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                         title="Reset Timer"
                     >
@@ -92,7 +90,7 @@ const ActiveFocusWidget = () => {
                     </Button>
                     <Button
                         size="sm"
-                        onClick={toggleTimer}
+                        onClick={handleToggle}
                         className={`${isActive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                     >
                         {isActive ? 'Pause' : 'Start Focus'}

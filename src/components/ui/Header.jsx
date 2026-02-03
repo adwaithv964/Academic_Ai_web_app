@@ -1,31 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import Icon from '../AppIcon';
 import Button from './Button';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
 import { sessions as sessionsApi, user as userApi } from '../../services/api';
+import { startTimer, pauseTimer, tick, setTimeLeft, resetTimer } from '../../store/slices/focusSlice';
 
 const Header = ({ sidebarCollapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, clearAll, addNotification } = useNotifications();
   const { formatDate } = useDateFormatter();
   const [userProfile, setUserProfile] = useState(null);
   const [showProfileTooltip, setShowProfileTooltip] = useState(false);
 
-  // Timer State (Mock for Global Header)
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [time, setTime] = useState(0);
+  // Global Focus Timer State
+  const { isActive, timeLeft, mode, initialDuration } = useSelector(state => state.focus);
 
+  // Global Tick Effect (This ensures timer runs on all pages)
   useEffect(() => {
-    let interval;
-    if (isTimerRunning) {
-      interval = setInterval(() => setTime(t => t + 1), 1000);
+    let interval = null;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        dispatch(tick());
+      }, 1000);
+    } else if (timeLeft === 0 && isActive) {
+      // Timer finished
+      dispatch(pauseTimer());
+      // Play sound or notify
+      addNotification({
+        title: 'Focus Session Complete!',
+        message: 'Great job! Take a break.',
+        timestamp: Date.now()
+      });
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isActive, timeLeft, dispatch, addNotification]);
 
   // Load user profile
   useEffect(() => {
@@ -44,7 +59,11 @@ const Header = ({ sidebarCollapsed = false }) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    // Show hours only if relevant
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const getBreadcrumbs = () => {
@@ -62,6 +81,39 @@ const Header = ({ sidebarCollapsed = false }) => {
         <span className="uppercase tracking-wider">{location.pathname === '/' ? 'DASHBOARD' : location.pathname.substring(1).toUpperCase()}</span>
       </div>
     );
+  };
+
+  const handleTimerToggle = async () => {
+    if (isActive) {
+      dispatch(pauseTimer());
+      // Optional: Save session if stopping early? 
+      // For now, mirroring old logic: save if significant progress
+      const elapsed = initialDuration - timeLeft;
+      if (elapsed > 60) {
+        try {
+          const now = new Date();
+          await sessionsApi.create({
+            subject: 'Focus Session',
+            topic: mode === 'focus' ? 'Deep Work' : 'Break',
+            startTime: new Date(now.getTime() - elapsed * 1000).toTimeString().substring(0, 5),
+            duration: Number((elapsed / 3600).toFixed(2)),
+            date: now.toISOString(),
+            type: 'study',
+            priority: 'medium',
+            notes: `Auto-saved ${mode}: ${formatTimer(elapsed)}`
+          });
+          addNotification({
+            title: 'Session Saved',
+            message: `Progress saved: ${formatTimer(elapsed)}`,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          console.error("Failed to save session", e);
+        }
+      }
+    } else {
+      dispatch(startTimer());
+    }
   };
 
   return (
@@ -87,60 +139,34 @@ const Header = ({ sidebarCollapsed = false }) => {
 
         {/* Right Section - Timer & Actions */}
         <div className="flex items-center gap-4">
-          {/* Timer Widget */}
-          <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full pl-4 pr-1 py-1">
-            <span className="font-mono text-sm text-white">{formatTimer(time)}</span>
-            <button
-              onClick={async () => {
-                if (isTimerRunning) {
-                  // Stop Timer
-                  setIsTimerRunning(false);
+          {/* Mini Timer Widget - Always visible if running or paused with progress */}
+          {(isActive || timeLeft !== initialDuration) && (
+            <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full pl-4 pr-1 py-1 animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-2 mr-2">
+                <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
+                <span className="font-mono text-sm text-white min-w-[3rem]">{formatTimer(timeLeft)}</span>
+              </div>
+              <button
+                onClick={handleTimerToggle}
+                className={`
+                            h-7 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all
+                            ${isActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-green-500/20 text-green-500 hover:bg-green-500/30'}
+                        `}
+              >
+                <Icon name={isActive ? "Pause" : "Play"} size={12} fill="currentColor" />
+                {isActive ? 'Pause' : 'Resume'}
+              </button>
 
-                  // Save Session if significant time elapsed (> 1 min)
-                  if (time > 60) {
-                    try {
-                      const now = new Date();
-                      const startTime = new Date(now.getTime() - time * 1000);
-
-                      await sessionsApi.create({
-                        subject: 'Uncategorized',
-                        topic: 'Timed Session',
-                        startTime: startTime?.toTimeString()?.substring(0, 5),
-                        duration: Number((time / 3600).toFixed(2)),
-                        date: now.toISOString(),
-                        type: 'study',
-                        priority: 'medium',
-                        notes: `Auto-saved session: ${formatTimer(time)}`
-                      });
-
-                      // Optional: Trigger a refresh or notify
-                      console.log('Session saved from timer');
-                      window.dispatchEvent(new CustomEvent('session-created'));
-
-                      addNotification({
-                        title: 'Session Saved',
-                        message: `Your ${formatTimer(time)} study session has been recorded.`,
-                        timestamp: Date.now()
-                      });
-                    } catch (error) {
-                      console.error('Failed to save timer session:', error);
-                    }
-                  }
-
-                  setTime(0);
-                } else {
-                  setIsTimerRunning(true);
-                }
-              }}
-              className={`
-                        h-7 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all
-                        ${isTimerRunning ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-primary/20 text-primary hover:bg-primary/30'}
-                    `}
-            >
-              <Icon name={isTimerRunning ? "Square" : "Play"} size={12} fill="currentColor" />
-              {isTimerRunning ? 'Stop' : 'Start'}
-            </button>
-          </div>
+              {/* Reset/Close Button */}
+              <button
+                onClick={() => dispatch(resetTimer())}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all ml-1"
+                title="Reset & Close"
+              >
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+          )}
 
           <div className="h-6 w-px bg-border hidden md:block" />
 

@@ -1,24 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
+import { startTimer, pauseTimer, resetTimer, setMode } from '../../store/slices/focusSlice';
 
 const FocusTimer = () => {
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
-    const [isActive, setIsActive] = useState(false);
-    const [mode, setMode] = useState('focus'); // focus, shortBreak, longBreak
+    const dispatch = useDispatch();
+    const { isActive, timeLeft, mode } = useSelector(state => state.focus);
 
-    useEffect(() => {
-        let interval = null;
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft(timeLeft - 1);
-            }, 1000);
-        } else if (timeLeft === 0) {
-            setIsActive(false);
-            // Play sound?
-        }
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft]);
+    // No local timer effect needed, Header handles the tick!
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -26,20 +16,20 @@ const FocusTimer = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const toggleTimer = () => setIsActive(!isActive);
-    const resetTimer = () => {
-        setIsActive(false);
-        if (mode === 'focus') setTimeLeft(25 * 60);
-        if (mode === 'shortBreak') setTimeLeft(5 * 60);
-        if (mode === 'longBreak') setTimeLeft(15 * 60);
+    const toggleTimer = () => {
+        if (isActive) {
+            dispatch(pauseTimer());
+        } else {
+            dispatch(startTimer());
+        }
     };
 
-    const setTimerMode = (newMode) => {
-        setMode(newMode);
-        setIsActive(false);
-        if (newMode === 'focus') setTimeLeft(25 * 60);
-        if (newMode === 'shortBreak') setTimeLeft(5 * 60);
-        if (newMode === 'longBreak') setTimeLeft(15 * 60);
+    const handleReset = () => {
+        dispatch(resetTimer());
+    };
+
+    const handleSetMode = (newMode) => {
+        dispatch(setMode(newMode));
     };
 
     return (
@@ -54,7 +44,7 @@ const FocusTimer = () => {
                     {['focus', 'shortBreak', 'longBreak'].map(m => (
                         <button
                             key={m}
-                            onClick={() => setTimerMode(m)}
+                            onClick={() => handleSetMode(m)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === m ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             {m === 'focus' ? 'Focus' : m === 'shortBreak' ? 'Short Break' : 'Long Break'}
@@ -77,7 +67,7 @@ const FocusTimer = () => {
                     >
                         {isActive ? 'Pause' : 'Start'}
                     </Button>
-                    <Button size="lg" variant="outline" onClick={resetTimer} iconName="RotateCcw" />
+                    <Button size="lg" variant="outline" onClick={handleReset} iconName="RotateCcw" />
                 </div>
             </div>
         </div>
