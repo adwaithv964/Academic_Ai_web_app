@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const DocumentSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     name: String,
     subject: String,
     type: { type: String, enum: ['note', 'paper', 'syllabus', 'assignment', 'other'], default: 'other' },

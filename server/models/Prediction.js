@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const PredictionSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     courseName: String,
     currentGrade: Number,
     predictedGrade: Number,

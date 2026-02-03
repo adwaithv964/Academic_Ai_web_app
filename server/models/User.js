@@ -13,6 +13,9 @@ const UserSchema = new mongoose.Schema({
     address: String,
     createdAt: { type: Date, default: Date.now },
 
+    // Identity
+    authUid: { type: String, unique: true, sparse: true, index: true },
+
     // Gamification - Core Stats
     lastActiveDate: { type: Date }, // For streak calculation
     level: { type: Number, default: 1 },

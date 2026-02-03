@@ -38,6 +38,7 @@ const User = require('./models/User');
 const Task = require('./models/Task');
 const StudySession = require('./models/StudySession');
 const Prediction = require('./models/Prediction');
+const authenticateUser = require('./middleware/auth');
 const Course = require('./models/Course');
 const Scenario = require('./models/Scenario');
 const EisenhowerTask = require('./models/EisenhowerTask');
@@ -445,6 +446,16 @@ app.get('/api/auth/google/callback', async (req, res) => {
 });
 
 
+// --- AUTH MIDDLEWARE ---
+// Protect all /api routes except auth hooks and public data
+app.use('/api', (req, res, next) => {
+  // Exclude sub-paths
+  const publicPaths = ['/auth', '/health'];
+  // Strict check for path start to avoid bypassing
+  if (publicPaths.some(p => req.path.startsWith(p))) return next();
+  authenticateUser(req, res, next);
+});
+
 // --- API ENDPOINTS ---
 
 const { STORE_ITEMS, ACHIEVEMENTS, DAILY_QUESTS_POOL } = require('./config/gamification');
@@ -470,7 +481,7 @@ app.get('/api/achievements', achievementsController.getGamification);
 // GET /api/history - History of Glory
 app.get('/api/history', async (req, res) => {
   try {
-    const logs = await ActivityLog.find().sort({ timestamp: -1 }).limit(50);
+    const logs = await ActivityLog.find({ userId: req.user._id }).sort({ timestamp: -1 }).limit(50);
     res.json(logs);
   } catch (err) {
     console.error("History Error Details:", err);
@@ -486,8 +497,9 @@ app.get('/api/store/items', (req, res) => {
 
 app.post('/api/store/buy', async (req, res) => {
   try {
-    const { userId, itemId } = req.body;
-    const user = await User.findById(userId);
+    const { itemId } = req.body;
+    // Use authenticated user
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const item = STORE_ITEMS.find(i => i.id === itemId);
@@ -506,9 +518,6 @@ app.post('/api/store/buy', async (req, res) => {
     user.points -= item.price;
     user.inventory.push(itemId);
 
-    // Handle specific item effects if needed (e.g., set theme immediately)
-    // For now, client handles the visual switch
-
     await user.save();
     res.json({ success: true, points: user.points, inventory: user.inventory });
   } catch (err) {
@@ -518,11 +527,8 @@ app.post('/api/store/buy', async (req, res) => {
 
 // --- GAMIFICATION: QUESTS ---
 app.get('/api/quests', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.json({ daily: DAILY_QUESTS_POOL }); // Fallback to generic if no user
-
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
     // Ensure user has quest data initialized
@@ -549,8 +555,8 @@ app.get('/api/quests', async (req, res) => {
 
 app.post('/api/quests/claim', async (req, res) => {
   try {
-    const { userId, questId } = req.body;
-    const user = await User.findById(userId);
+    const { questId } = req.body;
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const questDef = DAILY_QUESTS_POOL.find(q => q.id === questId);
@@ -568,9 +574,9 @@ app.post('/api/quests/claim', async (req, res) => {
       return res.status(400).json({ error: 'Quest already claimed' });
     }
 
-    // Mark as claimed and completed
+    // Mark as claimed 
     userQuest.claimed = true;
-    userQuest.completed = true; // Assuming claim implies completion for this simple flow at the moment
+    userQuest.completed = true;
 
     // Award points
     user.points += questDef.reward;
@@ -586,8 +592,8 @@ app.post('/api/quests/claim', async (req, res) => {
 // --- GAMIFICATION: GARDEN ---
 app.post('/api/garden/grow', async (req, res) => {
   try {
-    const { userId, minutes } = req.body;
-    const user = await User.findById(userId);
+    const { minutes } = req.body;
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Simple mechanism: 60 mins = 1 stage growth for first plant
@@ -607,21 +613,9 @@ app.post('/api/garden/grow', async (req, res) => {
 // --- USER PROFILE ---
 app.get('/api/user', async (req, res) => {
   try {
-    // For now, assuming single user or getting the first one
-    let user = await User.findOne();
-    if (!user) {
-      console.log("No user found, creating default user...");
-      user = new User({
-        firstName: 'Student',
-        lastName: 'Scholar',
-        email: 'student@example.com',
-        points: 0,
-        totalPoints: 0,
-        quests: { daily: [] }
-      });
-      await user.save();
-    }
-    res.json(user);
+    // req.user is already attached by middleware
+    if (!req.user) return res.status(404).json({ error: 'User not found' });
+    res.json(req.user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -629,10 +623,18 @@ app.get('/api/user', async (req, res) => {
 
 app.post('/api/user', async (req, res) => {
   try {
-    const { email, ...updateData } = req.body;
-    // Upsert user based on email or create new if not exists (handling singleton logic for now)
-    // Upsert user based on email or create new if not exists (handling singleton logic for now)
-    const user = await User.findOneAndUpdate({}, { $set: req.body }, { new: true, upsert: true });
+    // User is already authenticated, update their profile
+    // We restrict what can be updated for security
+    const allowedUpdates = ['firstName', 'lastName', 'institution', 'major', 'graduationYear', 'phone', 'dateOfBirth', 'address', 'academicSettings', 'preferences', 'garden'];
+
+    const updates = {};
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
+    const user = await User.findByIdAndUpdate(req.user._id, { $set: updates }, { new: true });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -642,7 +644,7 @@ app.post('/api/user', async (req, res) => {
 // --- TASKS ---
 app.get('/api/tasks', async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const tasks = await Task.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -651,7 +653,7 @@ app.get('/api/tasks', async (req, res) => {
 
 app.post('/api/tasks', async (req, res) => {
   try {
-    const task = new Task(req.body);
+    const task = new Task({ ...req.body, userId: req.user._id });
     await task.save();
     res.json(task);
   } catch (err) {
@@ -661,7 +663,12 @@ app.post('/api/tasks', async (req, res) => {
 
 app.put('/api/tasks/:id', async (req, res) => {
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!task) return res.status(404).json({ error: 'Task not found' });
     res.json(task);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -670,7 +677,8 @@ app.put('/api/tasks/:id', async (req, res) => {
 
 app.delete('/api/tasks/:id', async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
     res.json({ message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -680,7 +688,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
 // --- STUDY SESSIONS ---
 app.get('/api/study-sessions', async (req, res) => {
   try {
-    const sessions = await StudySession.find().sort({ date: -1 });
+    const sessions = await StudySession.find({ userId: req.user._id }).sort({ date: -1 });
     res.json(sessions);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -689,7 +697,7 @@ app.get('/api/study-sessions', async (req, res) => {
 
 app.post('/api/study-sessions', async (req, res) => {
   try {
-    const session = new StudySession(req.body);
+    const session = new StudySession({ ...req.body, userId: req.user._id });
     await session.save();
     res.json(session);
   } catch (err) {
@@ -699,7 +707,12 @@ app.post('/api/study-sessions', async (req, res) => {
 
 app.put('/api/study-sessions/:id', async (req, res) => {
   try {
-    const session = await StudySession.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const session = await StudySession.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -708,7 +721,8 @@ app.put('/api/study-sessions/:id', async (req, res) => {
 
 app.delete('/api/study-sessions/:id', async (req, res) => {
   try {
-    await StudySession.findByIdAndDelete(req.params.id);
+    const session = await StudySession.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json({ message: 'Session deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -718,7 +732,7 @@ app.delete('/api/study-sessions/:id', async (req, res) => {
 // --- COURSES ---
 app.get('/api/courses', async (req, res) => {
   try {
-    const courses = await Course.find().sort({ createdAt: -1 });
+    const courses = await Course.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(courses);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -727,7 +741,7 @@ app.get('/api/courses', async (req, res) => {
 
 app.post('/api/courses', async (req, res) => {
   try {
-    const course = new Course(req.body);
+    const course = new Course({ ...req.body, userId: req.user._id });
     await course.save();
     res.json(course);
   } catch (err) {
@@ -737,7 +751,12 @@ app.post('/api/courses', async (req, res) => {
 
 app.put('/api/courses/:id', async (req, res) => {
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const course = await Course.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json(course);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -746,7 +765,8 @@ app.put('/api/courses/:id', async (req, res) => {
 
 app.delete('/api/courses/:id', async (req, res) => {
   try {
-    await Course.findByIdAndDelete(req.params.id);
+    const course = await Course.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json({ message: 'Course deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -756,7 +776,7 @@ app.delete('/api/courses/:id', async (req, res) => {
 // --- EXAMS ---
 app.get('/api/exams', async (req, res) => {
   try {
-    const exams = await Exam.find().sort({ date: 1 });
+    const exams = await Exam.find({ userId: req.user._id }).sort({ date: 1 });
     res.json(exams);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -765,7 +785,7 @@ app.get('/api/exams', async (req, res) => {
 
 app.post('/api/exams', async (req, res) => {
   try {
-    const exam = new Exam(req.body);
+    const exam = new Exam({ ...req.body, userId: req.user._id });
     await exam.save();
     res.json(exam);
   } catch (err) {
@@ -775,7 +795,12 @@ app.post('/api/exams', async (req, res) => {
 
 app.put('/api/exams/:id', async (req, res) => {
   try {
-    const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const exam = await Exam.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
     res.json(exam);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -784,7 +809,8 @@ app.put('/api/exams/:id', async (req, res) => {
 
 app.delete('/api/exams/:id', async (req, res) => {
   try {
-    await Exam.findByIdAndDelete(req.params.id);
+    const exam = await Exam.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
     res.json({ message: 'Exam deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -794,7 +820,7 @@ app.delete('/api/exams/:id', async (req, res) => {
 // --- VACATIONS ---
 app.get('/api/vacations', async (req, res) => {
   try {
-    const vacations = await Vacation.find().sort({ startDate: 1 });
+    const vacations = await Vacation.find({ userId: req.user._id }).sort({ startDate: 1 });
     res.json(vacations);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -803,7 +829,7 @@ app.get('/api/vacations', async (req, res) => {
 
 app.post('/api/vacations', async (req, res) => {
   try {
-    const vacation = new Vacation(req.body);
+    const vacation = new Vacation({ ...req.body, userId: req.user._id });
     await vacation.save();
     res.json(vacation);
   } catch (err) {
@@ -823,7 +849,7 @@ app.delete('/api/vacations/:id', async (req, res) => {
 // --- EVENTS (General) ---
 app.get('/api/events', async (req, res) => {
   try {
-    const events = await Event.find().sort({ date: 1 });
+    const events = await Event.find({ userId: req.user._id }).sort({ date: 1 });
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -832,7 +858,7 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', async (req, res) => {
   try {
-    const event = new Event(req.body);
+    const event = new Event({ ...req.body, userId: req.user._id });
     await event.save();
     res.json(event);
   } catch (err) {
@@ -956,7 +982,7 @@ app.get('/api/terms', async (req, res) => {
 app.post('/api/terms', async (req, res) => {
   try {
     // Upsert logic could go here, or just save new
-    const term = new Term(req.body);
+    const term = new Term({ ...req.body, userId: req.user._id });
     await term.save();
     res.json(term);
   } catch (err) {
@@ -967,7 +993,7 @@ app.post('/api/terms', async (req, res) => {
 // --- SCENARIOS (Data Room) ---
 app.get('/api/scenarios', async (req, res) => {
   try {
-    const scenarios = await Scenario.find().sort({ createdAt: -1 });
+    const scenarios = await Scenario.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(scenarios);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -976,7 +1002,7 @@ app.get('/api/scenarios', async (req, res) => {
 
 app.post('/api/scenarios', async (req, res) => {
   try {
-    const scenario = new Scenario(req.body);
+    const scenario = new Scenario({ ...req.body, userId: req.user._id });
     await scenario.save();
     res.json(scenario);
   } catch (err) {
@@ -987,7 +1013,7 @@ app.post('/api/scenarios', async (req, res) => {
 // --- EISENHOWER TASKS ---
 app.get('/api/eisenhower-tasks', async (req, res) => {
   try {
-    const tasks = await EisenhowerTask.find().sort({ createdAt: -1 });
+    const tasks = await EisenhowerTask.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -996,7 +1022,7 @@ app.get('/api/eisenhower-tasks', async (req, res) => {
 
 app.post('/api/eisenhower-tasks', async (req, res) => {
   try {
-    const task = new EisenhowerTask(req.body);
+    const task = new EisenhowerTask({ ...req.body, userId: req.user._id });
     await task.save();
     res.json(task);
   } catch (err) {
@@ -1006,7 +1032,12 @@ app.post('/api/eisenhower-tasks', async (req, res) => {
 
 app.put('/api/eisenhower-tasks/:id', async (req, res) => {
   try {
-    const task = await EisenhowerTask.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const task = await EisenhowerTask.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { new: true }
+    );
+    if (!task) return res.status(404).json({ error: 'Task not found' });
     res.json(task);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1015,7 +1046,8 @@ app.put('/api/eisenhower-tasks/:id', async (req, res) => {
 
 app.delete('/api/eisenhower-tasks/:id', async (req, res) => {
   try {
-    await EisenhowerTask.findByIdAndDelete(req.params.id);
+    const task = await EisenhowerTask.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
     res.json({ message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1025,7 +1057,7 @@ app.delete('/api/eisenhower-tasks/:id', async (req, res) => {
 // --- DOCUMENTS ---
 app.get('/api/documents', async (req, res) => {
   try {
-    const documents = await Document.find().sort({ uploadDate: -1 });
+    const documents = await Document.find({ userId: req.user._id }).sort({ uploadDate: -1 });
     res.json(documents);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1035,7 +1067,7 @@ app.get('/api/documents', async (req, res) => {
 // --- PREDICTION ---
 app.get('/api/predictions', async (req, res) => {
   try {
-    const predictions = await Prediction.find().sort({ timestamp: -1 });
+    const predictions = await Prediction.find({ userId: req.user._id }).sort({ timestamp: -1 });
     res.json(predictions);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1069,7 +1101,8 @@ app.post('/api/predict', async (req, res) => {
         rangeLow: simulationStats.rangeLow,
         rangeHigh: simulationStats.rangeHigh,
         studyDataSummary: studentData.studyData,
-        aiAnalysis: aiAnalysis.insights
+        aiAnalysis: aiAnalysis.insights,
+        userId: req.user._id
       });
       await newPrediction.save();
       console.log('Prediction saved to DB:', newPrediction._id);
@@ -1175,7 +1208,7 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
 // --- WEB REFERENCES ---
 app.get('/api/web-references', async (req, res) => {
   try {
-    const refs = await WebReference.find().sort({ dateAdded: -1 });
+    const refs = await WebReference.find({ userId: req.user._id }).sort({ dateAdded: -1 });
     res.json(refs);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1184,7 +1217,7 @@ app.get('/api/web-references', async (req, res) => {
 
 app.post('/api/web-references', async (req, res) => {
   try {
-    const ref = new WebReference(req.body);
+    const ref = new WebReference({ ...req.body, userId: req.user._id });
     await ref.save();
     res.json(ref);
   } catch (err) {

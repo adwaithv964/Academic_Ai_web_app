@@ -10,7 +10,7 @@ const calculateStreak = async (userId) => {
     // However, for scalability, we should rely on the User model's 'currrentStreak' and 'lastActiveDate'.
     // Here we will RE-CALCULATE it based on sessions to be robust for now.
 
-    const sessions = await StudySession.find().sort({ date: -1 }); // Assuming simple single user for now or add userId filter
+    const sessions = await StudySession.find({ userId }).sort({ date: -1 });
     if (!sessions.length) return 0;
 
     const uniqueDates = [...new Set(sessions
@@ -52,8 +52,9 @@ const calculateStreak = async (userId) => {
 // GET /api/achievements/stats
 exports.getStats = async (req, res) => {
     try {
+        const userId = req.user._id;
         // 1. Total Focus Time
-        const sessions = await StudySession.find();
+        const sessions = await StudySession.find({ userId });
         let totalMinutes = 0;
         let totalEfficiency = 0;
         let efficiencyCount = 0;
@@ -80,10 +81,10 @@ exports.getStats = async (req, res) => {
         const formattedTime = `${hours}h ${minutes}m`;
 
         // 2. Current Streak
-        const streak = await calculateStreak(); // Add userId if multi-user
+        const streak = await calculateStreak(userId);
 
         // 3. Tasks Crushed
-        const completedTasksCount = await Task.countDocuments({ completed: true });
+        const completedTasksCount = await Task.countDocuments({ userId, completed: true });
 
         // 4. Average Efficiency
         const avgEfficiency = efficiencyCount > 0 ? Math.round(totalEfficiency / efficiencyCount) : 0;
@@ -108,21 +109,10 @@ exports.getStats = async (req, res) => {
 // GET /api/achievements
 exports.getGamification = async (req, res) => {
     try {
-        let user = await User.findOne();
-        if (!user) {
-            // Return dummy if no user (shouldn't happen in real app)
-            // Fix: Create default user on fly if missing to prevent crash
-            user = new User({
-                firstName: 'Student',
-                lastName: 'Scholar',
-                email: 'student@example.com',
-                points: 0,
-                totalPoints: 0,
-                achievements: {},
-                quests: { daily: [] }
-            });
-            await user.save();
-        }
+        const user = req.user;
+        const userId = user._id; // Ensure we have the ID for queries
+        // User is already attached by middleware, no need to find or create default here.
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
         if (!user.achievements) {
             user.achievements = new Map();
@@ -133,7 +123,7 @@ exports.getGamification = async (req, res) => {
         // Let's re-calculate stats here or extract a helper function.
         // Helper approach is better.
 
-        const sessions = await StudySession.find();
+        const sessions = await StudySession.find({ userId });
         let totalMinutes = 0;
         let maxSingleSession = 0;
 
@@ -143,7 +133,7 @@ exports.getGamification = async (req, res) => {
             if ((h * 60) > maxSingleSession) maxSingleSession = (h * 60);
         });
 
-        const streak = await calculateStreak();
+        const streak = await calculateStreak(userId);
         const totalHour = totalMinutes / 60;
 
         let badgesChanged = false;

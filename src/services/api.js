@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+import { auth } from './firebase';
+
 let apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Ensure apiBase ends with /api if it's a full URL
@@ -13,6 +15,20 @@ const client = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Add a request interceptor to attach the Token
+client.interceptors.request.use(async (config) => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.error("Error attaching auth token:", error);
+  }
+  return config;
 });
 
 // --- Existing Methods ---

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const StudySessionSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     subject: String,
     topic: String,
     date: { type: String, index: true }, // ISO String
