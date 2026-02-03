@@ -55,6 +55,7 @@ const WebReference = require('./models/WebReference');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (Render load balancer)
 const PORT = process.env.PORT || 5003;
 
 // --- OPTIMIZATION & SECURITY MIDDLEWARE ---
