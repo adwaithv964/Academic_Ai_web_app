@@ -4,10 +4,10 @@ const TaskSchema = new mongoose.Schema({
     title: String,
     subject: String,
     priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
-    dueDate: String,
+    dueDate: { type: String, index: true },
     type: String, // assignment, exam, etc.
     completed: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now, index: true }
 });
 
 module.exports = mongoose.model('Task', TaskSchema);

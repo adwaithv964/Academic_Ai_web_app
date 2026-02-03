@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const multer = require('multer');
+const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- PATCH FETCH FOR API KEY REFERRER RESTRICTION ---
@@ -51,13 +54,42 @@ const WebReference = require('./models/WebReference');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5003;
+
+// --- OPTIMIZATION & SECURITY MIDDLEWARE ---
+app.use(compression()); // Compress all responses
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for now to avoid breaking dev tools/inline scripts
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow resources to be loaded by frontend
+}));
+
+// Rate Limiter: General
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api', generalLimiter);
+
+// Rate Limiter: AI & Heavy endpoints
+const heavyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50, // Limit each IP to 50 requests per 15m for costly operations
+  message: 'Too many AI requests, please wait a moment.'
+});
+app.use('/api/ai-scan', heavyLimiter);
 
 app.use(cors());
 app.use(express.json());
 
 // Store image in memory buffer so we can pass it to AI
-const upload = multer({ storage: multer.memoryStorage() });
+// Limit file size to 5MB to prevent memory crashes
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 // Gemini SDK configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
@@ -1179,11 +1211,30 @@ app.delete('/api/web-references/:id', async (req, res) => {
 });
 
 if (require.main === module) {
+  // Global error handlers for debugging
+  process.on('uncaughtException', (err) => {
+    console.error(`[FATAL] Uncaught Exception: ${err.message}\n${err.stack}`);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error(`[FATAL] Unhandled Rejection: ${reason}`);
+    process.exit(1);
+  });
+
   connectDB().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`API server listening on http://localhost:${PORT}`);
-      console.log('Ensure you have a valid .env file with SERVER_MONGO_URI or MONGO_URI');
-    });
+    try {
+      const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log(`API server listening on http://localhost:${PORT}`);
+        console.log('Ensure you have a valid .env file with SERVER_MONGO_URI or MONGO_URI');
+      });
+
+      server.on('error', (err) => {
+        console.error(`[SERVER ERROR] Server Error: ${err.message}`);
+      });
+    } catch (err) {
+      console.error(`[STARTUP ERROR] Startup Error: ${err.message}`);
+    }
   });
 }
 

@@ -45,6 +45,8 @@ export const sessions = {
 export const courses = {
   list: () => client.get('/courses').then(r => r.data),
   create: (data) => client.post('/courses', data).then(r => r.data),
+  update: (id, data) => client.put(`/courses/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/courses/${id}`).then(r => r.data),
 };
 
 export const exams = {

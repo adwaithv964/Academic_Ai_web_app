@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
     xp: { type: Number, default: 0 },
 
     // Gamification - Config
-    points: { type: Number, default: 0 },
+    points: { type: Number, default: 0, index: true },
     totalPoints: { type: Number, default: 0 },
 
     inventory: [{ type: String }], // IDs of bought items

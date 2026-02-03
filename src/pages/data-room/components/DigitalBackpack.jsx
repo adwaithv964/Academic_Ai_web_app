@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, File, BookOpen, Filter, Download, Trash2, Search, Edit2 } from 'lucide-react';
+import { Upload, FileText, File, BookOpen, Filter, Download, Trash2, Search, Edit2, X } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import documentsApi from '../../../services/documents';
 import { formatDate } from '../../../utils/dateUtils';
@@ -18,6 +18,9 @@ const DigitalBackpack = () => {
     const [editingFile, setEditingFile] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', subject: '', type: '' });
 
+    // Upload Verification State
+    const [pendingUpload, setPendingUpload] = useState(null); // { file, name, subject, type }
+
     useEffect(() => {
         loadDocuments();
     }, []);
@@ -35,31 +38,57 @@ const DigitalBackpack = () => {
         }
     };
 
-    const handleFileSelect = async (e) => {
+    const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // In a real app, we might prompt for Subject/Type before upload
-        // For now, we'll upload with defaults and let user edit later, 
-        // OR we could show a modal first. Let's do simple direct upload for speed,
-        // then user can edit properties.
+        // Open verification modal instead of direct upload
+        setPendingUpload({
+            file,
+            name: file.name,
+            subject: 'General',
+            type: 'other' // default
+        });
+
+        // Clear input so same file can be selected again if cancelled
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const confirmUpload = async () => {
+        if (!pendingUpload) return;
 
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('subject', 'General'); // Default
-        formData.append('type', 'other');    // Default
+        formData.append('file', pendingUpload.file);
+        formData.append('subject', pendingUpload.subject || 'General');
+        formData.append('type', pendingUpload.type || 'other');
+        // If the backend supports renaming on upload, we might need to send 'name' separately
+        // or rename the file object. For now, assuming standard upload and we might update metadata later
+        // OR simply passing these fields is enough if backend handles it.
+        // Let's assume the backend 'documentsApi.upload' handles form data fields.
+
+        // Small hack: if backend takes 'name' field for display name
+        formData.append('name', pendingUpload.name);
 
         try {
             setUploading(true);
             const newDoc = await documentsApi.upload(formData);
+
+            // If backend didn't use our name/subject/type from FormData (depends on implementation),
+            // we might need an immediate update. But usually FormData fields are read.
+            // Let's assume it works or we'll refine.
+
             setFiles([newDoc, ...files]);
+            setPendingUpload(null);
         } catch (err) {
             console.error("Upload failed:", err);
             alert("Failed to upload file");
         } finally {
             setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
         }
+    };
+
+    const cancelUpload = () => {
+        setPendingUpload(null);
     };
 
     const handleDelete = async (id) => {
@@ -233,6 +262,56 @@ const DigitalBackpack = () => {
                         <div className="flex justify-end gap-2 pt-2">
                             <Button variant="outline" onClick={() => setEditingFile(null)}>Cancel</Button>
                             <Button variant="default" onClick={saveEdit}>Save Changes</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Upload Verification Modal */}
+            {pendingUpload && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-card rounded-lg border border-border shadow-lg p-6 w-full max-w-md space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-bold">New File Details</h3>
+                            <button onClick={cancelUpload} className="p-1 hover:bg-accent rounded-full">
+                                <X size={16} className="text-muted-foreground" />
+                            </button>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">File Name</label>
+                            <input
+                                className="w-full p-2 border rounded bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                value={pendingUpload.name}
+                                onChange={e => setPendingUpload({ ...pendingUpload, name: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Subject</label>
+                            <input
+                                className="w-full p-2 border rounded bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                value={pendingUpload.subject}
+                                onChange={e => setPendingUpload({ ...pendingUpload, subject: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Type</label>
+                            <select
+                                className="w-full p-2 border rounded bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                value={pendingUpload.type}
+                                onChange={e => setPendingUpload({ ...pendingUpload, type: e.target.value })}
+                            >
+                                <option value="note">Note</option>
+                                <option value="paper">Question Paper</option>
+                                <option value="syllabus">Syllabus</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button variant="outline" onClick={cancelUpload}>Cancel</Button>
+                            <Button variant="default" onClick={confirmUpload} disabled={uploading}>
+                                {uploading ? 'Uploading...' : 'Upload File'}
+                            </Button>
                         </div>
                     </div>
                 </div>

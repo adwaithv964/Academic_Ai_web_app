@@ -124,6 +124,24 @@ const StudyPlanner = () => {
     }
   };
 
+  const handleCourseDelete = async (courseId) => {
+    try {
+      await coursesApi.delete(courseId);
+      setCourses(prev => prev.filter(c => c._id !== courseId));
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+    }
+  };
+
+  const handleCourseUpdate = async (courseId, updates) => {
+    try {
+      const updated = await coursesApi.update(courseId, updates);
+      setCourses(prev => prev.map(c => c._id === courseId ? updated : c));
+    } catch (error) {
+      console.error("Failed to update course:", error);
+    }
+  };
+
   const handleSessionDelete = async (sessionId) => {
     try {
       await sessionsApi.delete(sessionId);
@@ -457,6 +475,8 @@ const StudyPlanner = () => {
           onDelete={handleSessionDelete}
           courses={courses}
           onCourseCreate={handleCourseCreate}
+          onCourseDelete={handleCourseDelete}
+          onCourseUpdate={handleCourseUpdate}
         />
       </div>
     </>

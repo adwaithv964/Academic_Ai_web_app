@@ -85,9 +85,10 @@ const StreaksHeatmap = ({ onBack }) => {
 
         // Current Streak
         let currentStreak = 0;
-        const todayTime = new Date().setHours(0, 0, 0, 0);
-        const yesterdayTime = new Date(today).setDate(today.getDate() - 1);
-        yesterdayTime.setHours(0, 0, 0, 0); // Fix: setDate returns timestamp, but need to zero time on a date obj if used differently, but here simple number math
+        const todayTime = new Date(today).setHours(0, 0, 0, 0);
+        const yesterdayObj = new Date(today);
+        yesterdayObj.setDate(today.getDate() - 1);
+        const yesterdayTime = yesterdayObj.setHours(0, 0, 0, 0);
 
         // Check if we have activity today or yesterday to keep streak alive
         const lastActive = uniqueDates[uniqueDates.length - 1];

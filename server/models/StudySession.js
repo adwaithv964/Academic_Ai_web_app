@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const StudySessionSchema = new mongoose.Schema({
     subject: String,
     topic: String,
-    date: String, // ISO String
+    date: { type: String, index: true }, // ISO String
     startTime: String,
     duration: Number, // in HOURS (actual)
     plannedDuration: Number, // in minutes (goal)

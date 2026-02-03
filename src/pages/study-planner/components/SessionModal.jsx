@@ -14,7 +14,9 @@ const SessionModal = ({
   selectedDay,
   selectedHour,
   courses = [],
-  onCourseCreate
+  onCourseCreate,
+  onCourseDelete,
+  onCourseUpdate
 }) => {
   const [formData, setFormData] = useState({
     subject: '',
@@ -28,6 +30,9 @@ const SessionModal = ({
 
   const [errors, setErrors] = useState({});
   const [isAddingSubject, setIsAddingSubject] = useState(false);
+  const [isManagingSubjects, setIsManagingSubjects] = useState(false);
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [manageSearchTerm, setManageSearchTerm] = useState('');
   const [newSubjectName, setNewSubjectName] = useState('');
   const [isCreatingCourse, setIsCreatingCourse] = useState(false);
 
@@ -150,6 +155,29 @@ const SessionModal = ({
     }
   };
 
+  const handleSubjectDelete = async (courseId) => {
+    if (onCourseDelete) {
+      if (confirm('Are you sure you want to delete this subject?')) {
+        await onCourseDelete(courseId);
+      }
+    }
+  };
+
+  const startEditingSubject = (course) => {
+    setEditingSubject({ id: course._id, name: course.name });
+  };
+
+  const saveSubjectEdit = async () => {
+    if (editingSubject && editingSubject.name.trim() && onCourseUpdate) {
+      await onCourseUpdate(editingSubject.id, { name: editingSubject.name });
+      setEditingSubject(null);
+    }
+  };
+
+  const cancelSubjectEdit = () => {
+    setEditingSubject(null);
+  };
+
   const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -174,12 +202,12 @@ const SessionModal = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-card rounded-lg border border-border w-full max-w-md max-h-[90vh] overflow-y-auto"
+          className="bg-card rounded-lg border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between p-8 border-b border-border">
             <h2 className="text-xl font-semibold text-foreground">
-              {session ? 'Edit Study Session' : 'New Study Session'}
+              {isManagingSubjects ? 'Manage Subjects' : (session ? 'Edit Study Session' : 'New Study Session')}
             </h2>
             <button
               onClick={onClose}
@@ -189,145 +217,224 @@ const SessionModal = ({
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                {isAddingSubject ? (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">New Subject</label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newSubjectName}
-                        onChange={(e) => setNewSubjectName(e.target.value)}
-                        placeholder="Subject Name"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleCreateSubject}
-                        disabled={isCreatingCourse}
-                      >
-                        <Icon name="Check" size={16} />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setIsAddingSubject(false)}
-                      >
-                        <Icon name="X" size={16} />
-                      </Button>
+          {isManagingSubjects ? (
+            <div className="space-y-4">
+              <div className="relative">
+                <Icon name="Search" size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                <Input
+                  placeholder="Search subjects..."
+                  value={manageSearchTerm}
+                  onChange={(e) => setManageSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+                {courses
+                  .filter(c => c.name.toLowerCase().includes(manageSearchTerm.toLowerCase()))
+                  .map(course => (
+                    <div key={course._id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border group hover:bg-muted/50 transition-colors">
+                      {editingSubject?.id === course._id ? (
+                        <div className="flex gap-2 flex-1 mr-2">
+                          <Input
+                            value={editingSubject.name}
+                            onChange={(e) => setEditingSubject({ ...editingSubject, name: e.target.value })}
+                            className="h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button size="icon" className="h-8 w-8" onClick={saveSubjectEdit}><Icon name="Check" size={14} /></Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelSubjectEdit}><Icon name="X" size={14} /></Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${course.color?.split(' ')[0] || 'bg-gray-400'}`}></div>
+                            <span className="font-medium text-sm">{course.name}</span>
+                          </div>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              onClick={() => startEditingSubject(course)}
+                            >
+                              <Icon name="Edit2" size={14} />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleSubjectDelete(course._id)}
+                            >
+                              <Icon name="Trash" size={14} />
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <Select
-                      label="Subject"
-                      options={subjectOptions}
-                      value={formData?.subject}
-                      onChange={(value) => handleChange('subject', value)}
-                      error={errors?.subject}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingSubject(true)}
-                      className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
-                    >
-                      <Icon name="Plus" size={12} /> Add New Subject
-                    </button>
+                  ))}
+                {courses.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No subjects found
                   </div>
                 )}
               </div>
-
-              <Select
-                label="Session Type"
-                options={typeOptions}
-                value={formData?.type}
-                onChange={(value) => handleChange('type', value)}
-              />
+              <Button type="button" variant="outline" className="w-full" onClick={() => setIsManagingSubjects(false)}>
+                Done
+              </Button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-8 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  {isAddingSubject ? (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">New Subject</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newSubjectName}
+                          onChange={(e) => setNewSubjectName(e.target.value)}
+                          placeholder="Subject Name"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          onClick={handleCreateSubject}
+                          disabled={isCreatingCourse}
+                        >
+                          <Icon name="Check" size={16} />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setIsAddingSubject(false)}
+                        >
+                          <Icon name="X" size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <Select
+                        label="Subject"
+                        options={subjectOptions}
+                        value={formData?.subject}
+                        onChange={(value) => handleChange('subject', value)}
+                        error={errors?.subject}
+                        required
+                      />
+                      <div className="flex flex-col gap-1 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingSubject(true)}
+                          className="text-xs text-primary hover:underline flex items-center gap-2 px-1 py-1 rounded hover:bg-primary/5 transition-colors w-full"
+                        >
+                          <Icon name="Plus" size={14} />
+                          <span>Add New Subject</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsManagingSubjects(true)}
+                          className="text-xs text-muted-foreground hover:text-foreground hover:underline flex items-center gap-2 px-1 py-1 rounded hover:bg-muted/50 transition-colors w-full"
+                        >
+                          <Icon name="Settings" size={14} />
+                          <span>Manage Subjects</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-            <Input
-              label="Topic"
-              type="text"
-              value={formData?.topic}
-              onChange={(e) => handleChange('topic', e?.target?.value)}
-              placeholder="What will you study?"
-              error={errors?.topic}
-              required
-            />
+                <Select
+                  label="Session Type"
+                  options={typeOptions}
+                  value={formData?.type}
+                  onChange={(value) => handleChange('type', value)}
+                />
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Start Time"
-                type="time"
-                value={formData?.startTime}
-                onChange={(e) => handleChange('startTime', e?.target?.value)}
-                error={errors?.startTime}
+                label="Topic"
+                type="text"
+                value={formData?.topic}
+                onChange={(e) => handleChange('topic', e?.target?.value)}
+                placeholder="What will you study?"
+                error={errors?.topic}
                 required
               />
 
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Start Time"
+                  type="time"
+                  value={formData?.startTime}
+                  onChange={(e) => handleChange('startTime', e?.target?.value)}
+                  error={errors?.startTime}
+                  required
+                />
+
+                <Select
+                  label="Duration"
+                  options={durationOptions}
+                  value={formData?.duration}
+                  onChange={(value) => handleChange('duration', value)}
+                />
+              </div>
+
               <Select
-                label="Duration"
-                options={durationOptions}
-                value={formData?.duration}
-                onChange={(value) => handleChange('duration', value)}
+                label="Priority"
+                options={priorityOptions}
+                value={formData?.priority}
+                onChange={(value) => handleChange('priority', value)}
               />
-            </div>
 
-            <Select
-              label="Priority"
-              options={priorityOptions}
-              value={formData?.priority}
-              onChange={(value) => handleChange('priority', value)}
-            />
+              <Input
+                label="Notes"
+                type="text"
+                value={formData?.notes}
+                onChange={(e) => handleChange('notes', e?.target?.value)}
+                placeholder="Additional notes or reminders..."
+                description="Optional study notes or reminders"
+              />
 
-            <Input
-              label="Notes"
-              type="text"
-              value={formData?.notes}
-              onChange={(e) => handleChange('notes', e?.target?.value)}
-              placeholder="Additional notes or reminders..."
-              description="Optional study notes or reminders"
-            />
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-4">
+                <div>
+                  {session && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      iconName="Trash2"
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-4">
-              <div>
-                {session && (
+                <div className="flex items-center gap-3">
                   <Button
                     type="button"
-                    variant="destructive"
-                    size="sm"
-                    iconName="Trash2"
-                    onClick={handleDelete}
+                    variant="ghost"
+                    onClick={onClose}
                   >
-                    Delete
+                    Cancel
                   </Button>
-                )}
+                  <Button
+                    type="submit"
+                    variant="default"
+                    iconName="Save"
+                  >
+                    {session ? 'Update' : 'Create'} Session
+                  </Button>
+                </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onClose}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="default"
-                  iconName="Save"
-                >
-                  {session ? 'Update' : 'Create'} Session
-                </Button>
-              </div>
-            </div>
-          </form>
+            </form>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>
