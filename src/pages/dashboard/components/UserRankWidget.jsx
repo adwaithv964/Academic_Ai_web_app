@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
-import axios from 'axios';
+import { gamification } from '../../../services/api';
 
 const UserRankWidget = () => {
     const [stats, setStats] = useState({
@@ -16,15 +16,15 @@ const UserRankWidget = () => {
             try {
                 // Try fetching from API similar to Achievements page
                 const [statsRes, gameRes] = await Promise.all([
-                    axios.get('/api/achievements/stats'),
-                    axios.get('/api/achievements')
+                    gamification.getStats(),
+                    gamification.getGamification()
                 ]);
 
                 setStats({
-                    rank: gameRes.data?.leveling?.title ? `${gameRes.data.leveling.title} Lvl ${gameRes.data.leveling.currentLevel}` : "Scholar Lvl 1",
-                    streak: statsRes.data?.currentStreak || 0,
-                    currentXP: gameRes.data?.leveling?.currentXp || 0,
-                    nextLevelXP: gameRes.data?.leveling?.nextLevelXp || 100
+                    rank: gameRes?.leveling?.title ? `${gameRes.leveling.title} Lvl ${gameRes.leveling.currentLevel}` : "Scholar Lvl 1",
+                    streak: statsRes?.currentStreak || 0,
+                    currentXP: gameRes?.leveling?.currentXp || 0,
+                    nextLevelXP: gameRes?.leveling?.nextLevelXp || 100
                 });
             } catch (error) {
                 console.warn("Failed to fetch user rank stats, using localStorage or default", error);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { gamification } from 'services/api';
 import HeroStats from 'components/achievements/HeroStats';
 import BadgeGrid from 'components/achievements/BadgeGrid';
 import LevelingSystem from 'components/achievements/LevelingSystem';
@@ -30,12 +30,12 @@ const Achievements = () => {
         const fetchData = async () => {
             try {
                 const [statsRes, gameRes] = await Promise.all([
-                    axios.get('/api/achievements/stats'),
-                    axios.get('/api/achievements')
+                    gamification.getStats(),
+                    gamification.getGamification()
                 ]);
 
-                setStats(statsRes.data);
-                setGamification(gameRes.data);
+                setStats(statsRes);
+                setGamification(gameRes);
             } catch (error) {
                 console.error("Failed to fetch achievements data. Using Demo Data.", error);
 
