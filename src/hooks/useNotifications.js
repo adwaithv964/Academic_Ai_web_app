@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { tasks as tasksApi, sessions as sessionsApi, exams as examsApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'academic_notifications';
 const TIMESTAMP_KEY = 'academic_notifications_timestamp';
-const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
+    const { currentUser } = useAuth();
 
     useEffect(() => {
+        if (!currentUser) return;
+
         const fetchAndGenerateNotifications = async () => {
             try {
                 // Fetch real data
@@ -113,7 +117,7 @@ export const useNotifications = () => {
         const interval = setInterval(fetchAndGenerateNotifications, 60 * 1000);
         return () => clearInterval(interval);
 
-    }, []);
+    }, [currentUser]);
 
     const updateNotifications = (newNotifications) => {
         setNotifications(newNotifications);

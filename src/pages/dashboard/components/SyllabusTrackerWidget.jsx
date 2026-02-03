@@ -3,7 +3,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import Icon from '../../../components/AppIcon';
 import { tasks as tasksApi, courses as coursesApi, sessions as sessionsApi } from '../../../services/api';
 
+import { useAuth } from '../../../contexts/AuthContext';
+
 const SyllabusTrackerWidget = () => {
+    const { currentUser } = useAuth();
     const [stats, setStats] = useState({
         syllabusCovered: 0,
         assignmentAce: 0
@@ -44,6 +47,8 @@ const SyllabusTrackerWidget = () => {
     );
 
     useEffect(() => {
+        if (!currentUser) return;
+
         const fetchStats = async () => {
             try {
                 // Fetch data
@@ -84,7 +89,7 @@ const SyllabusTrackerWidget = () => {
         };
 
         fetchStats();
-    }, []);
+    }, [currentUser]);
 
     const coverageData = [
         { name: 'Covered', value: Number.isFinite(stats.syllabusCovered) ? stats.syllabusCovered : 0, color: '#3b82f6' }, // Blue

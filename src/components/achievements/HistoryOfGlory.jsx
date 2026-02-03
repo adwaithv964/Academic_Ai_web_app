@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { History, Trophy, Flame, Star, CheckCircle } from 'lucide-react';
-import axios from 'axios';
+import { history as historyApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const HistoryItem = ({ item, isLast }) => {
     const { type, title, description, timestamp } = item;
@@ -38,14 +39,17 @@ const HistoryItem = ({ item, isLast }) => {
 };
 
 const HistoryOfGlory = () => {
+    const { currentUser } = useAuth();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!currentUser) return;
+
         const fetchHistory = async () => {
             try {
-                const res = await axios.get('/api/history');
-                setHistory(res.data);
+                const data = await historyApi.list();
+                setHistory(data);
             } catch (err) {
                 console.error("Failed to fetch history", err);
                 // Mock data fallback if empty or error
@@ -61,7 +65,7 @@ const HistoryOfGlory = () => {
             }
         };
         fetchHistory();
-    }, []);
+    }, [currentUser]);
 
     return (
         <div className="bg-gray-900/50 rounded-2xl border border-gray-800 p-6 h-full min-h-[400px]">

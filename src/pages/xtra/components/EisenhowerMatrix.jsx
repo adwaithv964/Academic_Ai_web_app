@@ -3,8 +3,10 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import { eisenhowerTasks } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const EisenhowerMatrix = ({ onBack }) => {
+    const { currentUser } = useAuth();
     // Quadrants: 
     // 1: Important & Urgent (Do First)
     // 2: Important, Not Urgent (Schedule)
@@ -17,8 +19,10 @@ const EisenhowerMatrix = ({ onBack }) => {
     const [targetQuad, setTargetQuad] = useState(1);
 
     useEffect(() => {
-        loadTasks();
-    }, []);
+        if (currentUser) {
+            loadTasks();
+        }
+    }, [currentUser]);
 
     const loadTasks = async () => {
         try {

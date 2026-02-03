@@ -13,6 +13,7 @@ try {
 }
 
 const firebaseConfig = {
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     credential: serviceAccount
         ? admin.credential.cert(serviceAccount)
         : admin.credential.applicationDefault()

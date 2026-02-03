@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { tasks as tasksApi, sessions as sessionsApi, courses as coursesApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import CalendarGrid from './components/CalendarGrid';
@@ -13,6 +14,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const StudyPlanner = () => {
+  const { currentUser } = useAuth();
   const [currentView, setCurrentView] = useState('weekly');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState(null);
@@ -28,6 +30,7 @@ const StudyPlanner = () => {
 
   // Fetch data on load
   useEffect(() => {
+    if (!currentUser) return;
     const fetchData = async () => {
       try {
         const [loadedSessions, loadedTasks, loadedCourses] = await Promise.all([
@@ -52,7 +55,7 @@ const StudyPlanner = () => {
     return () => {
       window.removeEventListener('session-created', handleSessionCreated);
     };
-  }, []);
+  }, [currentUser]);
 
   // Tasks are now managed via API state above
 

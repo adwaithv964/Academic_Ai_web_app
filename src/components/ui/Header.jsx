@@ -7,8 +7,10 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
 import { sessions as sessionsApi, user as userApi } from '../../services/api';
 import { startTimer, pauseTimer, tick, setTimeLeft, resetTimer } from '../../store/slices/focusSlice';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header = ({ sidebarCollapsed = false }) => {
+  const { currentUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -44,6 +46,8 @@ const Header = ({ sidebarCollapsed = false }) => {
 
   // Load user profile
   useEffect(() => {
+    if (!currentUser) return;
+
     const loadUserProfile = async () => {
       try {
         const profile = await userApi.get();
@@ -53,7 +57,7 @@ const Header = ({ sidebarCollapsed = false }) => {
       }
     };
     loadUserProfile();
-  }, []);
+  }, [currentUser]);
 
   const formatTimer = (seconds) => {
     const h = Math.floor(seconds / 3600);

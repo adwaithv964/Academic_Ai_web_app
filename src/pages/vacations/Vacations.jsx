@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import Input from '../../components/ui/Input';
 
 const Vacations = () => {
+    const { currentUser } = useAuth();
     const [vacations, setVacations] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -14,16 +17,15 @@ const Vacations = () => {
     });
 
     useEffect(() => {
-        fetchVacations();
-    }, []);
+        if (currentUser) {
+            fetchVacations();
+        }
+    }, [currentUser]);
 
     const fetchVacations = async () => {
         try {
-            const res = await fetch('http://localhost:5002/api/vacations');
-            if (res.ok) {
-                const data = await res.json();
-                setVacations(data);
-            }
+            const data = await api.vacations.list();
+            setVacations(data);
         } catch (error) {
             console.error("Failed to fetch vacations:", error);
         } finally {
@@ -56,18 +58,10 @@ const Vacations = () => {
         const payload = { ...formData, days };
 
         try {
-            const res = await fetch('http://localhost:5002/api/vacations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                const newVacation = await res.json();
-                setVacations([...vacations, newVacation]);
-                setIsModalOpen(false);
-                setFormData({ name: '', startDate: '', endDate: '' });
-            }
+            const newVacation = await api.vacations.create(payload);
+            setVacations([...vacations, newVacation]);
+            setIsModalOpen(false);
+            setFormData({ name: '', startDate: '', endDate: '' });
         } catch (error) {
             console.error("Failed to add vacation:", error);
         }
@@ -77,13 +71,8 @@ const Vacations = () => {
         if (!window.confirm("Are you sure you want to delete this vacation?")) return;
 
         try {
-            const res = await fetch(`http://localhost:5002/api/vacations/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (res.ok) {
-                setVacations(vacations.filter(v => v._id !== id));
-            }
+            await api.vacations.delete(id);
+            setVacations(vacations.filter(v => v._id !== id));
         } catch (error) {
             console.error("Failed to delete vacation:", error);
         }

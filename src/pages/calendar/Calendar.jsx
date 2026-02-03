@@ -20,9 +20,11 @@ import AgendaView from './views/AgendaView';
 import MultiWeekView from './views/MultiWeekView';
 import MultiDayView from './views/MultiDayView';
 import AddEventModal from './components/AddEventModal';
-import axios from 'axios';
+import { exams as examsApi, events as eventsApi, vacations as vacationsApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Calendar = () => {
+    const { currentUser } = useAuth();
     const [view, setView] = useState('month'); // year, month, multi-week, week, multi-day, day, agenda
     const [currentDate, setCurrentDate] = useState(new Date());
     const [events, setEvents] = useState([]);
@@ -54,18 +56,19 @@ const Calendar = () => {
     const jumpToToday = () => setCurrentDate(new Date());
 
     const fetchEvents = async () => {
+        if (!currentUser) return;
         setLoading(true);
         try {
             // Fetch from our APIs
-            const [examsRes, vacationsRes, eventsRes] = await Promise.all([
-                fetch('http://localhost:5002/api/exams').then(r => r.json()).catch(() => []),
-                fetch('http://localhost:5002/api/vacations').then(r => r.json()).catch(() => []),
-                fetch('http://localhost:5002/api/events').then(r => r.json()).catch(() => []),
+            const [examsRes = [], vacationsRes = [], eventsRes = []] = await Promise.all([
+                examsApi.list().catch(() => []),
+                vacationsApi.list().catch(() => []),
+                eventsApi.list().catch(() => []),
             ]);
 
             // Normalize events with pastel colors for "Kanban" look
             const normalizedEvents = [
-                ...examsRes.map(e => ({
+                ...(Array.isArray(examsRes) ? examsRes : []).map(e => ({
                     ...e,
                     type: 'exam',
                     date: new Date(e.date),
@@ -73,7 +76,7 @@ const Calendar = () => {
                     // Pastel Red/Pink
                     color: 'bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200'
                 })),
-                ...vacationsRes.map(v => ({
+                ...(Array.isArray(vacationsRes) ? vacationsRes : []).map(v => ({
                     ...v,
                     type: 'vacation',
                     date: new Date(v.startDate),
@@ -81,7 +84,7 @@ const Calendar = () => {
                     // Pastel Cyan/Blue
                     color: 'bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200'
                 })),
-                ...eventsRes.map(e => ({
+                ...(Array.isArray(eventsRes) ? eventsRes : []).map(e => ({
                     ...e,
                     type: 'generic',
                     date: new Date(e.date),
@@ -100,7 +103,7 @@ const Calendar = () => {
 
     useEffect(() => {
         fetchEvents();
-    }, [currentDate]);
+    }, [currentDate, currentUser]);
 
     const handleDateClick = (date) => {
         setCurrentDate(date);
@@ -122,9 +125,9 @@ const Calendar = () => {
     const handleSaveEvent = async (eventData) => {
         try {
             if (eventData._id) {
-                await axios.put(`http://localhost:5002/api/events/${eventData._id}`, eventData);
+                await eventsApi.update(eventData._id, eventData);
             } else {
-                await axios.post('http://localhost:5002/api/events', eventData);
+                await eventsApi.create(eventData);
             }
             fetchEvents();
             setIsModalOpen(false);
@@ -137,7 +140,7 @@ const Calendar = () => {
     const handleDeleteEvent = async (id) => {
         if (confirm("Are you sure you want to delete this event?")) {
             try {
-                await axios.delete(`http://localhost:5002/api/events/${id}`);
+                await eventsApi.delete(id);
                 fetchEvents();
                 setIsModalOpen(false);
                 setSelectedEvent(null);

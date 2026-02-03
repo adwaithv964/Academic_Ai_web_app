@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileText, File, BookOpen, Filter, Download, Trash2, Search, Edit2, X } from 'lucide-react';
 import Button from '../../../components/ui/Button';
-import documentsApi from '../../../services/documents';
+import { documents as documentsApi } from '../../../services/api';
 import { formatDate } from '../../../utils/dateUtils';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DigitalBackpack = () => {
+    const { currentUser } = useAuth();
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('all');
@@ -22,8 +24,9 @@ const DigitalBackpack = () => {
     const [pendingUpload, setPendingUpload] = useState(null); // { file, name, subject, type }
 
     useEffect(() => {
+        if (!currentUser) return;
         loadDocuments();
-    }, []);
+    }, [currentUser]);
 
     const loadDocuments = async () => {
         try {

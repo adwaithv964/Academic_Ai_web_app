@@ -6,7 +6,10 @@ import Icon from '../../../components/AppIcon';
 import { user as userApi } from '../../../services/api';
 import { useEffect } from 'react';
 
+import { useAuth } from '../../../contexts/AuthContext';
+
 const ProfileTab = () => {
+  const { currentUser } = useAuth();
   const defaultProfileData = {
     firstName: "John",
     lastName: "Smith",
@@ -23,6 +26,8 @@ const ProfileTab = () => {
   const [profileData, setProfileData] = useState(defaultProfileData);
 
   useEffect(() => {
+    if (!currentUser) return;
+
     const loadProfile = async () => {
       try {
         // Fetch from MongoDB via API
@@ -44,7 +49,7 @@ const ProfileTab = () => {
       }
     };
     loadProfile();
-  }, []);
+  }, [currentUser]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

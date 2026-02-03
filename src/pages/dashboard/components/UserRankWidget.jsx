@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import { gamification } from '../../../services/api';
 
+import { useAuth } from '../../../contexts/AuthContext';
+
 const UserRankWidget = () => {
+    const { currentUser } = useAuth();
     const [stats, setStats] = useState({
         rank: "Scholar Lvl 1",
         streak: 0,
@@ -12,6 +15,8 @@ const UserRankWidget = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!currentUser) return;
+
         const fetchStats = async () => {
             try {
                 // Try fetching from API similar to Achievements page
@@ -41,7 +46,7 @@ const UserRankWidget = () => {
         };
 
         fetchStats();
-    }, []);
+    }, [currentUser]);
 
     const progress = (stats.currentXP / stats.nextLevelXP) * 100;
 

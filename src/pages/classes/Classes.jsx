@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import Input from '../../components/ui/Input';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const COLORS = [
@@ -18,6 +19,7 @@ const COLORS = [
 ];
 
 const Classes = () => {
+    const { currentUser } = useAuth();
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,8 +31,8 @@ const Classes = () => {
     // Fetch Classes
     const fetchClasses = async () => {
         try {
-            const res = await axios.get('http://localhost:5002/api/courses');
-            setClasses(res.data);
+            const data = await api.courses.list();
+            setClasses(data);
         } catch (error) {
             console.error("Failed to fetch classes", error);
         } finally {
@@ -39,8 +41,10 @@ const Classes = () => {
     };
 
     useEffect(() => {
-        fetchClasses();
-    }, []);
+        if (currentUser) {
+            fetchClasses();
+        }
+    }, [currentUser]);
 
     // Open Modal
     const openModal = (cls = null) => {
@@ -67,9 +71,9 @@ const Classes = () => {
     const onSubmit = async (data) => {
         try {
             if (editingClass) {
-                await axios.put(`http://localhost:5002/api/courses/${editingClass._id}`, data);
+                await api.courses.update(editingClass._id, data);
             } else {
-                await axios.post('http://localhost:5002/api/courses', data);
+                await api.courses.create(data);
             }
             fetchClasses();
             setIsModalOpen(false);
@@ -83,7 +87,7 @@ const Classes = () => {
     const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this class?")) {
             try {
-                await axios.delete(`http://localhost:5002/api/courses/${id}`);
+                await api.courses.delete(id);
                 fetchClasses();
             } catch (error) {
                 console.error("Failed to delete class", error);

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import Input from '../../components/ui/Input';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const COLORS = [
@@ -18,6 +19,7 @@ const COLORS = [
 ];
 
 const Exams = () => {
+    const { currentUser } = useAuth();
     const [exams, setExams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,8 +31,8 @@ const Exams = () => {
     // Fetch Exams
     const fetchExams = async () => {
         try {
-            const res = await axios.get('http://localhost:5002/api/exams');
-            setExams(res.data);
+            const data = await api.exams.list();
+            setExams(data);
         } catch (error) {
             console.error("Failed to fetch exams", error);
         } finally {
@@ -39,8 +41,10 @@ const Exams = () => {
     };
 
     useEffect(() => {
-        fetchExams();
-    }, []);
+        if (currentUser) {
+            fetchExams();
+        }
+    }, [currentUser]);
 
     // Open Modal
     const openModal = (exam = null) => {
@@ -69,9 +73,9 @@ const Exams = () => {
     const onSubmit = async (data) => {
         try {
             if (editingExam) {
-                await axios.put(`http://localhost:5002/api/exams/${editingExam._id}`, data);
+                await api.exams.update(editingExam._id, data);
             } else {
-                await axios.post('http://localhost:5002/api/exams', data);
+                await api.exams.create(data);
             }
             fetchExams();
             setIsModalOpen(false);
@@ -85,7 +89,7 @@ const Exams = () => {
     const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this exam?")) {
             try {
-                await axios.delete(`http://localhost:5002/api/exams/${id}`);
+                await api.exams.delete(id);
                 fetchExams();
             } catch (error) {
                 console.error("Failed to delete exam", error);

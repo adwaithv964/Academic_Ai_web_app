@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 import api from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../constants';
 
@@ -12,6 +13,7 @@ import Leaderboard from './Leaderboard';
 import StudyGarden from './StudyGarden';
 
 const Rewards = ({ onBack }) => {
+    const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -30,8 +32,10 @@ const Rewards = ({ onBack }) => {
     };
 
     useEffect(() => {
-        fetchUserData();
-    }, []);
+        if (currentUser) {
+            fetchUserData();
+        }
+    }, [currentUser]);
 
     const handleTransaction = (newPoints, newInventory) => {
         setUser(prev => ({ ...prev, points: newPoints, inventory: newInventory }));

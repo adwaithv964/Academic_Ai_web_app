@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
+import { user as userApi } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const AcademicSettingsTab = () => {
+  const { currentUser } = useAuth();
   const defaultSettings = {
+    // ...
     currentGPA: "8.5",
     gpaScale: "10.0",
     targetGPA: "9.0",
@@ -24,12 +27,14 @@ const AcademicSettingsTab = () => {
 
   // Fetch settings on load
   React.useEffect(() => {
+    if (!currentUser) return;
+
     const fetchSettings = async () => {
       try {
-        const res = await axios.get('/api/user');
-        if (res.data && res.data.academicSettings) {
+        const res = await userApi.get();
+        if (res && res.academicSettings) {
           // Merge defaults with fetched to ensure all fields exist
-          setAcademicSettings({ ...defaultSettings, ...res.data.academicSettings });
+          setAcademicSettings({ ...defaultSettings, ...res.academicSettings });
         }
       } catch (err) {
         console.error("Failed to fetch academic settings", err);
@@ -38,7 +43,7 @@ const AcademicSettingsTab = () => {
       }
     };
     fetchSettings();
-  }, []);
+  }, [currentUser]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -105,7 +110,7 @@ const AcademicSettingsTab = () => {
     setIsSaving(true);
 
     try {
-      await axios.post('/api/user', { academicSettings });
+      await userApi.update({ academicSettings });
       alert('Academic settings updated successfully!');
     } catch (err) {
       console.error("Failed to save settings", err);

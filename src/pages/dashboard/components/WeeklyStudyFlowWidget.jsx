@@ -3,7 +3,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Icon from '../../../components/AppIcon';
 import { sessions as sessionsApi } from '../../../services/api';
 
+import { useAuth } from '../../../contexts/AuthContext';
+
 const WeeklyStudyFlowWidget = () => {
+    const { currentUser } = useAuth();
     const [data, setData] = useState([
         { name: 'Mon', hours: 0 },
         { name: 'Tue', hours: 0 },
@@ -17,6 +20,8 @@ const WeeklyStudyFlowWidget = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        if (!currentUser) return;
+
         const fetchData = async () => {
             try {
                 const allSessions = await sessionsApi.list() || [];
@@ -87,7 +92,7 @@ const WeeklyStudyFlowWidget = () => {
         fetchData();
         window.addEventListener('session-created', fetchData);
         return () => window.removeEventListener('session-created', fetchData);
-    }, []);
+    }, [currentUser]);
 
     return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full flex flex-col">

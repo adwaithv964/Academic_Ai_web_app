@@ -84,6 +84,12 @@ export const scenarios = {
 
 export const documents = {
   list: () => client.get('/documents').then(r => r.data),
+  upload: (formData) => client.post('/documents/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(r => r.data),
+  update: (id, data) => client.put(`/documents/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/documents/${id}`).then(r => r.data),
+  getDownloadUrl: (id) => `${apiBase}/documents/${id}/download`,
 };
 
 export const webReferences = {
@@ -109,10 +115,28 @@ export const gamification = {
   getGamification: () => client.get('/achievements').then(r => r.data),
   getLeaderboard: () => client.get('/leaderboard').then(r => r.data),
   getStoreItems: () => client.get('/store/items').then(r => r.data),
-  buyItem: (userId, itemId) => client.post('/store/buy', { userId, itemId }).then(r => r.data),
-  getQuests: (userId) => client.get(`/quests?userId=${userId}`).then(r => r.data),
-  claimQuest: (userId, questId) => client.post('/quests/claim', { userId, questId }).then(r => r.data),
-  growGarden: (userId, minutes) => client.post('/garden/grow', { userId, minutes }).then(r => r.data)
+  buyItem: (itemId) => client.post('/store/buy', { itemId }).then(r => r.data),
+  getQuests: () => client.get(`/quests`).then(r => r.data),
+  claimQuest: (questId) => client.post('/quests/claim', { questId }).then(r => r.data),
+  growGarden: (minutes) => client.post('/garden/grow', { minutes }).then(r => r.data)
+};
+
+export const history = {
+  list: () => client.get('/history').then(r => r.data),
+};
+
+export const events = {
+  list: () => client.get('/events').then(r => r.data),
+  create: (data) => client.post('/events', data).then(r => r.data),
+  update: (id, data) => client.put(`/events/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/events/${id}`).then(r => r.data),
+};
+
+export const vacations = {
+  list: () => client.get('/vacations').then(r => r.data),
+  create: (data) => client.post('/vacations', data).then(r => r.data),
+  update: (id, data) => client.put(`/vacations/${id}`, data).then(r => r.data),
+  delete: (id) => client.delete(`/vacations/${id}`).then(r => r.data),
 };
 
 export default {
@@ -127,6 +151,9 @@ export default {
   predictions,
   eisenhowerTasks,
   gamification,
+  history,
+  events,
+  vacations,
   predictGrades,
   health
 };

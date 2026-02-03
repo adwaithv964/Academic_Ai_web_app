@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gamification as gamificationApi } from 'services/api';
+import { useAuth } from 'contexts/AuthContext';
 import HeroStats from 'components/achievements/HeroStats';
 import BadgeGrid from 'components/achievements/BadgeGrid';
 import LevelingSystem from 'components/achievements/LevelingSystem';
@@ -7,6 +8,7 @@ import CourseAchievements from 'components/achievements/CourseAchievements';
 import HistoryOfGlory from 'components/achievements/HistoryOfGlory';
 
 const Achievements = () => {
+    const { currentUser } = useAuth();
     const [stats, setStats] = useState({
         totalFocusTime: '0h 0m',
         currentStreak: 0,
@@ -91,8 +93,10 @@ const Achievements = () => {
             }
         };
 
-        fetchData();
-    }, []);
+        if (currentUser) {
+            fetchData();
+        }
+    }, [currentUser]);
 
     if (loading) {
         return (
