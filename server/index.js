@@ -1180,7 +1180,7 @@ app.delete('/api/web-references/:id', async (req, res) => {
 
 if (require.main === module) {
   connectDB().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`API server listening on http://localhost:${PORT}`);
       console.log('Ensure you have a valid .env file with SERVER_MONGO_URI or MONGO_URI');
     });

@@ -8,6 +8,7 @@ const CourseSchema = new mongoose.Schema({
     grade: String, // Current letter grade or percentage
     term: String,
     color: String,
+    progress: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
 

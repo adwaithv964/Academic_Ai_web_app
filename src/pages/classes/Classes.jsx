@@ -50,12 +50,14 @@ const Classes = () => {
             setValue('code', cls.code);
             setValue('instructor', cls.instructor || '');
             setValue('color', cls.color || COLORS[0].value);
+            setValue('progress', cls.progress || 0);
         } else {
             reset({
                 name: '',
                 code: '',
                 instructor: '',
-                color: COLORS[0].value
+                color: COLORS[0].value,
+                progress: 0
             });
         }
         setIsModalOpen(true);
@@ -208,6 +210,15 @@ const Classes = () => {
                                         label="Instructor (Optional)"
                                         placeholder="e.g. Dr. Sarah Smith"
                                         {...register('instructor')}
+                                    />
+
+                                    <Input
+                                        label="Syllabus Progress (%)"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        placeholder="0-100"
+                                        {...register('progress', { min: 0, max: 100 })}
                                     />
 
                                     <div>
