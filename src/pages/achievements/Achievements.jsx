@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { gamification } from 'services/api';
+import { gamification as gamificationApi } from 'services/api';
 import HeroStats from 'components/achievements/HeroStats';
 import BadgeGrid from 'components/achievements/BadgeGrid';
 import LevelingSystem from 'components/achievements/LevelingSystem';
@@ -30,8 +30,8 @@ const Achievements = () => {
         const fetchData = async () => {
             try {
                 const [statsRes, gameRes] = await Promise.all([
-                    gamification.getStats(),
-                    gamification.getGamification()
+                    gamificationApi.getStats(),
+                    gamificationApi.getGamification()
                 ]);
 
                 setStats(statsRes);
