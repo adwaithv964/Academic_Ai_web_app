@@ -60,8 +60,10 @@ exports.getStats = async (req, res) => {
 
         sessions.forEach(session => {
             // Handle duration (assuming minutes)
-            const duration = session.duration || 0;
-            totalMinutes += duration;
+            // Handle duration (stored in HOURS in DB, convert to minutes)
+            const durationInHours = session.duration || 0;
+            const durationInMinutes = durationInHours * 60;
+            totalMinutes += durationInMinutes;
 
             if (session.plannedDuration && session.plannedDuration > 0) {
                 // Efficiency capped at 100% for calculation? Or allow >100%? Let's cap at 100 for "Average" to be sane.
@@ -74,7 +76,7 @@ exports.getStats = async (req, res) => {
         });
 
         const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
+        const minutes = Math.round(totalMinutes % 60);
         const formattedTime = `${hours}h ${minutes}m`;
 
         // 2. Current Streak
@@ -136,8 +138,9 @@ exports.getGamification = async (req, res) => {
         let maxSingleSession = 0;
 
         sessions.forEach(s => {
-            totalMinutes += (s.duration || 0);
-            if ((s.duration || 0) > maxSingleSession) maxSingleSession = (s.duration || 0);
+            const h = s.duration || 0;
+            totalMinutes += (h * 60); // Convert hours to minutes
+            if ((h * 60) > maxSingleSession) maxSingleSession = (h * 60);
         });
 
         const streak = await calculateStreak();

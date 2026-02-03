@@ -5,7 +5,7 @@ const StudySessionSchema = new mongoose.Schema({
     topic: String,
     date: String, // ISO String
     startTime: String,
-    duration: Number, // in minutes (actual)
+    duration: Number, // in HOURS (actual)
     plannedDuration: Number, // in minutes (goal)
     priority: String,
     type: String, // study, review, etc.
