@@ -32,6 +32,11 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       icon: 'Grid', // Using Grid for Menu
     },
     {
+      label: 'AI Assistant',
+      path: '/ai-assistant',
+      icon: 'Bot', // or BrainCircuit if available
+    },
+    {
       label: 'Sessions',
       path: '/study-planner',
       icon: 'Clock', // Or 'Timer'
@@ -47,7 +52,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       icon: 'CheckSquare',
     },
     {
-      label: 'Courses',
+      label: 'Prediction',
       path: '/grade-predictor', // Mapping "Courses" to Grade Predictor as it deals with courses/grades
       icon: 'BookOpen',
     },
@@ -61,7 +66,6 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       path: '/achievements', // Placeholder
       icon: 'Trophy',
     },
-
     {
       label: 'Settings',
       path: '/student-profile-settings',

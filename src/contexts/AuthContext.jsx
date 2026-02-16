@@ -58,9 +58,42 @@ export function AuthProvider({ children }) {
         return deleteUser(auth.currentUser);
     }
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const fetchUserProfile = async (user) => {
+        try {
+            const token = await user.getIdToken();
+            const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api';
+            const response = await fetch(`${baseURL}/user`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const dbUser = await response.json();
+                setCurrentUser({ ...user, ...dbUser, token });
+            } else {
+                console.error('Failed to fetch user profile');
+                setCurrentUser(user);
+            }
+        } catch (err) {
+            console.error('Error fetching user profile:', err);
             setCurrentUser(user);
+        }
+    };
+
+    const refreshUser = async () => {
+        if (auth.currentUser) {
+            await fetchUserProfile(auth.currentUser);
+        }
+    };
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await fetchUserProfile(user);
+            } else {
+                setCurrentUser(null);
+            }
             setLoading(false);
         });
 
@@ -73,7 +106,9 @@ export function AuthProvider({ children }) {
         login,
         googleSignIn,
         logout,
-        deleteAccount
+        deleteAccount,
+        refreshUser,
+        loading
     };
 
     return (

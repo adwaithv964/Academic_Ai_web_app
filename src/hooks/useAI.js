@@ -20,12 +20,12 @@ export const useAI = () => {
         console.error('AI Error:', error);
         let errorMessage = 'An error occurred while processing your request.';
 
-        if (error?.code === 'insufficient_quota') {
+        if (error?.response?.status === 429 || error?.code === 'rate_limit_exceeded') {
+            errorMessage = 'AI Service is busy (Rate Limit Reached). Please wait a moment and try again.';
+        } else if (error?.code === 'insufficient_quota') {
             errorMessage = 'AI API quota exceeded. Please check your API usage.';
         } else if (error?.code === 'invalid_api_key') {
             errorMessage = 'Invalid AI API key. Please check your configuration.';
-        } else if (error?.code === 'rate_limit_exceeded') {
-            errorMessage = 'Rate limit exceeded. Please try again in a few moments.';
         } else if (error?.message) {
             errorMessage = error?.message;
         }

@@ -5,11 +5,6 @@ const { ACHIEVEMENTS } = require('../config/gamification');
 
 // Helper: Calculate streak from sessions
 const calculateStreak = async (userId) => {
-    // Basic implementation: check consecutive days with study sessions
-    // For MVP, we can just query sessions, group by date, and count consecutive days backwards from today/yesterday.
-    // However, for scalability, we should rely on the User model's 'currrentStreak' and 'lastActiveDate'.
-    // Here we will RE-CALCULATE it based on sessions to be robust for now.
-
     const sessions = await StudySession.find({ userId }).sort({ date: -1 });
     if (!sessions.length) return 0;
 
@@ -60,17 +55,12 @@ exports.getStats = async (req, res) => {
         let efficiencyCount = 0;
 
         sessions.forEach(session => {
-            // Handle duration (assuming minutes)
-            // Handle duration (stored in HOURS in DB, convert to minutes)
             const durationInHours = session.duration || 0;
             const durationInMinutes = durationInHours * 60;
             totalMinutes += durationInMinutes;
 
             if (session.plannedDuration && session.plannedDuration > 0) {
-                // Efficiency capped at 100% for calculation? Or allow >100%? Let's cap at 100 for "Average" to be sane.
-                // Actually, high efficiency is good. But >100% usually means bad estimation. 
-                // Let's just do raw ratio * 100 for now.
-                const efficiency = (duration / session.plannedDuration) * 100;
+                const efficiency = (durationInMinutes / session.plannedDuration) * 100;
                 totalEfficiency += efficiency;
                 efficiencyCount++;
             }
@@ -109,9 +99,9 @@ exports.getStats = async (req, res) => {
 // GET /api/achievements
 exports.getGamification = async (req, res) => {
     try {
-        const user = req.user;
-        const userId = user._id; // Ensure we have the ID for queries
-        // User is already attached by middleware, no need to find or create default here.
+        const user = await User.findById(req.user._id);
+        const userId = user._id;
+
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         if (!user.achievements) {
@@ -119,80 +109,158 @@ exports.getGamification = async (req, res) => {
         }
 
         // --- BADGE UNLOCK CHECK ---
-        // We need stats to check badges.
-        // Let's re-calculate stats here or extract a helper function.
-        // Helper approach is better.
-
         const sessions = await StudySession.find({ userId });
         let totalMinutes = 0;
         let maxSingleSession = 0;
+        let powerSessions = 0;
+        let earlySessions = 0;
+        let nightSessions = 0;
 
         sessions.forEach(s => {
             const h = s.duration || 0;
-            totalMinutes += (h * 60); // Convert hours to minutes
+            totalMinutes += (h * 60);
             if ((h * 60) > maxSingleSession) maxSingleSession = (h * 60);
+
+            // Power Mode Check
+            if (s.type === 'Focus' || s.type === 'Deep Work' || s.priority === 'High') {
+                powerSessions++;
+            }
+
+            // Time Check (Early/Night)
+            if (s.startTime) {
+                // startTime is "HH:MM" string
+                const hour = parseInt(s.startTime.split(':')[0], 10);
+                if (!isNaN(hour)) {
+                    if (hour < 8) earlySessions++;
+                    if (hour >= 22) nightSessions++;
+                }
+            }
         });
 
         const streak = await calculateStreak(userId);
-        const totalHour = totalMinutes / 60;
+        const totalHours = totalMinutes / 60;
+        const totalTasks = await Task.countDocuments({ userId, completed: true });
 
         let badgesChanged = false;
+        let xpGained = 0;
 
         // Iterate Config Achievements
         ACHIEVEMENTS.forEach(ach => {
-            // Check if already unlocked
-            if (user.achievements.get(ach.id)) return;
+            let currentTier = 'locked';
+            let currentProgress = 0;
+            const existingBadge = user.achievements.get(ach.id);
 
-            let unlocked = false;
-
-            // Logic for each badge ID
-            // Hardcoded logic mapping for now based on ID
+            // Determine Metric
+            let metricValue = 0;
             switch (ach.id) {
-                case 'marathoner': // > 4 hours single session
-                    if (maxSingleSession >= 240) unlocked = true; // 4 hours in minutes
+                case 'marathoner':
+                    metricValue = maxSingleSession; // max minutes
                     break;
-                case 'centurion': // > 100 hours total
-                    if (totalHour >= 100) unlocked = true;
+                case 'centurion':
+                    metricValue = totalHours; // total hours
                     break;
-                case 'streak_keeper': // > 7 days streak (bronze) - simplifying tiers for now
-                    // Tiers logic: check largest threshold met
-                    if (streak >= 7) unlocked = true;
+                case 'streak_keeper':
+                    metricValue = streak; // streak days
                     break;
                 case 'focus_master':
-                    // Logic for Power Mode? Need to track "Power Mode sessions" specifically.
-                    // Assuming 'type'='power' or similar in StudySession? 
-                    // Or just generic "sessions count" for now.
-                    // Let's skip valid check for this MVP unless we have 'power' type.
+                    metricValue = powerSessions; // count
+                    break;
+                case 'early_riser':
+                    metricValue = earlySessions; // count
+                    break;
+                case 'night_owl':
+                    metricValue = nightSessions; // count
+                    break;
+                case 'task_master':
+                    metricValue = totalTasks; // count
                     break;
                 default:
                     break;
             }
 
-            if (unlocked) {
-                user.achievements.set(ach.id, {
-                    progress: 100,
-                    tier: 'bronze', // Default to bronze, implement tier logic later
-                    unlockedAt: new Date()
-                });
-                badgesChanged = true;
+            // Check Tiers
+            let bestTier = 'locked';
+            let reward = 0;
 
-                // Award XP?
-                // user.xp += 100;
+            if (ach.tiers) {
+                // Check Gold first, then Silver, then Bronze
+                if (ach.tiers.gold && metricValue >= ach.tiers.gold.threshold) {
+                    bestTier = 'gold';
+                    reward = ach.tiers.gold.reward || 0;
+                } else if (ach.tiers.silver && metricValue >= ach.tiers.silver.threshold) {
+                    bestTier = 'silver';
+                    reward = ach.tiers.silver.reward || 0;
+                } else if (ach.tiers.bronze && metricValue >= ach.tiers.bronze.threshold) {
+                    bestTier = 'bronze';
+                    reward = ach.tiers.bronze.reward || 0;
+                }
+            } else if (ach.condition) {
+                // Fallback for simple boolean badges if tiers missing
+                // (Existing logic support)
+            }
+
+            // Update Logic
+            if (bestTier !== 'locked') {
+                // If new badge or upgrade
+                if (!existingBadge || existingBadge.tier !== bestTier) {
+                    // Calculate incremental XP if upgrading (optional, or just give full reward if distinct)
+                    // For simplicity, we give the reward of the reached tier. 
+                    // To avoid double dipping, we should ideally store 'rewardsClaimed' but let's just give the difference or full for now.
+                    // Let's give the FULL reward of the new tier, but maybe we should subtract previous? 
+                    // Gamification usually motivates by giving more. Let's just give the reward defined for that tier.
+
+                    // Logic: If upgrading Bronze -> Silver, give Silver reward.
+
+                    user.achievements.set(ach.id, {
+                        progress: 100, // Or actual % calculation
+                        tier: bestTier,
+                        unlockedAt: new Date()
+                    });
+
+                    // Award XP
+                    // Only award if it's an UPGRADE or NEW
+                    // Prevent re-awarding same tier (handled by existingBadge.tier !== bestTier)
+
+                    // NOTE: If user jumps straight to Gold, they get Gold reward. 
+                    // They might miss Bronze/Silver rewards. acceptable for MVP.
+
+                    xpGained += reward;
+                    badgesChanged = true;
+                }
             }
         });
 
         if (badgesChanged) {
+            user.xp = (user.xp || 0) + xpGained;
+            user.totalPoints = (user.totalPoints || 0) + xpGained; // Keep points in sync if XP == Points
+            // Note: User model has 'points' and 'xp'. Let's update both for consistency, or just XP.
+            // Model says: xp: { type: Number, default: 0 }, points: { type: Number, default: 0 }
+            user.points = (user.points || 0) + xpGained;
+
             await user.save();
         }
 
         // --- RESPONSE CONSTRUCTION ---
 
         // Level Calc
+        // Formula: Level = k * sqrt(XP)
         const constant = 0.1;
         const level = Math.floor(constant * Math.sqrt(user.xp)) + 1;
 
-        // XP for next level: L = k * sqrt(XP) => XP = (L/k)^2
+        // Save level if changed
+        if (user.level !== level) {
+            user.level = level;
+            await user.save();
+        }
+
+        // XP for next level
         // Next Level = Level + 1
+        // Required XP = ((Level)/k)^2  <-- Wait, if L = k*sqrt(XP) -> XP = (L/k)^2. 
+        // So for level L+1, we need (L+1/k)^2? 
+        // Current Level L starts at (L-1/k)^2. 
+        // Let's stick to the formula: required for *current* level was (Level-1 / k)^2?
+        // Let's just use: Next Level Threshold = (CurrentLevel / k)^2  (to reach next)
+
         const nextLevelXp = Math.pow((level) / constant, 2);
 
         const levelProgress = {
@@ -207,6 +275,7 @@ exports.getGamification = async (req, res) => {
             return {
                 ...ach,
                 isUnlocked: !!userAch,
+                tier: userAch ? userAch.tier : 'locked',
                 unlockedAt: userAch ? userAch.unlockedAt : null
             };
         });

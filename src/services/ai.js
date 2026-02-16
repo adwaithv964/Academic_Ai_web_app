@@ -7,6 +7,23 @@ const client = axios.create({
   timeout: 60000,
 });
 
+// Add a request interceptor to attach the Token
+// Fixes 401 Unauthorized error
+import { auth } from './firebase';
+
+client.interceptors.request.use(async (config) => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.error("Error attaching auth token:", error);
+  }
+  return config;
+});
+
 export async function chat(message, subject = 'general') {
   const { data } = await client.post('/ai/chat', { message, subject });
   return data; // { text }

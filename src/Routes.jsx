@@ -27,11 +27,24 @@ import CalendarSync from './pages/calendar-sync/CalendarSync';
 import ScheduleSetup from './pages/schedule-setup/ScheduleSetup';
 import Calendar from './pages/calendar/Calendar';
 import Achievements from './pages/achievements/Achievements';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagementAdmin from './pages/admin/UserManagement';
+import UserDetail from './pages/admin/UserDetail';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminContent from './pages/admin/AdminContent';
+import AdminLogs from './pages/admin/AdminLogs';
+import AdminLayout from './components/layout/AdminLayout';
+import AdminRoute from './components/AdminRoute';
+import AdminLogin from './pages/admin/AdminLogin';
 import { useAuth } from './contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-indigo-600">Loading...</div>;
+  }
 
   if (!currentUser) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
@@ -40,12 +53,46 @@ const PrivateRoute = ({ children }) => {
   return children;
 };
 
+import axios from 'axios';
+import Maintenance from './pages/Maintenance';
+
 const Routes = () => {
+  const [isMaintenance, setIsMaintenance] = React.useState(false);
+  const [checkingStatus, setCheckingStatus] = React.useState(true);
+
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api';
+        const { data } = await axios.get(`${baseURL}/public/status`);
+        setIsMaintenance(data.maintenanceMode);
+      } catch (error) {
+        console.error("System Status Check Failed", error);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+    checkStatus();
+  }, []);
+
+  if (checkingStatus) return <div className="flex items-center justify-center min-h-screen text-indigo-600">Loading System Status...</div>;
+
+  if (isMaintenance && !window.location.pathname.startsWith('/admin') && window.location.pathname !== '/maintenance') {
+    window.location.href = '/maintenance';
+    return null;
+  }
+
+  if (!isMaintenance && window.location.pathname === '/maintenance') {
+    window.location.href = '/';
+    return null;
+  }
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ErrorBoundary>
         <ScrollToTop />
         <RouterRoutes>
+          <Route path="/maintenance" element={<Maintenance />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={
             <PrivateRoute>
@@ -110,21 +157,75 @@ const Routes = () => {
                 <Menu />
               </PrivateRoute>
             } />
-            <Route path="/classes" element={<PrivateRoute><Classes /></PrivateRoute>} />
-            <Route path="/exams" element={<PrivateRoute><Exams /></PrivateRoute>} />
-            <Route path="/vacations" element={<PrivateRoute><Vacations /></PrivateRoute>} />
-            <Route path="/xtra" element={<PrivateRoute><Xtra /></PrivateRoute>} />
-            <Route path="/timer" element={<PrivateRoute><FocusTimer /></PrivateRoute>} />
-            <Route path="/achievements" element={<PrivateRoute><Achievements /></PrivateRoute>} />
-            <Route path="/ai-scan" element={<PrivateRoute><AiScheduleScan /></PrivateRoute>} />
-            <Route path="/sync" element={<PrivateRoute><CalendarSync /></PrivateRoute>} />
-            <Route path="/schedule-setup" element={<PrivateRoute><ScheduleSetup /></PrivateRoute>} />
+            <Route path="/classes" element={
+              <PrivateRoute>
+                <Classes />
+              </PrivateRoute>
+            } />
+            <Route path="/exams" element={
+              <PrivateRoute>
+                <Exams />
+              </PrivateRoute>
+            } />
+            <Route path="/vacations" element={
+              <PrivateRoute>
+                <Vacations />
+              </PrivateRoute>
+            } />
+            <Route path="/xtra" element={
+              <PrivateRoute>
+                <Xtra />
+              </PrivateRoute>
+            } />
+            <Route path="/focus-timer" element={
+              <PrivateRoute>
+                <FocusTimer />
+              </PrivateRoute>
+            } />
+            <Route path="/ai-scan" element={
+              <PrivateRoute>
+                <AiScheduleScan />
+              </PrivateRoute>
+            } />
+            <Route path="/calendar-sync" element={
+              <PrivateRoute>
+                <CalendarSync />
+              </PrivateRoute>
+            } />
+            <Route path="/schedule-setup" element={
+              <PrivateRoute>
+                <ScheduleSetup />
+              </PrivateRoute>
+            } />
+            <Route path="/achievements" element={
+              <PrivateRoute>
+                <Achievements />
+              </PrivateRoute>
+            } />
+
             <Route path="/calendar" element={
               <PrivateRoute>
                 <Calendar />
               </PrivateRoute>
             } />
             <Route path="*" element={<NotFound />} />
+          </Route>
+
+          {/* Standalone Admin Portal Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<UserManagementAdmin />} />
+            <Route path="users/:id" element={<UserDetail />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="content" element={<AdminContent />} />
+            <Route path="logs" element={<AdminLogs />} />
           </Route>
         </RouterRoutes>
       </ErrorBoundary>

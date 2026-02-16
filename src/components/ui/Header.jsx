@@ -10,7 +10,7 @@ import { startTimer, pauseTimer, tick, setTimeLeft, resetTimer } from '../../sto
 import { useAuth } from '../../contexts/AuthContext';
 
 const Header = ({ sidebarCollapsed = false }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -34,15 +34,36 @@ const Header = ({ sidebarCollapsed = false }) => {
     } else if (timeLeft === 0 && isActive) {
       // Timer finished
       dispatch(pauseTimer());
-      // Play sound or notify
-      addNotification({
-        title: 'Focus Session Complete!',
-        message: 'Great job! Take a break.',
-        timestamp: Date.now()
-      });
+
+      // SAVE SESSION AUTOMATICALLY
+      const saveCompletedSession = async () => {
+        try {
+          const now = new Date();
+          await sessionsApi.create({
+            subject: 'Focus Session',
+            topic: mode === 'focus' ? 'Deep Work' : 'Break',
+            startTime: new Date(now.getTime() - initialDuration * 1000).toTimeString().substring(0, 5),
+            duration: Number((initialDuration / 3600).toFixed(2)),
+            date: now.toISOString(),
+            type: 'study',
+            priority: 'medium',
+            notes: `Completed ${mode}: ${formatTimer(initialDuration)}`
+          });
+          addNotification({
+            title: 'Session Complete & Saved!',
+            message: `Great job! Recorded ${formatTimer(initialDuration)} of focus.`,
+            timestamp: Date.now()
+          });
+          // Refresh User Data (Quests/Garden)
+          if (refreshUser) await refreshUser();
+        } catch (error) {
+          console.error("Failed to save completed session:", error);
+        }
+      };
+      saveCompletedSession();
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, dispatch, addNotification]);
+  }, [isActive, timeLeft, dispatch, addNotification, mode, initialDuration]);
 
   // Load user profile
   useEffect(() => {

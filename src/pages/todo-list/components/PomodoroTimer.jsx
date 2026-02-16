@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import TimeSpinner from '../../focus-timer/components/TimeSpinner';
 
 const PomodoroTimer = () => {
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
     const [mode, setMode] = useState('focus'); // focus, short, long
+    const [totalDuration, setTotalDuration] = useState(25 * 60); // Track total for progress
 
     useEffect(() => {
         let interval = null;
@@ -25,26 +27,36 @@ const PomodoroTimer = () => {
 
     const resetTimer = () => {
         setIsActive(false);
-        if (mode === 'focus') setTimeLeft(25 * 60);
-        if (mode === 'short') setTimeLeft(5 * 60);
-        if (mode === 'long') setTimeLeft(15 * 60);
+        if (mode === 'focus') { setTimeLeft(25 * 60); setTotalDuration(25 * 60); }
+        if (mode === 'short') { setTimeLeft(5 * 60); setTotalDuration(5 * 60); }
+        if (mode === 'long') { setTimeLeft(60 * 60); setTotalDuration(60 * 60); }
     };
 
     const changeMode = (newMode) => {
         setMode(newMode);
         setIsActive(false);
-        if (newMode === 'focus') setTimeLeft(25 * 60);
-        if (newMode === 'short') setTimeLeft(5 * 60);
-        if (newMode === 'long') setTimeLeft(15 * 60);
+        if (newMode === 'focus') { setTimeLeft(25 * 60); setTotalDuration(25 * 60); }
+        if (newMode === 'short') { setTimeLeft(5 * 60); setTotalDuration(5 * 60); }
+        if (newMode === 'long') { setTimeLeft(60 * 60); setTotalDuration(60 * 60); }
     };
 
     const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
+
+        if (hrs > 0) {
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const progress = 1 - (timeLeft / (mode === 'focus' ? 1500 : mode === 'short' ? 300 : 900));
+    const handleTimeChange = (newSeconds) => {
+        setTimeLeft(newSeconds);
+        setTotalDuration(newSeconds);
+    };
+
+    const progress = totalDuration > 0 ? 1 - (timeLeft / totalDuration) : 0;
 
     return (
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
@@ -82,10 +94,23 @@ const PomodoroTimer = () => {
                             animate={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - progress) }}
                         />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-5xl font-mono font-bold text-foreground tracking-tighter">
-                            {formatTime(timeLeft)}
-                        </span>
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                        {isActive ? (
+                            <span className="text-5xl font-mono font-bold text-foreground tracking-tighter">
+                                {formatTime(timeLeft)}
+                            </span>
+                        ) : (
+                            <div className="scale-75">
+                                <TimeSpinner
+                                    totalSeconds={timeLeft}
+                                    onChange={handleTimeChange}
+                                    isDark={false}
+                                    showHours={mode === 'focus' || mode === 'long'}
+                                    minMinutes={mode === 'short' ? 5 : 0}
+                                    maxMinutes={mode === 'short' ? 15 : 59}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 

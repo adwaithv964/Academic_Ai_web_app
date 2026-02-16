@@ -8,7 +8,7 @@ const menuItems = [
     { label: 'Exams', icon: '✍️', path: '/exams', color: 'bg-orange-100', text: 'text-orange-600' },
     { label: 'Vacations', icon: '🏝️', path: '/vacations', color: 'bg-cyan-100', text: 'text-cyan-600' },
     { label: 'Xtra', icon: '⚡', path: '/xtra', color: 'bg-yellow-100', text: 'text-yellow-600' },
-    { label: 'Focus Timer', icon: '⏳', path: '/timer', color: 'bg-rose-100', text: 'text-rose-600' },
+    { label: 'Focus Timer', icon: '⏳', path: '/focus-timer', color: 'bg-rose-100', text: 'text-rose-600' },
     { label: 'Ai Schedule Scan', icon: '📸', path: '/ai-scan', color: 'bg-blue-100', text: 'text-blue-600' },
 
     { label: 'Settings', icon: '🛠️', path: '/student-profile-settings', color: 'bg-slate-100', text: 'text-slate-600' },

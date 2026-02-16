@@ -1,5 +1,6 @@
 const admin = require('../config/firebase');
 const User = require('../models/User');
+const SystemSettings = require('../models/SystemSettings');
 
 /**
  * Middleware to verify Firebase ID token and attach user to request
@@ -13,22 +14,22 @@ const authenticateUser = async (req, res, next) => {
         }
 
         const idToken = authHeader.split('Bearer ')[1];
+        // console.log("Auth Middleware Token received:", idToken ? "Yes (Length: " + idToken.length + ")" : "No/Empty");
 
         // 1. Verify Token with Firebase
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         const { uid, email, firebase } = decodedToken;
 
         // 2. Find or Create User in MongoDB
-        // We strictly find by email or firebase UID. 
-        // Ideally, we store the firebase UID in the DB.
-
-        // Try finding by email first (migration friendly)
         let user = await User.findOne({ email: email });
 
-        // If not found, try finding by a customized googleId/firebaseId if you have one.
-        // For now, let's assume email is the unique identifier link.
-
         if (!user) {
+            // Check if registration is allowed
+            const settings = await SystemSettings.getInstance();
+            if (!settings.allowRegistration) {
+                return res.status(403).json({ error: 'Registration is currently disabled.' });
+            }
+
             // Option: Auto-create user or reject?
             // Let's auto-create to be safe for new signups logic flow
             console.log(`Creating new user for ${email} from Auth Middleware`);

@@ -73,6 +73,53 @@
     --input: 240 3.7% 15.9%;
     --ring: 263.4 70% 50.4%;
   }
+
+  /* Cyberpunk Theme (Neon/Dark) */
+  .theme-cyberpunk {
+    --background: 260 50% 10%;
+    --foreground: 280 20% 98%;
+
+    --card: 260 50% 12%;
+    --card-foreground: 280 20% 98%;
+
+    --primary: 320 100% 55%; /* Neon Pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 190 100% 50%; /* Cyan */
+    --secondary-foreground: 260 50% 10%;
+    
+    --accent: 280 100% 60%; /* Purple */
+    --accent-foreground: 0 0% 100%;
+
+    --border: 320 80% 30%;
+    --input: 260 50% 20%;
+    --ring: 320 100% 55%;
+  }
+
+  /* Nature Theme (Green/Earthy - Light) */
+  .theme-nature {
+    --background: 100 30% 96%; /* Soft Green-White */
+    --foreground: 120 40% 15%; /* Deep Green Text */
+
+    --card: 100 25% 100%;
+    --card-foreground: 120 40% 15%;
+
+    --primary: 140 50% 45%; /* Forest Green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 80 60% 90%; /* Light Lime */
+    --secondary-foreground: 120 50% 20%;
+
+    --muted: 100 20% 92%;
+    --muted-foreground: 120 20% 40%;
+    
+    --accent: 35 60% 50%; /* Earth/Wood */
+    --accent-foreground: 0 0% 100%;
+
+    --border: 120 20% 85%;
+    --input: 120 20% 95%;
+    --ring: 140 50% 45%;
+  }
   
   * {
     @apply border-border;

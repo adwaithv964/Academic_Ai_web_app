@@ -4,7 +4,7 @@ const ActivityLogSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: {
         type: String,
-        enum: ['achievement', 'streak', 'course_completion', 'level_up', 'quest_complete'],
+        enum: ['achievement', 'streak', 'course_completion', 'level_up', 'quest_complete', 'ai_chat', 'ai_analysis'],
         required: true
     },
     title: { type: String, required: true },

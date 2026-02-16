@@ -48,7 +48,7 @@ const focusSlice = createSlice({
             state.isActive = false;
             if (mode === 'focus') state.initialDuration = 25 * 60;
             if (mode === 'shortBreak') state.initialDuration = 5 * 60;
-            if (mode === 'longBreak') state.initialDuration = 15 * 60;
+            if (mode === 'longBreak') state.initialDuration = 60 * 60; // 1 Hour
             state.timeLeft = state.initialDuration;
         },
         setTimeLeft: (state, action) => {
@@ -77,6 +77,11 @@ const focusSlice = createSlice({
         },
         setTask: (state, action) => {
             state.task = action.payload;
+        },
+        setInitialDuration: (state, action) => {
+            state.initialDuration = action.payload;
+            state.timeLeft = action.payload; // Also update current time if specific duration is set
+            state.isActive = false; // Pause when changing duration
         }
     },
 });
@@ -91,5 +96,5 @@ export const focusMiddleware = store => next => action => {
     return result;
 };
 
-export const { setMode, setTimeLeft, startTimer, pauseTimer, resetTimer, tick, setTask } = focusSlice.actions;
+export const { setMode, setTimeLeft, startTimer, pauseTimer, resetTimer, tick, setTask, setInitialDuration } = focusSlice.actions;
 export default focusSlice.reducer;

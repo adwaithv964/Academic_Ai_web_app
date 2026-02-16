@@ -22,7 +22,7 @@ const DailyQuests = ({ user, onClaim }) => {
     const handleClaim = async (quest) => {
         setClaiming(quest.id);
         try {
-            const res = await api.gamification.claimQuest(user._id, quest.id);
+            const res = await api.gamification.claimQuest(quest.id);
             if (res.success) {
                 onClaim(res.points);
                 // Update local state to show as claimed
@@ -65,14 +65,32 @@ const DailyQuests = ({ user, onClaim }) => {
                             <button disabled className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-green-600 border border-transparent flex items-center gap-1">
                                 <Icon name="Check" size={16} /> Claimed
                             </button>
-                        ) : (
+                        ) : (quest.completed || (quest.progress >= quest.target)) ? (
                             <button
                                 onClick={() => handleClaim(quest)}
                                 disabled={claiming === quest.id}
-                                className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                                className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md hover:shadow-lg hover:from-indigo-700 hover:to-violet-700 transition-all flex items-center gap-2 transform active:scale-95"
                             >
-                                {claiming === quest.id ? 'Claiming...' : 'Claim Reward'}
+                                {claiming === quest.id ? (
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Icon name="Gift" size={16} /> Claim
+                                    </>
+                                )}
                             </button>
+                        ) : (
+                            <div className="flex flex-col items-end gap-1">
+                                <span className="text-xs font-semibold text-gray-500">
+                                    {quest.progress} / {quest.target}
+                                </span>
+                                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${Math.min((quest.progress / quest.target) * 100, 100)}%` }}
+                                    />
+                                </div>
+                            </div>
                         )}
                     </div>
                 ))}

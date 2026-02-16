@@ -47,6 +47,7 @@ export async function health() {
 export const user = {
   get: () => client.get('/user').then(r => r.data),
   update: (data) => client.post('/user', data).then(r => r.data),
+  updateTheme: (theme) => client.put('/user/theme', { theme }).then(r => r.data),
 };
 
 export const tasks = {
@@ -118,7 +119,8 @@ export const gamification = {
   buyItem: (itemId) => client.post('/store/buy', { itemId }).then(r => r.data),
   getQuests: () => client.get(`/quests`).then(r => r.data),
   claimQuest: (questId) => client.post('/quests/claim', { questId }).then(r => r.data),
-  growGarden: (minutes) => client.post('/garden/grow', { minutes }).then(r => r.data)
+  growGarden: (minutes) => client.post('/garden/grow', { minutes }).then(r => r.data),
+  getGarden: () => client.get('/garden').then(r => r.data)
 };
 
 export const history = {

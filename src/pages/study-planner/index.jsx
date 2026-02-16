@@ -14,7 +14,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const StudyPlanner = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUser } = useAuth();
   const [currentView, setCurrentView] = useState('weekly');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState(null);
@@ -186,6 +186,10 @@ const StudyPlanner = () => {
           task._id === taskId ? { ...task, completed } : task
         )
       );
+      // Refresh User Data (Quests) if completing a task
+      if (completed && refreshUser) {
+        setTimeout(() => refreshUser(), 500);
+      }
     } catch (error) {
       console.error("Failed to toggle task:", error);
     }

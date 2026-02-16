@@ -18,12 +18,14 @@ const UserSchema = new mongoose.Schema({
 
     // Gamification - Core Stats
     lastActiveDate: { type: Date }, // For streak calculation
+    streak: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
     xp: { type: Number, default: 0 },
 
     // Gamification - Config
     points: { type: Number, default: 0, index: true },
     totalPoints: { type: Number, default: 0 },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
     inventory: [{ type: String }], // IDs of bought items
 
@@ -54,6 +56,7 @@ const UserSchema = new mongoose.Schema({
     },
 
     garden: {
+        level: { type: Number, default: 1 }, // Added level for unlock conditions
         plants: [{
             type: { type: String }, // e.g., 'tree', 'flower'
             stage: { type: Number, default: 1 }, // 1-3 growth stages
@@ -94,7 +97,8 @@ const UserSchema = new mongoose.Schema({
             showQuickStats: { type: Boolean, default: true },
             showUpcomingDeadlines: { type: Boolean, default: true },
             showRecentGrades: { type: Boolean, default: true },
-            compactMode: { type: Boolean, default: false }
+            compactMode: { type: Boolean, default: false },
+            activeTheme: { type: String, default: 'default' }
         },
         privacy: {
             profileVisibility: { type: String, default: "friends" },
@@ -104,5 +108,34 @@ const UserSchema = new mongoose.Schema({
         }
     }
 });
+
+// Helper Method to Update Quest Progress
+UserSchema.methods.updateQuestProgress = async function (type, amount = 1) {
+    // Lazy load to ensure no circular dependency issues, though config should be fine
+    const { DAILY_QUESTS_POOL } = require('../config/gamification');
+
+    if (!this.quests || !this.quests.daily) return;
+
+    let modified = false;
+    this.quests.daily.forEach(quest => {
+        const poolItem = DAILY_QUESTS_POOL.find(p => p.id === quest.id);
+        if (poolItem && poolItem.type === type) {
+            // Apply Update
+            if (!quest.completed) {
+                quest.progress += amount;
+                if (quest.progress >= poolItem.target) {
+                    quest.progress = poolItem.target;
+                    quest.completed = true;
+                    // Optional: Auto-claim or notify? For now, just mark completed.
+                }
+                modified = true;
+            }
+        }
+    });
+
+    if (modified) {
+        await this.save();
+    }
+};
 
 module.exports = mongoose.model('User', UserSchema);

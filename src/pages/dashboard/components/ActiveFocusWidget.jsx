@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import { startTimer, pauseTimer, resetTimer, setTask, setTimeLeft } from '../../../store/slices/focusSlice';
+import { startTimer, pauseTimer, resetTimer, setTask, setTimeLeft, setInitialDuration } from '../../../store/slices/focusSlice';
+import TimeSpinner from '../../focus-timer/components/TimeSpinner';
 
 const ActiveFocusWidget = () => {
     const dispatch = useDispatch();
@@ -36,8 +37,13 @@ const ActiveFocusWidget = () => {
     }, [activeTask, dispatch]);
 
     const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
+
+        if (hrs > 0) {
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
@@ -53,8 +59,12 @@ const ActiveFocusWidget = () => {
         dispatch(resetTimer());
     };
 
+    const handleTimeChange = (newSeconds) => {
+        dispatch(setInitialDuration(newSeconds));
+    };
+
     return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-full relative overflow-hidden group">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden group gap-4">
             <div className="flex justify-between items-start z-10">
                 <div>
                     <h3 className="text-gray-500 font-medium text-sm flex items-center gap-2">
@@ -62,9 +72,7 @@ const ActiveFocusWidget = () => {
                         Active Focus
                     </h3>
                     <div className="mt-2">
-                        <h4 className="font-bold text-gray-900 line-clamp-1" title={activeTask?.title}>
-                            {activeTask?.title || "No Task Selected"}
-                        </h4>
+                        {/* Task Title Removed as per request */}
                         {activeTask?.id && activeTask.id !== 'none' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">
                                 {mode === 'focus' ? 'FOCUS MODE' : Object.keys({ shortBreak: 'SHORT BREAK', longBreak: 'LONG BREAK' })[mode] || mode.toUpperCase()}
@@ -74,9 +82,21 @@ const ActiveFocusWidget = () => {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between mt-6 z-10">
+            <div className="flex items-center justify-between z-10 w-full">
                 <div className="text-4xl font-black font-mono text-gray-800 tracking-tight">
-                    {formatTime(timeLeft)}
+                    {isActive ? (
+                        formatTime(timeLeft)
+                    ) : (
+                        <div className="scale-75 origin-left -ml-4">
+                            <TimeSpinner
+                                totalSeconds={timeLeft}
+                                onChange={handleTimeChange}
+                                showHours={mode === 'focus' || mode === 'longBreak'}
+                                minMinutes={mode === 'shortBreak' ? 5 : 0}
+                                maxMinutes={mode === 'shortBreak' ? 15 : 59}
+                            />
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <Button

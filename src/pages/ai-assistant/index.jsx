@@ -15,6 +15,13 @@ const AIAssistant = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const [selectedSubject, setSelectedSubject] = useState('general');
 
+  const [stats, setStats] = useState({
+    chatSessions: 0,
+    documentsAnalyzed: 0,
+    studyPlans: 0,
+    avgImprovement: '0%'
+  });
+
   const { loading, error } = useAI();
   const [serverAIReady, setServerAIReady] = useState(false);
 
@@ -24,7 +31,19 @@ const AIAssistant = () => {
       try {
         const h = await apiHealth();
         if (mounted) setServerAIReady(Boolean(h?.aiReady));
-      } catch {
+
+        // Fetch Stats
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/stats`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}` // Simple auth check
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (mounted) setStats(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
         if (mounted) setServerAIReady(false);
       }
     })();
@@ -48,7 +67,8 @@ const AIAssistant = () => {
 
   const handleAnalysisComplete = (result) => {
     console.log('Analysis completed:', result);
-    // You could add logic here to store results, show notifications, etc.
+    // Refresh stats if needed
+    setStats(prev => ({ ...prev, documentsAnalyzed: prev.documentsAnalyzed + 1 }));
   };
 
   return (
@@ -93,7 +113,7 @@ const AIAssistant = () => {
                 <Icon name="MessageCircle" size={16} className="text-primary" />
                 <span className="text-sm font-medium text-muted-foreground">Chat Sessions</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">12</p>
+              <p className="text-2xl font-bold text-foreground">{stats.chatSessions}</p>
             </div>
 
             <div className="bg-card rounded-lg border border-border p-4">
@@ -101,7 +121,7 @@ const AIAssistant = () => {
                 <Icon name="FileImage" size={16} className="text-success" />
                 <span className="text-sm font-medium text-muted-foreground">Documents Analyzed</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">8</p>
+              <p className="text-2xl font-bold text-foreground">{stats.documentsAnalyzed}</p>
             </div>
 
             <div className="bg-card rounded-lg border border-border p-4">
@@ -109,7 +129,7 @@ const AIAssistant = () => {
                 <Icon name="BookOpen" size={16} className="text-accent" />
                 <span className="text-sm font-medium text-muted-foreground">Study Plans</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">5</p>
+              <p className="text-2xl font-bold text-foreground">{stats.studyPlans}</p>
             </div>
 
             <div className="bg-card rounded-lg border border-border p-4">
@@ -117,7 +137,7 @@ const AIAssistant = () => {
                 <Icon name="TrendingUp" size={16} className="text-warning" />
                 <span className="text-sm font-medium text-muted-foreground">Avg. Improvement</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">15%</p>
+              <p className="text-2xl font-bold text-foreground">{stats.avgImprovement}</p>
             </div>
           </div>
         </motion.div>
@@ -193,8 +213,9 @@ const AIAssistant = () => {
                 <AIChat
                   subject={selectedSubject}
                   isOpen={true}
+                  variant="embedded"
                   onClose={() => { }}
-                  className="relative inset-0 w-full h-full"
+                  className="w-full h-full"
                 />
               </div>
             </div>

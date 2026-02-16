@@ -180,7 +180,7 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
             className="w-full shadow-lg shadow-primary/20 h-12 text-lg"
             iconName="Stars"
           >
-            {isLoading ? 'Running Simulation...' : 'Generate Prediction'}
+            {isLoading ? 'Running Simulation...' : 'Generate AI Prediction'}
           </Button>
         </form>
       </div>

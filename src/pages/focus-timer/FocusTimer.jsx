@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
-import { startTimer, pauseTimer, resetTimer, setMode } from '../../store/slices/focusSlice';
+import { startTimer, pauseTimer, resetTimer, setMode, setInitialDuration } from '../../store/slices/focusSlice';
+import TimeSpinner from './components/TimeSpinner';
 
 const FocusTimer = () => {
     const dispatch = useDispatch();
@@ -11,8 +12,13 @@ const FocusTimer = () => {
     // No local timer effect needed, Header handles the tick!
 
     const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
+
+        if (hrs > 0) {
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
@@ -30,6 +36,10 @@ const FocusTimer = () => {
 
     const handleSetMode = (newMode) => {
         dispatch(setMode(newMode));
+    };
+
+    const handleTimeChange = (newSeconds) => {
+        dispatch(setInitialDuration(newSeconds));
     };
 
     return (
@@ -54,9 +64,20 @@ const FocusTimer = () => {
 
                 <div className="relative w-64 h-64 mx-auto mb-8 flex items-center justify-center">
                     <div className={`absolute inset-0 rounded-full border-8 opacity-20 ${mode === 'focus' ? 'border-blue-500' : mode === 'shortBreak' ? 'border-green-500' : 'border-purple-500'}`}></div>
-                    <div className="text-6xl font-black font-mono text-gray-800">
-                        {formatTime(timeLeft)}
-                    </div>
+
+                    {isActive ? (
+                        <div className="text-6xl font-black font-mono text-gray-800">
+                            {formatTime(timeLeft)}
+                        </div>
+                    ) : (
+                        <TimeSpinner
+                            totalSeconds={timeLeft}
+                            onChange={handleTimeChange}
+                            showHours={mode === 'focus' || mode === 'longBreak'}
+                            minMinutes={mode === 'shortBreak' ? 5 : 0}
+                            maxMinutes={mode === 'shortBreak' ? 15 : 59}
+                        />
+                    )}
                 </div>
 
                 <div className="flex justify-center gap-4">

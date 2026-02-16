@@ -9,7 +9,13 @@ import { useAI } from '../hooks/useAI';
  * AI Chat Component for Academic Assistance
  * Provides real-time AI tutoring and academic support
  */
-const AIChat = ({ subject = 'general', isOpen = false, onClose = () => { } }) => {
+const AIChat = ({
+  subject = 'general',
+  isOpen = false,
+  onClose = () => { },
+  variant = 'widget', // 'widget' | 'embedded'
+  className = ''
+}) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -24,6 +30,7 @@ const AIChat = ({ subject = 'general', isOpen = false, onClose = () => { } }) =>
   const inputRef = useRef(null);
 
   const { loading, error, startTutoringSession, resetState } = useAI();
+  const isWidget = variant === 'widget';
 
   const scrollToBottom = () => {
     messagesEndRef?.current?.scrollIntoView({ behavior: 'smooth' });
@@ -124,6 +131,13 @@ const AIChat = ({ subject = 'general', isOpen = false, onClose = () => { } }) =>
 
   if (!isOpen) return null;
 
+  // Dynamic classes based on variant
+  const baseClasses = "bg-card flex flex-col overflow-hidden";
+  const widgetClasses = "fixed top-0 left-0 right-0 bottom-[60px] sm:top-auto sm:left-auto sm:bottom-4 sm:right-4 w-full sm:w-96 h-auto sm:h-[600px] border-0 sm:border border-border sm:rounded-lg shadow-xl z-[400]";
+  const embeddedClasses = "w-full h-full rounded-lg border border-border";
+
+  const containerClass = `${baseClasses} ${isWidget ? widgetClasses : embeddedClasses} ${className}`;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -131,10 +145,10 @@ const AIChat = ({ subject = 'general', isOpen = false, onClose = () => { } }) =>
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="fixed top-0 left-0 right-0 bottom-[60px] sm:top-auto sm:left-auto sm:bottom-4 sm:right-4 w-full sm:w-96 h-auto sm:h-[600px] bg-card border-0 sm:border border-border sm:rounded-lg shadow-xl z-[400] flex flex-col"
+        className={containerClass}
       >
         {/* Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-primary/5 rounded-t-lg">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-primary/5">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
               <Icon name="Bot" size={16} className="text-primary" />
@@ -151,14 +165,18 @@ const AIChat = ({ subject = 'general', isOpen = false, onClose = () => { } }) =>
               onClick={clearChat}
               iconName="RotateCcw"
               className="h-8 w-8 p-0"
+              title="Clear Chat"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              iconName="X"
-              className="h-10 w-10 p-0"
-            />
+            {isWidget && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                iconName="X"
+                className="h-10 w-10 p-0"
+                title="Close"
+              />
+            )}
           </div>
         </div>
 
