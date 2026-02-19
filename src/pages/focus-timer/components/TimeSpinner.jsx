@@ -9,11 +9,11 @@ const TimeSpinner = ({ totalSeconds, onChange, isDark = false, showHours = true,
     const minRef = useRef(null);
 
     const hoursList = Array.from({ length: 24 }, (_, i) => i);
-    // Generate minutes based on min/max constraints
+    
     const minutesList = Array.from({ length: 60 }, (_, i) => i)
         .filter(m => m >= minMinutes && m <= maxMinutes);
 
-    const ITEM_HEIGHT = 40; // Height of each number item
+    const ITEM_HEIGHT = 40; 
 
     const handleScroll = (type) => {
         const ref = type === 'hours' ? hourRef : minRef;
@@ -28,9 +28,9 @@ const TimeSpinner = ({ totalSeconds, onChange, isDark = false, showHours = true,
                 onChange((newHours * 3600) + (minutes * 60));
             }
         } else {
-            // Find minute at this index in our filtered list
+            
             const newMinutes = minutesList[index];
-            // If undefined (out of bounds scroll), keep current or default to min
+            
             if (newMinutes !== undefined && newMinutes !== minutes) {
                 onChange((hours * 3600) + (newMinutes * 60));
             }
@@ -42,9 +42,9 @@ const TimeSpinner = ({ totalSeconds, onChange, isDark = false, showHours = true,
             const nextHour = (hours + 1) % 24;
             onChange((nextHour * 3600) + (minutes * 60));
         } else {
-            // Find current index in filtered list
+            
             const currentIndex = minutesList.indexOf(minutes);
-            // If not found (e.g. out of bounds), default to first item
+            
             const safeIndex = currentIndex === -1 ? 0 : currentIndex;
             const nextIndex = Math.min(safeIndex + 1, minutesList.length - 1);
             const nextMinute = minutesList[nextIndex];
@@ -65,7 +65,7 @@ const TimeSpinner = ({ totalSeconds, onChange, isDark = false, showHours = true,
         }
     };
 
-    // Initial scroll position and sync with external updates
+    
     useEffect(() => {
         if (hourRef.current && showHours) {
             const currentHourIndex = Math.round(hourRef.current.scrollTop / ITEM_HEIGHT);
@@ -75,12 +75,12 @@ const TimeSpinner = ({ totalSeconds, onChange, isDark = false, showHours = true,
         }
         if (minRef.current) {
             const currentMinScrollIndex = Math.round(minRef.current.scrollTop / ITEM_HEIGHT);
-            // Find the index of the current 'minutes' value in our filtered list
+            
             const targetIndex = minutesList.indexOf(minutes);
 
-            // If current minutes is not in list (e.g. switched mode with invalid time), 
-            // valid options usually handled by parent resetting time, but we should handle visual sync
-            // Default to 0 if not found
+            
+            
+            
             const safeIndex = targetIndex >= 0 ? targetIndex : 0;
 
             if (currentMinScrollIndex !== safeIndex) {

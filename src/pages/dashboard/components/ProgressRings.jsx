@@ -48,7 +48,7 @@ const CircularProgress = ({ value, max, color, label, icon }) => {
 };
 
 const ProgressRings = () => {
-    // Mock data
+    
     const stats = [
         { label: 'Study Hours', value: 4.5, max: 6.0, color: 'text-primary', icon: 'Clock' },
         { label: 'Daily Tasks', value: 3, max: 5, color: 'text-success', icon: 'CheckSquare' },

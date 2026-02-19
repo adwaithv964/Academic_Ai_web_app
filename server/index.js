@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -7,33 +13,33 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// --- PATCH FETCH FOR API KEY REFERRER RESTRICTION ---
+
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (url, options = {}) => {
   const newOptions = { ...options };
 
-  // Ensure headers exist
+  
   if (!newOptions.headers) {
     newOptions.headers = {};
   }
 
-  // Handle different header types safely
+  
   if (typeof Headers !== 'undefined' && newOptions.headers instanceof Headers) {
     newOptions.headers.set('Referer', 'http://localhost:4028');
   } else if (Array.isArray(newOptions.headers)) {
     newOptions.headers.push(['Referer', 'http://localhost:4028']);
   } else {
-    // Plain object
+    
     newOptions.headers = { ...newOptions.headers, 'Referer': 'http://localhost:4028' };
   }
 
   return originalFetch(url, newOptions);
 };
-// ----------------------------------------------------
+
 
 const connectDB = require('./db');
 
-// Models
+
 const User = require('./models/User');
 const Task = require('./models/Task');
 const StudySession = require('./models/StudySession');
@@ -57,31 +63,31 @@ const WebReference = require('./models/WebReference');
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy (Render load balancer)
+app.set('trust proxy', 1); 
 const PORT = process.env.PORT || 5003;
 
-// --- OPTIMIZATION & SECURITY MIDDLEWARE ---
-app.use(cors()); // Enable CORS first
-app.use(compression()); // Compress all responses
+
+app.use(cors()); 
+app.use(compression()); 
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP for now to avoid breaking dev tools/inline scripts
-  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow resources to be loaded by frontend
+  contentSecurityPolicy: false, 
+  crossOriginResourcePolicy: { policy: "cross-origin" } 
 }));
 
-// Rate Limiter: General
+
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 300, 
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api', generalLimiter);
 
-// Rate Limiter: AI & Heavy endpoints
+
 const heavyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50, // Limit each IP to 50 requests per 15m for costly operations
+  max: 50, 
   message: 'Too many AI requests, please wait a moment.'
 });
 app.use('/api/ai-scan', heavyLimiter);
@@ -89,31 +95,31 @@ app.use('/api/ai-scan', heavyLimiter);
 
 app.use(express.json());
 
-// Store image in memory buffer so we can pass it to AI
-// Limit file size to 5MB to prevent memory crashes
+
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-// Gemini SDK configuration
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 
-// --- FIX 1: SIMPLIFIED MODEL LIST ---
-// Only use stable, production-ready models to reduce errors.
-// Only use stable, production-ready models to reduce errors.
-// Only use stable, production-ready models to reduce errors.
-// Only use stable, production-ready models to reduce errors.
+
+
+
+
+
 const MODEL_HIERARCHY = [
-  'gemini-2.5-flash',     // User explicitly requested this specific version
-  'gemini-2.0-flash-exp', // Experimental
+  'gemini-2.5-flash',     
+  'gemini-2.0-flash-exp', 
   'gemini-1.5-pro',
-  'gemini-1.5-flash',     // Fallback: Most Stable
+  'gemini-1.5-flash',     
 ];
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// --- FIX 2: IMPROVED ERROR HANDLING ---
+
 async function generateContentSafe(input) {
   if (!GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
 
@@ -123,7 +129,7 @@ async function generateContentSafe(input) {
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      // Handle array input (multimodal) vs string input
+      
       const content = Array.isArray(input) ? input : [input];
 
       const result = await model.generateContent(content);
@@ -136,15 +142,15 @@ async function generateContentSafe(input) {
       console.warn(`[Gemini] Model ${modelName} failed (RateLimit: ${isRateLimit}, NotFound: ${isNotFound})`);
       lastError = error;
 
-      // CRITICAL FIX: If we hit a Rate Limit (429), we can try the next model in the hierarchy
-      // as different models might have separate quotas or be less busy.
+      
+      
       if (isRateLimit) {
         console.warn('[Gemini] Rate limit hit. Attempting fallback to next model...');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before fallback
+        await new Promise(resolve => setTimeout(resolve, 2000)); 
         continue;
       }
 
-      // If it's just a 404 (model not found) or 500 (server hiccup), wait briefly and try the next model
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
@@ -153,14 +159,14 @@ async function generateContentSafe(input) {
   throw new Error(`AI Generation Failed: ${lastError?.message || 'Unknown error'}`);
 }
 
-// Helper: Text-only generation (wrapper)
+
 async function geminiGenerate(text) {
   return generateContentSafe(text);
 }
 
-// --- LOGIC FUNCTIONS (Unchanged) ---
 
-// --- NEW LOGIC: Monte Carlo + Gemini AI ---
+
+
 
 /**
  * Runs a Monte Carlo simulation to predict future grades statistically.
@@ -175,46 +181,46 @@ function runSmartMonteCarlo(currentGrade, params) {
   const startGrade = Number(currentGrade);
   const { remainingWeight, volatility, trend, difficultyAdjust } = params;
 
-  // Map string volatility to standard deviation
+  
   let stdDev = 5;
   if (volatility === 'low') stdDev = 2;
   if (volatility === 'high') stdDev = 10;
 
-  // Fallback defaults if params are missing/null
+  
   if (!remainingWeight) remainingWeight = 0.3;
 
   const results = [];
 
   for (let i = 0; i < iterations; i++) {
-    // Random performance on remaining work
-    // Box-Muller transform for normal distribution
+    
+    
     const u1 = Math.random();
     const u2 = Math.random();
     const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 
     let performance = startGrade + (trend || 0) + (z * stdDev);
 
-    // Apply difficulty adjustment
-    if (difficultyAdjust) performance *= (1 / difficultyAdjust); // Higher difficulty = lower performance
+    
+    if (difficultyAdjust) performance *= (1 / difficultyAdjust); 
 
-    // Cap performance
+    
     performance = Math.max(0, Math.min(100, performance));
 
-    // Calculate final grade
-    // Final = (Current * (1 - Weight)) + (Performance * Weight)
+    
+    
     const finalGrade = (startGrade * (1 - (remainingWeight || 0.3))) + (performance * (remainingWeight || 0.3));
     results.push(finalGrade);
   }
 
   results.sort((a, b) => a - b);
   const median = results[Math.floor(iterations * 0.5)];
-  const p10 = results[Math.floor(iterations * 0.1)]; // Worst case (conservative)
-  const p90 = results[Math.floor(iterations * 0.9)]; // Best case (optimistic)
+  const p10 = results[Math.floor(iterations * 0.1)]; 
+  const p90 = results[Math.floor(iterations * 0.9)]; 
 
-  // Generate distribution bucket data
+  
   const buckets = {};
   results.forEach(g => {
-    const bucket = Math.floor(g / 2) * 2; // Bucket size 2
+    const bucket = Math.floor(g / 2) * 2; 
     buckets[bucket] = (buckets[bucket] || 0) + 1;
   });
 
@@ -241,7 +247,7 @@ function runSmartMonteCarlo(currentGrade, params) {
 async function analyzeContextAndSimulate(studentData) {
   const { currentGrade, courseName, context, studyData } = studentData;
 
-  // Safety check for keys
+  
   if (!GEMINI_API_KEY) throw new Error("Missing GEMINI_API_KEY");
 
   const plannerSummary = studyData?.studySessions?.map(s =>
@@ -285,7 +291,7 @@ async function analyzeContextAndSimulate(studentData) {
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error("AI Analysis Failed:", e);
-    // Fallback params
+    
     return {
       parameters: { remainingWeight: 0.3, volatility: 'medium', trend: 0 },
       insights: {
@@ -297,7 +303,7 @@ async function analyzeContextAndSimulate(studentData) {
   }
 }
 
-// --- AI SCHEDULE SCAN ---
+
 app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -309,7 +315,7 @@ app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error: Gemini API Key missing' });
     }
 
-    // Convert buffer to base64
+    
     const mimeType = req.file.mimetype;
     const imageBase64 = req.file.buffer.toString('base64');
 
@@ -350,22 +356,22 @@ app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
 
     let text = "";
     try {
-      // Use generateContentSafe to handle model fallbacks
+      
       text = await generateContentSafe(parts);
     } catch (genErr) {
       console.error("Gemini Generation Failed:", genErr);
       return res.status(500).json({ error: `AI Generation Failed: ${genErr.message || genErr}` });
     }
 
-    console.log("[AI Scan] Raw AI Response:", text.substring(0, 500) + "..."); // Log first 500 chars
+    console.log("[AI Scan] Raw AI Response:", text.substring(0, 500) + "..."); 
 
     let events = [];
     try {
-      // Robust JSON Extraction
-      // 1. Remove markdown code blocks
+      
+      
       let cleanText = text.replace(/```json/g, '').replace(/```/g, '');
 
-      // 2. Find the JSON array
+      
       const startIndex = cleanText.indexOf('[');
       const endIndex = cleanText.lastIndexOf(']');
 
@@ -394,39 +400,39 @@ app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
   }
 });
 
-// --- GOOGLE CALENDAR SYNC (OAuth) ---
+
 const { google } = require('googleapis');
 
-// OAuth 2.0 Client Setup
+
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5002/api/auth/google/callback'
 );
 
-// Scopes for Calendar API
+
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 
-// 1. Redirect to Google Consent Screen
+
 app.get('/api/auth/google', (req, res) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.status(500).send('Google Client ID/Secret missing in .env');
   }
   const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline', // Request refresh token
+    access_type: 'offline', 
     scope: SCOPES,
   });
   res.redirect(url);
 });
 
-// 2. Handle Callback and Fetch Events
+
 app.get('/api/auth/google/callback', async (req, res) => {
   const { code } = req.query;
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    // Fetch Calendar Events
+    
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
     const now = new Date();
@@ -444,20 +450,20 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     const googleEvents = response.data.items || [];
 
-    // Save to MongoDB
+    
     const savePromises = googleEvents.map(gEvent => {
-      if (!gEvent.start) return null; // Skip if no time (unlikely for main events)
+      if (!gEvent.start) return null; 
 
-      // Map Google Event to our Schema
+      
       const newEvent = {
         title: gEvent.summary || 'No Title',
         description: gEvent.description || 'Imported from Google Calendar',
         date: new Date(gEvent.start.dateTime || gEvent.start.date),
         time: gEvent.start.dateTime ? new Date(gEvent.start.dateTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : 'All Day',
-        color: 'bg-green-100 text-green-700 border-green-200' // Distinguish Google events
+        color: 'bg-green-100 text-green-700 border-green-200' 
       };
 
-      // Simple "Upsert" check by title+date (Improve logic for real prod)
+      
       return Event.findOneAndUpdate(
         { title: newEvent.title, date: newEvent.date },
         newEvent,
@@ -467,7 +473,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     await Promise.all(savePromises);
 
-    // Redirect back to frontend with success
+    
     res.redirect('http://localhost:4028/sync?status=success&provider=google');
 
   } catch (error) {
@@ -479,7 +485,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
 const maintenance = require('./middleware/maintenance');
 
-// --- PUBLIC ROUTES ---
+
 app.get('/api/public/status', async (req, res) => {
   try {
     const SystemSettings = require('./models/SystemSettings');
@@ -494,22 +500,22 @@ app.get('/api/public/status', async (req, res) => {
   }
 });
 
-// --- AUTH MIDDLEWARE ---
-// Protect all /api routes except auth hooks and public data
+
+
 app.use('/api', async (req, res, next) => {
-  // Exclude sub-paths
+  
   const publicPaths = ['/auth', '/health', '/public'];
-  // Strict check for path start to avoid bypassing
+  
   if (publicPaths.some(p => req.path.startsWith(p))) return next();
 
-  // Authenticate first (populates req.user)
+  
   await authenticateUser(req, res, async () => {
-    // Then check maintenance mode
+    
     await maintenance(req, res, next);
   });
 });
 
-// --- ADMIN ROUTES ---
+
 app.get('/api/admin/stats', admin, adminController.getDashboardStats);
 app.get('/api/admin/users', admin, adminController.getAllUsers);
 app.get('/api/admin/users/:id', admin, adminController.getUserDetails);
@@ -517,20 +523,20 @@ app.delete('/api/admin/users/:id', admin, adminController.deleteUser);
 app.get('/api/admin/settings', admin, adminController.getSystemSettings);
 app.put('/api/admin/settings', admin, adminController.updateSystemSettings);
 
-// Admin Content Management
+
 app.get('/api/admin/content/courses', admin, adminController.getGlobalCourses);
 app.post('/api/admin/content/courses', admin, adminController.addGlobalCourse);
 app.put('/api/admin/content/courses/:id', admin, adminController.updateGlobalCourse);
 app.delete('/api/admin/content/courses/:id', admin, adminController.deleteGlobalCourse);
 
-// Admin Logs
+
 app.get('/api/admin/logs', admin, adminController.getSystemLogs);
 
-// --- API ENDPOINTS ---
+
 
 const { STORE_ITEMS, ACHIEVEMENTS, DAILY_QUESTS_POOL } = require('./config/gamification');
 
-// --- GAMIFICATION: LEADERBOARD ---
+
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const topUsers = await User.find({}, 'firstName lastName points avatar').sort({ points: -1 }).limit(10);
@@ -542,13 +548,13 @@ app.get('/api/leaderboard', async (req, res) => {
 
 const achievementsController = require('./controllers/achievementsController');
 
-// GET /api/achievements/stats - Hero Stats
+
 app.get('/api/achievements/stats', achievementsController.getStats);
 
-// GET /api/achievements - Badges & Level
+
 app.get('/api/achievements', achievementsController.getGamification);
 
-// GET /api/history - History of Glory
+
 app.get('/api/history', async (req, res) => {
   try {
     const logs = await ActivityLog.find({ userId: req.user._id }).sort({ timestamp: -1 }).limit(50);
@@ -560,7 +566,7 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
-// --- GAMIFICATION: STORE ---
+
 app.get('/api/store/items', (req, res) => {
   res.json(STORE_ITEMS);
 });
@@ -568,28 +574,28 @@ app.get('/api/store/items', (req, res) => {
 app.post('/api/store/buy', async (req, res) => {
   try {
     const { itemId } = req.body;
-    // Use authenticated user
+    
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const item = STORE_ITEMS.find(i => i.id === itemId);
     if (!item) return res.status(400).json({ error: 'Item not found' });
 
-    // Check ownership
+    
     if (user.inventory && user.inventory.includes(itemId)) {
       return res.status(400).json({ error: 'Item already owned' });
     }
 
-    // Check Unlock Condition
-    // Check Unlock Condition
-    // Check Unlock Condition (Strict Rules)
+    
+    
+    
     if (item.unlockCondition) {
       try {
         const { type, threshold, startHour, endHour, taskType, days, minMinutes } = item.unlockCondition;
         let met = false;
 
         switch (type) {
-          // OLD CONDITIONS (Likely unused now but good to keep for logic)
+          
           case 'level':
             met = (user.level || 1) >= threshold;
             break;
@@ -598,24 +604,24 @@ app.post('/api/store/buy', async (req, res) => {
             met = streak >= threshold;
             break;
 
-          // NEW STRICT CONDITIONS
+          
           case 'time_window':
-            // Check if ANY session exists in this window
-            // In real app, we check recent sessions. For demo, we check if *current time* is in window?
-            // "Complete a study session..." implies past tense. 
-            // Let's check `StudySession` for a session with `startTime` in range?
+            
+            
+            
+            
             const StudySession = require('./models/StudySession');
-            // Find a session where hour(startTime) is between start and end
+            
             const sessions = await StudySession.find({ userId: user._id });
             met = sessions.some(s => {
               const h = new Date(s.startTime).getHours();
-              return h >= startHour && h < endHour; // e.g. 2 <= h < 5
+              return h >= startHour && h < endHour; 
             });
             break;
 
           case 'task_count':
             const Task = require('./models/Task');
-            // Check ALL completed tasks
+            
             const totalTasks = await Task.countDocuments({
               userId: user._id,
               status: 'completed'
@@ -625,7 +631,7 @@ app.post('/api/store/buy', async (req, res) => {
 
           case 'task_type_count':
             const TaskType = require('./models/Task');
-            // Match Type OR Title containing "code"
+            
             const codingTasks = await TaskType.countDocuments({
               userId: user._id,
               status: 'completed',
@@ -638,22 +644,22 @@ app.post('/api/store/buy', async (req, res) => {
             break;
 
           case 'weekend_study':
-            // 10 Hours on Sat/Sun
+            
             const StudySessionWeekend = require('./models/StudySession');
             const weekendSessions = await StudySessionWeekend.find({ userId: user._id });
             const weekendMinutes = weekendSessions.reduce((acc, s) => {
-              const day = new Date(s.startTime).getDay(); // 0=Sun, 6=Sat
+              const day = new Date(s.startTime).getDay(); 
               if (day === 0 || day === 6) return acc + (s.duration || 0);
               return acc;
             }, 0);
-            met = weekendMinutes >= threshold; // 600 mins
+            met = weekendMinutes >= threshold; 
             break;
 
           case 'strict_streak':
-            // 7 days streak with > 1 hour (60 mins) each day
-            // Simplified: Trust User.streak for now
+            
+            
             const strictStreak = user.streak || 0;
-            met = strictStreak >= days; // threshold
+            met = strictStreak >= days; 
             break;
 
           default:
@@ -669,10 +675,10 @@ app.post('/api/store/buy', async (req, res) => {
       }
     }
 
-    // CHECK IF CHALLENGE REWARD (Don't charge, AWARD points)
+    
     if (item.type === 'challenge') {
       user.points += (item.reward || 0);
-      user.totalPoints += (item.reward || 0); // Track lifetime points
+      user.totalPoints += (item.reward || 0); 
       user.inventory.push(itemId);
       await user.save();
       return res.json({
@@ -683,7 +689,7 @@ app.post('/api/store/buy', async (req, res) => {
       });
     }
 
-    // NORMAL BUY (Themes/Items - logic fallback)
+    
     if (user.points < item.price) {
       return res.status(400).json({ error: 'Not enough points' });
     }
@@ -698,15 +704,15 @@ app.post('/api/store/buy', async (req, res) => {
   }
 });
 
-// --- GAMIFICATION: QUESTS ---
+
 app.get('/api/quests', async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Ensure user has quest data initialized
+    
     if (!user.quests || !user.quests.daily || user.quests.daily.length === 0) {
-      // Initialize if empty (simple logic for now)
+      
       user.quests = {
         daily: DAILY_QUESTS_POOL.map(q => ({ id: q.id, progress: 0, completed: false, claimed: false })),
         lastGenerated: new Date()
@@ -714,7 +720,7 @@ app.get('/api/quests', async (req, res) => {
       await user.save();
     }
 
-    // Merge Pool info with User Status
+    
     const dailyQuests = DAILY_QUESTS_POOL.map(poolItem => {
       const userStatus = user.quests.daily.find(q => q.id === poolItem.id) || { progress: 0, completed: false, claimed: false };
       return { ...poolItem, ...userStatus };
@@ -735,10 +741,10 @@ app.post('/api/quests/claim', async (req, res) => {
     const questDef = DAILY_QUESTS_POOL.find(q => q.id === questId);
     if (!questDef) return res.status(400).json({ error: 'Quest not found' });
 
-    // Check if quest exists in user list
+    
     let userQuest = user.quests.daily.find(q => q.id === questId);
     if (!userQuest) {
-      // Should have been initialized by getQuests, but if not:
+      
       userQuest = { id: questId, progress: 0, completed: false, claimed: false };
       user.quests.daily.push(userQuest);
     }
@@ -751,11 +757,11 @@ app.post('/api/quests/claim', async (req, res) => {
       return res.status(400).json({ error: 'Quest not completed' });
     }
 
-    // Mark as claimed 
+    
     userQuest.claimed = true;
     userQuest.completed = true;
 
-    // Award points
+    
     user.points += questDef.reward;
     user.totalPoints += questDef.reward;
 
@@ -766,42 +772,42 @@ app.post('/api/quests/claim', async (req, res) => {
   }
 });
 
-// --- GAMIFICATION: GARDEN ---
+
 app.get('/api/garden', async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Calculate total study hours from StudySession
+    
     const StudySession = require('./models/StudySession');
     const sessions = await StudySession.find({ userId: req.user._id });
     const studyMinutes = sessions.reduce((acc, session) => acc + (session.duration * 60 || 0), 0);
 
-    // Calculate hours from Completed Tasks (1 Task = 15 mins = 0.25h)
+    
     const Task = require('./models/Task');
     const completedTasksCount = await Task.countDocuments({ userId: req.user._id, completed: true });
     const taskMinutes = completedTasksCount * 15;
 
     const totalMinutes = studyMinutes + taskMinutes;
-    const totalHours = parseFloat((totalMinutes / 60).toFixed(2)); // Precision for UI
+    const totalHours = parseFloat((totalMinutes / 60).toFixed(2)); 
 
-    // Define Plant Unlocks
+    
     const plants = [
       { id: 'rose', name: 'Rose', unlockHours: 0, icon: 'Flower2', color: 'text-pink-500' },
       { id: 'oak', name: 'Oak', unlockHours: 5, icon: 'Trees', color: 'text-green-600' },
-      { id: 'cactus', name: 'Cactus', unlockHours: 20, icon: 'Sprout', color: 'text-emerald-600' }, // Placeholder 1
-      { id: 'sunflower', name: 'Sunflower', unlockHours: 50, icon: 'Sun', color: 'text-yellow-500' } // Placeholder 2
+      { id: 'cactus', name: 'Cactus', unlockHours: 20, icon: 'Sprout', color: 'text-emerald-600' }, 
+      { id: 'sunflower', name: 'Sunflower', unlockHours: 50, icon: 'Sun', color: 'text-yellow-500' } 
     ];
 
-    // Determine Status
+    
     const gardenState = plants.map(plant => ({
       ...plant,
       unlocked: totalHours >= plant.unlockHours,
-      progress: Math.min(100, (totalHours / plant.unlockHours) * 100) || (totalHours > 0 ? 100 : 0) // visual progress
+      progress: Math.min(100, (totalHours / plant.unlockHours) * 100) || (totalHours > 0 ? 100 : 0) 
     }));
 
     res.json({
-      totalHours, // Float
+      totalHours, 
       breakdown: { studyMinutes, taskMinutes, tasks: completedTasksCount },
       plants: gardenState
     });
@@ -817,24 +823,24 @@ app.post('/api/garden/grow', async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Simple mechanism: 60 mins = 1 stage growth for first plant
-    // In real app, manage specific plants
+    
+    
 
     if (!user.garden.plants.length) {
       user.garden.plants.push({ type: 'sapling', stage: 1, plantedAt: new Date() });
     }
 
-    // Just an example response for now
+    
     res.json({ success: true, message: 'Garden watered' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// --- USER PROFILE ---
+
 app.get('/api/user', async (req, res) => {
   try {
-    // req.user is already attached by middleware
+    
     if (!req.user) return res.status(404).json({ error: 'User not found' });
     res.json(req.user);
   } catch (err) {
@@ -844,9 +850,9 @@ app.get('/api/user', async (req, res) => {
 
 app.post('/api/user', async (req, res) => {
   try {
-    // User is already authenticated, update their profile
-    // We restrict what can be updated for security
-    const allowedUpdates = ['firstName', 'lastName', 'institution', 'major', 'graduationYear', 'phone', 'dateOfBirth', 'address', 'academicSettings', 'preferences', 'garden', 'activeTheme'];
+    
+    
+    const allowedUpdates = ['firstName', 'lastName', 'institution', 'major', 'graduationYear', 'phone', 'dateOfBirth', 'address', 'academicSettings', 'preferences', 'garden', 'activeTheme', 'studentId'];
 
     const updates = {};
     Object.keys(req.body).forEach(key => {
@@ -863,7 +869,7 @@ app.post('/api/user', async (req, res) => {
 });
 
 
-// --- NEW: Theme Update Endpoint ---
+
 app.put('/api/user/theme', async (req, res) => {
   try {
     const { theme } = req.body;
@@ -875,7 +881,7 @@ app.put('/api/user/theme', async (req, res) => {
 
     user.preferences.display.activeTheme = theme;
 
-    // Mark modified because preferences is usually nested/mixed or just to be safe with Mongoose mixed types
+    
     user.markModified('preferences');
 
     await user.save();
@@ -885,7 +891,7 @@ app.put('/api/user/theme', async (req, res) => {
   }
 });
 
-// --- TASKS ---
+
 app.get('/api/tasks', async (req, res) => {
   try {
     const tasks = await Task.find({ userId: req.user._id }).sort({ createdAt: -1 });
@@ -900,9 +906,9 @@ app.post('/api/tasks', async (req, res) => {
     const task = new Task({ ...req.body, userId: req.user._id });
     await task.save();
 
-    // Quest Update - REMOVED: Creation is not completion
-    // const user = await User.findById(req.user._id);
-    // if (user) await user.updateQuestProgress('tasks_completed', 1);
+    
+    
+    
 
     res.json(task);
   } catch (err) {
@@ -912,23 +918,23 @@ app.post('/api/tasks', async (req, res) => {
 
 app.put('/api/tasks/:id', async (req, res) => {
   try {
-    // 1. Find the existing task first to check current status
+    
     const existingTask = await Task.findOne({ _id: req.params.id, userId: req.user._id });
     if (!existingTask) return res.status(404).json({ error: 'Task not found' });
 
-    // 2. Check if we are completing it now
+    
     const wasCompleted = existingTask.completed;
     const isNowCompleted = req.body.completed === true;
     const justCompleted = !wasCompleted && isNowCompleted;
 
-    // 3. Update the task
+    
     const updatedTask = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       req.body,
       { new: true }
     );
 
-    // 4. Trigger Quest Progress if just completed
+    
     if (justCompleted) {
       const user = await User.findById(req.user._id);
       if (user) await user.updateQuestProgress('tasks_completed', 1);
@@ -950,7 +956,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// --- STUDY SESSIONS ---
+
 app.get('/api/study-sessions', async (req, res) => {
   try {
     const sessions = await StudySession.find({ userId: req.user._id }).sort({ date: -1 });
@@ -965,27 +971,27 @@ app.post('/api/study-sessions', async (req, res) => {
     const session = new StudySession({ ...req.body, userId: req.user._id });
     await session.save();
 
-    // Quest Update
+    
     const user = await User.findById(req.user._id);
     if (user) {
-      // duration in body. Is it minutes or hours?
-      // Frontend <Stopwatch> or <Timer> usually sends minutes or seconds?
-      // If AchievementsController converts `duration * 60`, it implies duration is HOURS.
-      // BUT `gamification.js` says `target: 45` for `daily_study_45` (minutes).
-      // If I store HOURS, I must convert.
-      // Let's assume input `duration` is minutes for now or check frontend?
-      // Safest: `req.body.duration` is what we saved.
-      // `updateQuestProgress` adds `amount`.
-      // If `type` is `study_minutes`.
-      // If `req.body.duration` is hours, we need `* 60`.
-      // If `req.body.duration` is minutes, we just pass it.
-      // Let's check `StudySession` schema in a separate step if unsure? 
-      // Or just pass `req.body.duration` and we'll calibrate later. 
-      // Actually, `simulate_challenges` set `duration: 60` for 1 hour session (Night Owl). 
-      // If that was minutes, then `duration` = minutes. 
-      // `achievementsController` might be wrong or legacy.
-      // Let's assume MINUTES.
-      // Convert duration (Hours) to Minutes for Quest
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       const durationInMinutes = (req.body.duration || 0) * 60;
       await user.updateQuestProgress('study_minutes', durationInMinutes);
       await user.updateQuestProgress('focus_session', 1);
@@ -1021,7 +1027,7 @@ app.delete('/api/study-sessions/:id', async (req, res) => {
   }
 });
 
-// --- COURSES ---
+
 app.get('/api/courses', async (req, res) => {
   try {
     const courses = await Course.find({ userId: req.user._id }).sort({ createdAt: -1 });
@@ -1065,7 +1071,7 @@ app.delete('/api/courses/:id', async (req, res) => {
   }
 });
 
-// --- EXAMS ---
+
 app.get('/api/exams', async (req, res) => {
   try {
     const exams = await Exam.find({ userId: req.user._id }).sort({ date: 1 });
@@ -1080,7 +1086,7 @@ app.post('/api/exams', async (req, res) => {
     const exam = new Exam({ ...req.body, userId: req.user._id });
     await exam.save();
 
-    // Quest Update
+    
     const user = await User.findById(req.user._id);
     if (user) await user.updateQuestProgress('exam_completed', 1);
 
@@ -1114,7 +1120,7 @@ app.delete('/api/exams/:id', async (req, res) => {
   }
 });
 
-// --- VACATIONS ---
+
 app.get('/api/vacations', async (req, res) => {
   try {
     const vacations = await Vacation.find({ userId: req.user._id }).sort({ startDate: 1 });
@@ -1143,7 +1149,7 @@ app.delete('/api/vacations/:id', async (req, res) => {
   }
 });
 
-// --- EVENTS (General) ---
+
 app.get('/api/events', async (req, res) => {
   try {
     const events = await Event.find({ userId: req.user._id }).sort({ date: 1 });
@@ -1181,11 +1187,11 @@ app.delete('/api/events/:id', async (req, res) => {
   }
 });
 
-// --- DOCUMENTS (Digital Backpack) ---
+
 app.get('/api/documents', async (req, res) => {
   try {
-    // Return metadata only, not the full buffer to keep it light
-    // FIX: Filter by userId so users only see their own files
+    
+    
     const documents = await Document.find({ userId: req.user._id }, '-data').sort({ uploadDate: -1 });
     res.json(documents);
   } catch (err) {
@@ -1201,25 +1207,25 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
 
     const { subject, type } = req.body;
 
-    // Calculate readable size
+    
     const sizeBytes = req.file.size;
     let sizeStr = sizeBytes + ' B';
     if (sizeBytes > 1024 * 1024) sizeStr = (sizeBytes / (1024 * 1024)).toFixed(1) + ' MB';
     else if (sizeBytes > 1024) sizeStr = (sizeBytes / 1024).toFixed(1) + ' KB';
 
     const newDoc = new Document({
-      userId: req.user._id, // FIX: Assign to current user
+      userId: req.user._id, 
       name: req.file.originalname,
       subject: subject || 'General',
       type: type || 'other',
       size: sizeStr,
       contentType: req.file.mimetype,
-      data: req.file.buffer // Store binary
+      data: req.file.buffer 
     });
 
     await newDoc.save();
 
-    // Return doc without buffer
+    
     const docResponse = newDoc.toObject();
     delete docResponse.data;
 
@@ -1267,10 +1273,10 @@ app.delete('/api/documents/:id', async (req, res) => {
 });
 
 
-// --- TERMS (Schedule Setup) ---
+
 app.get('/api/terms', async (req, res) => {
   try {
-    const term = await Term.findOne().sort({ createdAt: -1 }); // Get latest config
+    const term = await Term.findOne().sort({ createdAt: -1 }); 
     res.json(term || {});
   } catch (err) {
     console.error("Error in GET /api/terms:", err);
@@ -1280,7 +1286,7 @@ app.get('/api/terms', async (req, res) => {
 
 app.post('/api/terms', async (req, res) => {
   try {
-    // Upsert logic could go here, or just save new
+    
     const term = new Term({ ...req.body, userId: req.user._id });
     await term.save();
     res.json(term);
@@ -1289,7 +1295,7 @@ app.post('/api/terms', async (req, res) => {
   }
 });
 
-// --- SCENARIOS (Data Room) ---
+
 app.get('/api/scenarios', async (req, res) => {
   try {
     const scenarios = await Scenario.find({ userId: req.user._id }).sort({ createdAt: -1 });
@@ -1309,7 +1315,7 @@ app.post('/api/scenarios', async (req, res) => {
   }
 });
 
-// --- EISENHOWER TASKS ---
+
 app.get('/api/eisenhower-tasks', async (req, res) => {
   try {
     const tasks = await EisenhowerTask.find({ userId: req.user._id }).sort({ createdAt: -1 });
@@ -1353,7 +1359,7 @@ app.delete('/api/eisenhower-tasks/:id', async (req, res) => {
   }
 });
 
-// --- DOCUMENTS ---
+
 app.get('/api/documents', async (req, res) => {
   try {
     const documents = await Document.find({ userId: req.user._id }).sort({ uploadDate: -1 });
@@ -1363,7 +1369,7 @@ app.get('/api/documents', async (req, res) => {
   }
 });
 
-// --- PREDICTION ---
+
 app.get('/api/predictions', async (req, res) => {
   try {
     const predictions = await Prediction.find({ userId: req.user._id }).sort({ timestamp: -1 });
@@ -1377,13 +1383,13 @@ app.post('/api/predict', async (req, res) => {
   try {
     const studentData = req.body || {};
 
-    // 1. Analyze Context & Infer Parameters via Gemini
+    
     const aiAnalysis = await analyzeContextAndSimulate(studentData);
 
-    // 2. Run Monte Carlo Simulation using AI-derived parameters
+    
     const simulationStats = runSmartMonteCarlo(studentData.currentGrade, aiAnalysis.parameters);
 
-    // 3. Merge Results (Initial)
+    
     const responseData = {
       stats: simulationStats,
       aiAnalysis: aiAnalysis.insights,
@@ -1391,7 +1397,7 @@ app.post('/api/predict', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    // 4. SAVE TO MONGODB
+    
     try {
       const newPrediction = new Prediction({
         courseName: studentData.courseName,
@@ -1406,9 +1412,9 @@ app.post('/api/predict', async (req, res) => {
       await newPrediction.save();
       console.log('Prediction saved to DB:', newPrediction._id);
 
-      // Include the ID in the response
+      
       responseData._id = newPrediction._id;
-      responseData.id = newPrediction._id; // standard alias
+      responseData.id = newPrediction._id; 
 
     } catch (dbErr) {
       console.error('Failed to save prediction:', dbErr);
@@ -1419,7 +1425,7 @@ app.post('/api/predict', async (req, res) => {
 
     console.error("Prediction API Error:", e);
 
-    // Fallback attempt
+    
     try {
       const defaultParams = { remainingWeight: 0.3, volatility: 'medium', trend: 0 };
       const fallbackStats = runSmartMonteCarlo(req.body.currentGrade || 80, defaultParams);
@@ -1439,35 +1445,35 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', aiReady: Boolean(GEMINI_API_KEY), model: MODEL_HIERARCHY[0] });
 });
 
-// AI: Stats Endpoint
+
 app.get('/api/ai/stats', authenticateUser, async (req, res) => {
   try {
     if (!req.user || !req.user._id) return res.status(401).json({ error: 'Unauthorized' });
 
     const userId = req.user._id;
 
-    // 1. Chat Sessions (Count logs)
+    
     const chatCount = await ActivityLog.countDocuments({ userId, type: 'ai_chat' });
 
-    // 2. Documents Analyzed (Count logs)
+    
     const docCount = await ActivityLog.countDocuments({ userId, type: 'ai_analysis' });
 
-    // 3. Study Plans (Count StudySession docs)
+    
     const studyPlanCount = await StudySession.countDocuments({ userId });
 
-    // 4. Avg. Improvement (Calculate from predictions)
-    // Compare stats.predictedGrade vs currentGrade in Prediction history
+    
+    
     const predictions = await Prediction.find({ userId }).select('currentGrade predictedGrade');
     let avgImprovement = 0;
     if (predictions.length > 0) {
       const totalImprovement = predictions.reduce((acc, curr) => {
         const improvement = (curr.predictedGrade || 0) - (curr.currentGrade || 0);
-        return acc + (improvement > 0 ? improvement : 0); // Only count positive improvement? Or net? Let's do net but floor at 0 for display
+        return acc + (improvement > 0 ? improvement : 0); 
       }, 0);
       avgImprovement = Math.round((totalImprovement / predictions.length) * 10) / 10;
     }
 
-    // Default mock values if low data (for demo feel)
+    
     const displayStats = {
       chatSessions: chatCount || 0,
       documentsAnalyzed: docCount || 0,
@@ -1482,7 +1488,7 @@ app.get('/api/ai/stats', authenticateUser, async (req, res) => {
   }
 });
 
-// AI: Chat using Gemini
+
 app.post('/api/ai/chat', async (req, res) => {
   try {
     const { message, subject } = req.body || {};
@@ -1491,10 +1497,10 @@ app.post('/api/ai/chat', async (req, res) => {
     }
     const prompt = `You are an expert ${subject || 'general'} tutor. Provide clear, step-by-step guidance.\n\nStudent question: ${message}`;
 
-    // Use the helper function
+    
     const text = await geminiGenerate(prompt);
 
-    // Log detailed activity for stats
+    
     if (req.user && req.user._id) {
       try {
         await ActivityLog.create({
@@ -1511,10 +1517,10 @@ app.post('/api/ai/chat', async (req, res) => {
 
     return res.json({ text });
   } catch (err) {
-    // Better error Logging
+    
     console.error('Gemini chat error:', err.message);
 
-    // If it's a rate limit, send a specific error to the client
+    
     if (err.message.includes('429')) {
       return res.status(429).json({ error: 'AI Quota Exceeded. Please try again later.' });
     }
@@ -1523,7 +1529,7 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
-// AI: Image analysis using Gemini (multipart/form-data)
+
 app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'image file is required' });
@@ -1531,7 +1537,7 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
     const analysisType = (req.body?.analysisType || 'general').toString();
     const mimeType = req.file.mimetype || 'image/png';
 
-    // 1. Convert Buffer to Base64 for Gemini SDK
+    
     const imagePart = {
       inlineData: {
         data: req.file.buffer.toString('base64'),
@@ -1548,10 +1554,10 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
 
     const textPrompt = `${prompts[analysisType] || prompts.general}\n\nFormat: Clean Markdown. Tone: Professional & Concise.`;
 
-    // 2. Call generateContent with BOTH text and image
+    
     const analysis = await generateContentSafe([textPrompt, imagePart]);
 
-    // Log detailed activity for stats
+    
     if (req.user && req.user._id) {
       try {
         await ActivityLog.create({
@@ -1578,7 +1584,7 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
   }
 });
 
-// --- WEB REFERENCES ---
+
 app.get('/api/web-references', async (req, res) => {
   try {
     const refs = await WebReference.find({ userId: req.user._id }).sort({ dateAdded: -1 });
@@ -1617,7 +1623,7 @@ app.delete('/api/web-references/:id', async (req, res) => {
 });
 
 if (require.main === module) {
-  // Global error handlers for debugging
+  
   process.on('uncaughtException', (err) => {
     console.error(`[FATAL] Uncaught Exception: ${err.message}\n${err.stack}`);
     process.exit(1);

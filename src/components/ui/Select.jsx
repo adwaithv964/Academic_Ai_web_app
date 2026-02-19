@@ -1,4 +1,3 @@
-// components/ui/Select.jsx - Shadcn style Select
 import React, { useState } from "react";
 import { ChevronDown, Check, Search, X } from "lucide-react";
 import { cn } from "../../utils/cn";
@@ -29,10 +28,10 @@ const Select = React.forwardRef(({
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Generate unique ID if not provided
+    
     const selectId = id || `select-${Math.random()?.toString(36)?.substr(2, 9)}`;
 
-    // Filter options based on search
+    
     const filteredOptions = searchable && searchTerm
         ? options?.filter(option =>
             option?.label?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
@@ -40,7 +39,7 @@ const Select = React.forwardRef(({
         )
         : options;
 
-    // Get selected option(s) for display
+    
     const getSelectedDisplay = () => {
         if (!value) return placeholder;
 
@@ -157,7 +156,7 @@ const Select = React.forwardRef(({
                 <select
                     name={name}
                     value={value || ''}
-                    onChange={() => { }} // Controlled by our custom logic
+                    onChange={() => { }} 
                     className="sr-only"
                     tabIndex={-1}
                     multiple={multiple}

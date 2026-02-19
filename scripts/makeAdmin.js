@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load env vars
-dotenv.config({ path: path.join(__dirname, '../.env') }); // Attempt root .env first
+
+dotenv.config({ path: path.join(__dirname, '../.env') }); 
 if (!process.env.MONGO_URI && !process.env.SERVER_MONGO_URI) {
-    // Fallback to server/.env if root fails or specific var missing
+    
     dotenv.config({ path: path.join(__dirname, '../server/.env') });
 }
 
-const User = require('../server/models/User'); // Adjust path to models
+const User = require('../server/models/User'); 
 
 const makeAdmin = async () => {
     const email = process.argv[2];

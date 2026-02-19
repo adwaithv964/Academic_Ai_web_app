@@ -13,7 +13,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Explicitly set persistence (helps with some IndexedDB race conditions in dev/hot-reload)
+
 setPersistence(auth, browserLocalPersistence).catch((error) => {
     console.error("Firebase Persistence Error:", error);
 });

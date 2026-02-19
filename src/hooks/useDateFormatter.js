@@ -24,10 +24,10 @@ export const useDateFormatter = () => {
 
         loadPreferences();
 
-        // Listen for storage events to update in real-time across tabs
+        
         window.addEventListener('storage', loadPreferences);
 
-        // Custom event for same-tab updates
+        
         window.addEventListener('preferencesUpdated', loadPreferences);
 
         return () => {

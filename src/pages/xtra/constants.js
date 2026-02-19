@@ -1,4 +1,3 @@
-
 export const ACHIEVEMENTS_LIST = [
     {
         id: 'focus_master',

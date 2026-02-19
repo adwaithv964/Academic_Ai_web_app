@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const HistoryItem = ({ item, isLast }) => {
     const { type, title, description, timestamp } = item;
 
-    // Icon Logic
+    
     const getIcon = () => {
         switch (type) {
             case 'achievement': return <Trophy className="w-4 h-4 text-yellow-500" />;
@@ -52,7 +52,7 @@ const HistoryOfGlory = () => {
                 setHistory(data);
             } catch (err) {
                 console.error("Failed to fetch history", err);
-                // Mock data fallback if empty or error
+                
                 if (history.length === 0) {
                     setHistory([
                         { _id: 1, type: 'achievement', title: 'Unlocked: Marathoner', description: 'Studied for 4 hours in a single day.', timestamp: new Date() },

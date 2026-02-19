@@ -129,12 +129,12 @@ export const useOpenAI = () => {
   }, [handleError]);
 
   return {
-    // State
+    
     loading,
     error,
     response,
 
-    // Actions
+    
     predictGrades,
     getStudyRecommendations,
     chatWithAI,

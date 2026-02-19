@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const CourseSchema = new mongoose.Schema({
@@ -6,7 +12,7 @@ const CourseSchema = new mongoose.Schema({
     code: String,
     credits: Number,
     instructor: String,
-    grade: String, // Current letter grade or percentage
+    grade: String, 
     term: String,
     color: String,
     progress: { type: Number, default: 0 },

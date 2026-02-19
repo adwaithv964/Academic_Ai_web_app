@@ -7,7 +7,7 @@ const DeepFocusTimer = ({ onBack }) => {
     const [breakTime, setBreakTime] = useState(5);
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
-    const [mode, setMode] = useState('work'); // work, break
+    const [mode, setMode] = useState('work'); 
     const [isDndActive, setIsDndActive] = useState(false);
     const [isZenMode, setIsZenMode] = useState(false);
 
@@ -22,17 +22,17 @@ const DeepFocusTimer = ({ onBack }) => {
             if (mode === 'work') {
                 setMode('break');
                 setTimeLeft(breakTime * 60);
-                // Notification here
+                
             } else {
                 setMode('work');
                 setTimeLeft(workTime * 60);
-                // Notification here
+                
             }
         }
         return () => clearInterval(interval);
     }, [isActive, timeLeft, mode, workTime, breakTime]);
 
-    // Navigation Block
+    
     useEffect(() => {
         const handleBeforeUnload = (e) => {
             if (isActive && isDndActive) {
@@ -69,7 +69,7 @@ const DeepFocusTimer = ({ onBack }) => {
         }
     };
 
-    // Zen Mode Fullscreen Logic
+    
     useEffect(() => {
         const enterFullscreen = async () => {
             try {

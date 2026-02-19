@@ -12,7 +12,7 @@ const WeekView = ({ currentDate, events, onDateClick, onEventClick }) => {
     const weekStart = startOfWeek(currentDate);
     const weekEnd = endOfWeek(currentDate);
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-    const hours = Array.from({ length: 24 }, (_, i) => i); // 0 to 23
+    const hours = Array.from({ length: 24 }, (_, i) => i); 
 
     return (
         <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -42,8 +42,8 @@ const WeekView = ({ currentDate, events, onDateClick, onEventClick }) => {
                         {days.map(day => {
                             const currentHourEvents = events.filter(e =>
                                 isSameDay(e.date, day) &&
-                                // Simplified time logic: check if event starts in this hour (parsing time string usually needed)
-                                // Assuming 'time' string exists like "10:00 AM" for now, strict parsing would be better
+                                
+                                
                                 (e.time && e.time.startsWith(format(new Date().setHours(hour), 'hh')))
                             );
 

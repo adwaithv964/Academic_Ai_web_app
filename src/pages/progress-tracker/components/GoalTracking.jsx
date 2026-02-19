@@ -87,7 +87,7 @@ const GoalTracking = () => {
 
   const handleAddGoal = () => {
     if (newGoal?.title && newGoal?.target && newGoal?.deadline) {
-      // Mock add goal functionality
+      
       console.log('Adding new goal:', newGoal);
       setNewGoal({ title: '', target: '', deadline: '', type: 'gpa' });
       setShowAddGoal(false);

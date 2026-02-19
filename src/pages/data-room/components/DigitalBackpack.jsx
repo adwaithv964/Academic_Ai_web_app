@@ -13,15 +13,15 @@ const DigitalBackpack = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
 
-    // File Input Ref
+    
     const fileInputRef = React.useRef(null);
 
-    // Edit State
+    
     const [editingFile, setEditingFile] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', subject: '', type: '' });
 
-    // Upload Verification State
-    const [pendingUpload, setPendingUpload] = useState(null); // { file, name, subject, type }
+    
+    const [pendingUpload, setPendingUpload] = useState(null); 
 
     useEffect(() => {
         if (!currentUser) return;
@@ -35,7 +35,7 @@ const DigitalBackpack = () => {
             setFiles(docs);
         } catch (err) {
             console.error("Failed to load documents:", err);
-            // Optionally set error state to show in UI
+            
         } finally {
             setLoading(false);
         }
@@ -45,15 +45,15 @@ const DigitalBackpack = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Open verification modal instead of direct upload
+        
         setPendingUpload({
             file,
             name: file.name,
             subject: 'General',
-            type: 'other' // default
+            type: 'other' 
         });
 
-        // Clear input so same file can be selected again if cancelled
+        
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -64,21 +64,21 @@ const DigitalBackpack = () => {
         formData.append('file', pendingUpload.file);
         formData.append('subject', pendingUpload.subject || 'General');
         formData.append('type', pendingUpload.type || 'other');
-        // If the backend supports renaming on upload, we might need to send 'name' separately
-        // or rename the file object. For now, assuming standard upload and we might update metadata later
-        // OR simply passing these fields is enough if backend handles it.
-        // Let's assume the backend 'documentsApi.upload' handles form data fields.
+        
+        
+        
+        
 
-        // Small hack: if backend takes 'name' field for display name
+        
         formData.append('name', pendingUpload.name);
 
         try {
             setUploading(true);
             const newDoc = await documentsApi.upload(formData);
 
-            // If backend didn't use our name/subject/type from FormData (depends on implementation),
-            // we might need an immediate update. But usually FormData fields are read.
-            // Let's assume it works or we'll refine.
+            
+            
+            
 
             setFiles([newDoc, ...files]);
             setPendingUpload(null);
@@ -109,7 +109,7 @@ const DigitalBackpack = () => {
     const handleDownload = async (doc) => {
         try {
             const blob = await documentsApi.download(doc._id);
-            // blob is already a Blob object from axios
+            
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -127,13 +127,13 @@ const DigitalBackpack = () => {
     const handleView = async (doc) => {
         try {
             const blob = await documentsApi.download(doc._id);
-            // It's already a blob, create URL directly
+            
             const url = window.URL.createObjectURL(blob);
 
-            // Open in new tab
+            
             window.open(url, '_blank');
 
-            // Clean up after a delay to allow the new tab to load the blob
+            
             setTimeout(() => window.URL.revokeObjectURL(url), 1000);
         } catch (error) {
             console.error("View failed:", error);
@@ -171,7 +171,7 @@ const DigitalBackpack = () => {
 
     const filteredFiles = files.filter(file => {
         const matchesFilter = activeFilter === 'all' || file.type === activeFilter;
-        // Search by name or subject
+        
         const matchesSearch =
             (file.name && file.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (file.subject && file.subject.toLowerCase().includes(searchQuery.toLowerCase()));

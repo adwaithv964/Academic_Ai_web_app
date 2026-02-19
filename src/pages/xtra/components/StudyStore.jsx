@@ -19,7 +19,7 @@ const StudyStore = ({ user, onPurchase }) => {
     }, []);
 
     const handleBuy = async (item) => {
-        // For challenges, price is 0, so this check passes if price is 0.
+        
         if (item.price > 0 && user.points < item.price) return;
 
         setBuying(item.id);
@@ -27,12 +27,12 @@ const StudyStore = ({ user, onPurchase }) => {
         try {
             const res = await api.gamification.buyItem(item.id);
             if (res.success) {
-                // If it was a challenge, res.points includes the reward!
+                
                 onPurchase(res.points, res.inventory);
             }
         } catch (err) {
             console.error("Claim failed", err);
-            // Show error to user (e.g., "Condition Not Met")
+            
             const msg = err.response?.data?.error || "Failed to claim.";
             setError({ itemId: item.id, msg });
             setTimeout(() => setError(null), 3000);
@@ -53,7 +53,7 @@ const StudyStore = ({ user, onPurchase }) => {
         }
     };
 
-    // Helper to check if condition is met (Frontend approximation)
+    
     const checkUnlockCondition = (condition) => {
         if (!condition) return true;
         const { type, threshold } = condition;
@@ -62,10 +62,10 @@ const StudyStore = ({ user, onPurchase }) => {
             case 'level':
                 return (user.level || 1) >= threshold;
             case 'streak':
-                // Simple streak check
+                
                 return (user.streak || 0) >= threshold;
-            // For complex backend checks, we return TRUE here to let the user TRY to claim.
-            // The backend will reject if not met.
+            
+            
             case 'time_window':
             case 'task_type_count':
             case 'weekend_study':
@@ -88,9 +88,9 @@ const StudyStore = ({ user, onPurchase }) => {
                     const isTheme = item.type === 'theme';
                     const isChallenge = item.type === 'challenge';
 
-                    // Check if condition is met (visually)
+                    
                     const isConditionMet = checkUnlockCondition(item.unlockCondition);
-                    const isLocked = !isConditionMet && !isChallenge; // Only lock non-challenges strictly
+                    const isLocked = !isConditionMet && !isChallenge; 
 
                     return (
                         <div key={item.id} className={`bg-white border text-card-foreground shadow-sm rounded-xl p-6 flex flex-col justify-between transition-all hover:shadow-md relative ring-1 ${isOwned ? 'ring-green-100' : 'ring-gray-100'}`}>

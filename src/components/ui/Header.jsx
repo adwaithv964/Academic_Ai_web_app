@@ -18,13 +18,14 @@ const Header = ({ sidebarCollapsed = false }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, clearAll, addNotification } = useNotifications();
   const { formatDate } = useDateFormatter();
-  const [userProfile, setUserProfile] = useState(null);
+  
+  const userProfile = currentUser;
   const [showProfileTooltip, setShowProfileTooltip] = useState(false);
 
-  // Global Focus Timer State
+  
   const { isActive, timeLeft, mode, initialDuration } = useSelector(state => state.focus);
 
-  // Global Tick Effect (This ensures timer runs on all pages)
+  
   useEffect(() => {
     let interval = null;
     if (isActive && timeLeft > 0) {
@@ -32,10 +33,10 @@ const Header = ({ sidebarCollapsed = false }) => {
         dispatch(tick());
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
-      // Timer finished
+      
       dispatch(pauseTimer());
 
-      // SAVE SESSION AUTOMATICALLY
+      
       const saveCompletedSession = async () => {
         try {
           const now = new Date();
@@ -54,7 +55,7 @@ const Header = ({ sidebarCollapsed = false }) => {
             message: `Great job! Recorded ${formatTimer(initialDuration)} of focus.`,
             timestamp: Date.now()
           });
-          // Refresh User Data (Quests/Garden)
+          
           if (refreshUser) await refreshUser();
         } catch (error) {
           console.error("Failed to save completed session:", error);
@@ -65,26 +66,11 @@ const Header = ({ sidebarCollapsed = false }) => {
     return () => clearInterval(interval);
   }, [isActive, timeLeft, dispatch, addNotification, mode, initialDuration]);
 
-  // Load user profile
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const loadUserProfile = async () => {
-      try {
-        const profile = await userApi.get();
-        setUserProfile(profile);
-      } catch (error) {
-        console.error('Failed to load user profile:', error);
-      }
-    };
-    loadUserProfile();
-  }, [currentUser]);
-
   const formatTimer = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    // Show hours only if relevant
+    
     if (h > 0) {
       return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
@@ -92,9 +78,9 @@ const Header = ({ sidebarCollapsed = false }) => {
   };
 
   const getBreadcrumbs = () => {
-    // Mock breadcrumb logic based on design: "Date - Week - Context"
+    
     const today = new Date();
-    const dateStr = today.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }); // 04.10.24 style
+    const dateStr = today.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }); 
     const weekNumber = Math.ceil((today.getDate() - 1 + new Date(today.getFullYear(), 0, 1).getDay()) / 7);
 
     return (
@@ -111,8 +97,8 @@ const Header = ({ sidebarCollapsed = false }) => {
   const handleTimerToggle = async () => {
     if (isActive) {
       dispatch(pauseTimer());
-      // Optional: Save session if stopping early? 
-      // For now, mirroring old logic: save if significant progress
+      
+      
       const elapsed = initialDuration - timeLeft;
       if (elapsed > 60) {
         try {

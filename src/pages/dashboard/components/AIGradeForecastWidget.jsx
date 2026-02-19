@@ -9,7 +9,7 @@ const AIGradeForecastWidget = () => {
     useEffect(() => {
         const loadPrediction = async () => {
             try {
-                // Get latest prediction
+                
                 const latest = await db.predictions.orderBy('date').reverse().first();
                 if (latest) {
                     setPrediction(latest);
@@ -22,7 +22,7 @@ const AIGradeForecastWidget = () => {
         loadPrediction();
     }, []);
 
-    // Helper to calculate color based on grade
+    
     const getGradeColor = (grade) => {
         if (grade >= 90) return 'text-green-500';
         if (grade >= 80) return 'text-blue-500';
@@ -30,9 +30,9 @@ const AIGradeForecastWidget = () => {
         return 'text-red-500';
     };
 
-    // Helper for gauge arc
+    
     const calculateRotation = (value) => {
-        // Value 0-100 mapped to -90deg to 90deg (180deg span)
+        
         const constrained = Math.min(Math.max(value, 0), 100);
         return (constrained / 100) * 180 - 90;
     };
@@ -64,8 +64,8 @@ const AIGradeForecastWidget = () => {
                                     fill="none"
                                     stroke="url(#gradient)"
                                     strokeWidth="10"
-                                    strokeDasharray={`${(prediction?.predictedGrade || 0) * 1.25}, 125`} // Rough approximation for 0-100 mapping to available arc length
-                                // Actually arc length is PI * R = 3.14 * 40 = 125.6
+                                    strokeDasharray={`${(prediction?.predictedGrade || 0) * 1.25}, 125`} 
+                                
                                 />
                                 <defs>
                                     <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">

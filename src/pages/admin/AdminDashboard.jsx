@@ -41,17 +41,17 @@ const AdminDashboard = () => {
         try {
             const config = {
                 headers: {
-                    Authorization: `Bearer ${token}` // Assuming token is available in AuthContext or localStorage but using currentUser token if stored there
+                    Authorization: `Bearer ${token}` 
                 }
             };
 
-            // In a real app we'd need to ensure the token is correctly passed.
-            // If the AuthContext doesn't expose the raw token, we might need to rely on the interceptor 
-            // or get it from localStorage if that's where it's kept.
-            // For now, let's assume standard axios setup or explicit header if token is available.
+            
+            
+            
+            
 
-            // NOTE: If AuthContext doesn't provide token directly, check how other requests are made.
-            // Usually there's an api instance or we grab it from localStorage.
+            
+            
             if (currentUser) {
                 const token = currentUser.token;
                 config.headers.Authorization = `Bearer ${token}`;
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
                 const { data } = await axios.get(`${baseURL}/admin/stats`, config);
                 setStats(data);
             } else {
-                // Wait for auth to initialize or redirect
+                
                 setLoading(false);
             }
         } catch (err) {

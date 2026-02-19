@@ -25,14 +25,14 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Calendar = () => {
     const { currentUser } = useAuth();
-    const [view, setView] = useState('month'); // year, month, multi-week, week, multi-day, day, agenda
+    const [view, setView] = useState('month'); 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
 
-    // Navigation Logic
+    
     const next = () => {
         if (view === 'year') setCurrentDate(addYears(currentDate, 1));
         if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
@@ -59,21 +59,21 @@ const Calendar = () => {
         if (!currentUser) return;
         setLoading(true);
         try {
-            // Fetch from our APIs
+            
             const [examsRes = [], vacationsRes = [], eventsRes = []] = await Promise.all([
                 examsApi.list().catch(() => []),
                 vacationsApi.list().catch(() => []),
                 eventsApi.list().catch(() => []),
             ]);
 
-            // Normalize events with pastel colors for "Kanban" look
+            
             const normalizedEvents = [
                 ...(Array.isArray(examsRes) ? examsRes : []).map(e => ({
                     ...e,
                     type: 'exam',
                     date: new Date(e.date),
                     title: e.subject,
-                    // Pastel Red/Pink
+                    
                     color: 'bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200'
                 })),
                 ...(Array.isArray(vacationsRes) ? vacationsRes : []).map(v => ({
@@ -81,14 +81,14 @@ const Calendar = () => {
                     type: 'vacation',
                     date: new Date(v.startDate),
                     title: v.name,
-                    // Pastel Cyan/Blue
+                    
                     color: 'bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200'
                 })),
                 ...(Array.isArray(eventsRes) ? eventsRes : []).map(e => ({
                     ...e,
                     type: 'generic',
                     date: new Date(e.date),
-                    // Use saved color or default
+                    
                     color: e.color || 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
                 })),
             ];
@@ -109,8 +109,8 @@ const Calendar = () => {
         setCurrentDate(date);
         if (view === 'year') setView('month');
         else if (view === 'month') {
-            // Optional: clicking a day could open modal to add event?
-            // For now just drills down
+            
+            
             setView('day');
         }
     };
@@ -155,6 +155,21 @@ const Calendar = () => {
         setIsModalOpen(true);
     };
 
+    const handleEventComplete = async (event) => {
+        try {
+            
+            const updatedEvents = events.map(e =>
+                e._id === event._id ? { ...e, isCompleted: !e.isCompleted } : e
+            );
+            setEvents(updatedEvents);
+
+            await eventsApi.update(event._id, { isCompleted: !event.isCompleted });
+        } catch (error) {
+            console.error("Failed to toggle event completion", error);
+            fetchEvents(); 
+        }
+    };
+
     const getHeaderLabel = () => {
         if (view === 'year') return format(currentDate, 'yyyy');
         if (view === 'day') return format(currentDate, 'MMMM d, yyyy');
@@ -185,7 +200,7 @@ const Calendar = () => {
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden p-6 pt-4 pb-20">
                 {view === 'year' && <YearView currentDate={currentDate} events={events} onMonthClick={(d) => { setCurrentDate(d); setView('month'); }} />}
-                {view === 'month' && <MonthView currentDate={currentDate} events={events} onDateClick={handleDateClick} onEventClick={handleEventClick} />}
+                {view === 'month' && <MonthView currentDate={currentDate} events={events} onDateClick={handleDateClick} onEventClick={handleEventClick} onEventComplete={handleEventComplete} />}
                 {view === 'multi-week' && <MultiWeekView currentDate={currentDate} events={events} onDateClick={handleDateClick} onEventClick={handleEventClick} />}
                 {view === 'week' && <WeekView currentDate={currentDate} events={events} onDateClick={handleDateClick} onEventClick={handleEventClick} />}
                 {view === 'multi-day' && <MultiDayView currentDate={currentDate} events={events} onEventClick={handleEventClick} />}

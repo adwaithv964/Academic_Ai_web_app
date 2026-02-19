@@ -48,20 +48,20 @@ const TaskList = ({ tasks, courses = [], onTaskToggle, onTaskAdd, onTaskUpdate, 
   const handleSubmit = () => {
     if (newTask?.title?.trim()) {
       if (editingTaskId) {
-        // Update existing task
+        
         onTaskUpdate(editingTaskId, newTask);
         setEditingTaskId(null);
       } else {
-        // Add new task
+        
         onTaskAdd({
           ...newTask,
-          id: Date.now(), // Temp ID
+          id: Date.now(), 
           completed: false,
           createdAt: new Date()?.toISOString()
         });
       }
 
-      // Reset form
+      
       setNewTask({
         title: '',
         subject: '',

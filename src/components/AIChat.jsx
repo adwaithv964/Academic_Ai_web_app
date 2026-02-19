@@ -13,7 +13,7 @@ const AIChat = ({
   subject = 'general',
   isOpen = false,
   onClose = () => { },
-  variant = 'widget', // 'widget' | 'embedded'
+  variant = 'widget', 
   className = ''
 }) => {
   const [messages, setMessages] = useState([
@@ -60,7 +60,7 @@ const AIChat = ({
     setInputMessage('');
     setIsStreaming(true);
 
-    // Create AI response placeholder
+    
     const aiMessageId = Date.now() + 1;
     const aiMessage = {
       id: aiMessageId,
@@ -131,7 +131,7 @@ const AIChat = ({
 
   if (!isOpen) return null;
 
-  // Dynamic classes based on variant
+  
   const baseClasses = "bg-card flex flex-col overflow-hidden";
   const widgetClasses = "fixed top-0 left-0 right-0 bottom-[60px] sm:top-auto sm:left-auto sm:bottom-4 sm:right-4 w-full sm:w-96 h-auto sm:h-[600px] border-0 sm:border border-border sm:rounded-lg shadow-xl z-[400]";
   const embeddedClasses = "w-full h-full rounded-lg border border-border";
@@ -198,11 +198,11 @@ const AIChat = ({
                 {/* Custom Message Formatter */}
                 <div className="text-sm leading-relaxed">
                   {message?.content?.split('\n').map((line, i) => {
-                    // Handle bullet points
+                    
                     const isBullet = line.trim().startsWith('* ') || line.trim().startsWith('- ');
                     const cleanLine = isBullet ? line.trim().substring(2) : line;
 
-                    // Handle bold text (**text**)
+                    
                     const parts = cleanLine.split(/\*\*(.*?)\*\*/g);
 
                     return (
@@ -210,7 +210,7 @@ const AIChat = ({
                         {isBullet && <span className="text-primary/70">•</span>}
                         <span className="break-words">
                           {parts.map((part, j) =>
-                            // Even indices are normal text, odd are bold (captured groups)
+                            
                             j % 2 === 1 ? <strong key={j} className="font-semibold">{part}</strong> : part
                           )}
                         </span>

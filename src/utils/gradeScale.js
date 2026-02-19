@@ -22,25 +22,25 @@ export const GRADE_SCALES = {
         'C+': 78, 'C': 75, 'C-': 70,
         'D+': 68, 'D': 65, 'F': 0
     },
-    'CALICUT_UG_2024': { // Based on new regulations
-        'O': 10.0,    // 8.5 - 10.0
-        'A+': 8.49,   // 7.5 - 8.49
-        'A': 7.49,    // 6.5 - 7.49
-        'B+': 6.49,   // 5.5 - 6.49
-        'B': 5.49,    // 5.0 - 5.49
-        'C': 4.99,    // 4.5 - 4.99
-        'D': 4.49,    // 4.0 - 4.49
-        'F': 0.0      // Below 4.0
+    'CALICUT_UG_2024': { 
+        'O': 10.0,    
+        'A+': 8.49,   
+        'A': 7.49,    
+        'B+': 6.49,   
+        'B': 5.49,    
+        'C': 4.99,    
+        'D': 4.49,    
+        'F': 0.0      
     }
 };
 
-// Calculate GP from marks explicitly for Calicut system
+
 export const calculateCalicutGP = (marks) => {
     const val = parseFloat(marks);
     if (isNaN(val)) return 0;
     if (val < 40) return 0;
-    // GP = (Marks / 10)
-    // Example: 88% -> 8.8
+    
+    
     const gp = val / 10;
     return parseFloat(gp.toFixed(2));
 };
@@ -56,7 +56,7 @@ export const getCalicutGrade = (marks) => {
     if (val < 65) return 'B+';
     if (val < 75) return 'A';
     if (val < 85) return 'A+';
-    return 'O'; // 85-100
+    return 'O'; 
 };
 
 export const getGradeOptions = (scaleType = '4.0') => {
@@ -76,8 +76,8 @@ export const getGradePoint = (grade, scaleType = '4.0') => {
 export const calculateGPA = (courses, scaleType = '4.0') => {
     const scale = GRADE_SCALES[scaleType] || GRADE_SCALES['4.0'];
     const totalPoints = courses.reduce((sum, course) => {
-        // Use explicit GP if available (for exact calculation like Calicut)
-        // Otherwise fallback to Grade Mapping
+        
+        
         let points = 0;
         if (typeof course.gp === 'number') {
             points = course.gp;

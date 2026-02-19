@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -13,21 +19,21 @@ const UserSchema = new mongoose.Schema({
     address: String,
     createdAt: { type: Date, default: Date.now },
 
-    // Identity
+    
     authUid: { type: String, unique: true, sparse: true, index: true },
 
-    // Gamification - Core Stats
-    lastActiveDate: { type: Date }, // For streak calculation
+    
+    lastActiveDate: { type: Date }, 
     streak: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
     xp: { type: Number, default: 0 },
 
-    // Gamification - Config
+    
     points: { type: Number, default: 0, index: true },
     totalPoints: { type: Number, default: 0 },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
-    inventory: [{ type: String }], // IDs of bought items
+    inventory: [{ type: String }], 
 
     achievements: {
         type: Map,
@@ -56,13 +62,13 @@ const UserSchema = new mongoose.Schema({
     },
 
     garden: {
-        level: { type: Number, default: 1 }, // Added level for unlock conditions
+        level: { type: Number, default: 1 }, 
         plants: [{
-            type: { type: String }, // e.g., 'tree', 'flower'
-            stage: { type: Number, default: 1 }, // 1-3 growth stages
+            type: { type: String }, 
+            stage: { type: Number, default: 1 }, 
             plantedAt: Date
         }],
-        unlockedThemes: [{ type: String }] // 'default', 'night', etc.
+        unlockedThemes: [{ type: String }] 
     },
 
     academicSettings: {
@@ -109,9 +115,9 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-// Helper Method to Update Quest Progress
+
 UserSchema.methods.updateQuestProgress = async function (type, amount = 1) {
-    // Lazy load to ensure no circular dependency issues, though config should be fine
+    
     const { DAILY_QUESTS_POOL } = require('../config/gamification');
 
     if (!this.quests || !this.quests.daily) return;
@@ -120,13 +126,13 @@ UserSchema.methods.updateQuestProgress = async function (type, amount = 1) {
     this.quests.daily.forEach(quest => {
         const poolItem = DAILY_QUESTS_POOL.find(p => p.id === quest.id);
         if (poolItem && poolItem.type === type) {
-            // Apply Update
+            
             if (!quest.completed) {
                 quest.progress += amount;
                 if (quest.progress >= poolItem.target) {
                     quest.progress = poolItem.target;
                     quest.completed = true;
-                    // Optional: Auto-claim or notify? For now, just mark completed.
+                    
                 }
                 modified = true;
             }

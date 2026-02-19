@@ -9,7 +9,7 @@ const AdminSettings = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
 
-    // Settings State
+    
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [allowRegistration, setAllowRegistration] = useState(true);
     const [systemEmail, setSystemEmail] = useState('admin@academicpredictor.com');
@@ -55,7 +55,7 @@ const AdminSettings = () => {
 
             setMessage({ type: 'success', text: 'Settings saved successfully!' });
 
-            // Clear message after 3 seconds
+            
             setTimeout(() => setMessage(''), 3000);
         } catch (error) {
             console.error("Failed to save settings:", error);

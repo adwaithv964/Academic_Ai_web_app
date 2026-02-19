@@ -10,7 +10,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 const AcademicSettingsTab = () => {
   const { currentUser } = useAuth();
   const defaultSettings = {
-    // ...
+    
     currentGPA: "8.5",
     gpaScale: "10.0",
     targetGPA: "9.0",
@@ -25,7 +25,7 @@ const AcademicSettingsTab = () => {
   const [academicSettings, setAcademicSettings] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
 
-  // Fetch settings on load
+  
   React.useEffect(() => {
     if (!currentUser) return;
 
@@ -33,7 +33,7 @@ const AcademicSettingsTab = () => {
       try {
         const res = await userApi.get();
         if (res && res.academicSettings) {
-          // Merge defaults with fetched to ensure all fields exist
+          
           setAcademicSettings({ ...defaultSettings, ...res.academicSettings });
         }
       } catch (err) {

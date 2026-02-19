@@ -3,10 +3,10 @@ import { format, isSameDay } from 'date-fns';
 import Icon from '../../../components/AppIcon';
 
 const AgendaView = ({ events, onEventClick }) => {
-    // Sort events by date
+    
     const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Group by Month
+    
     const grouped = sortedEvents.reduce((acc, event) => {
         const monthKey = format(new Date(event.date), 'MMMM yyyy');
         if (!acc[monthKey]) acc[monthKey] = [];

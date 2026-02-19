@@ -10,15 +10,15 @@ const ActiveFocusWidget = () => {
     const dispatch = useDispatch();
     const { isActive, timeLeft, task: activeTask, mode } = useSelector(state => state.focus);
 
-    // We still load tasks to find a suggestion if none is selected
+    
     useEffect(() => {
-        // Load high priority task from local storage or find the first one
+        
         const loadTask = () => {
-            if (activeTask) return; // Already have a task in global state
+            if (activeTask) return; 
 
             try {
                 const savedTasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
-                // Find first high priority task that is not done
+                
                 const highPriority = savedTasks.find(t => (t.priority === 'high' || t.tags?.includes('HIGH')) && t.status !== 'done');
                 const anyTask = savedTasks.find(t => t.status !== 'done');
 

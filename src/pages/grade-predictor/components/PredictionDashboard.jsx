@@ -16,7 +16,7 @@ const PredictionDashboard = ({ data, isLoading }) => {
 
     if (!data) return null;
 
-    // Handles both old and new data structures gracefully
+    
     const stats = data.stats || {};
     const aiAnalysis = data.aiAnalysis || data.aiInsights || {};
     const parameters = data.parameters;

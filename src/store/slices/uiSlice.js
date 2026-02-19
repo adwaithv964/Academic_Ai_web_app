@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    theme: 'light', // 'light' | 'dark'
+    theme: 'light', 
     sidebarCollapsed: false,
     activeTab: 'dashboard',
 };
@@ -12,7 +12,7 @@ const uiSlice = createSlice({
     reducers: {
         toggleTheme: (state) => {
             state.theme = state.theme === 'light' ? 'dark' : 'light';
-            // Side effect for Tailwind generic dark mode can be handled in a subscriber or useEffect
+            
             if (state.theme === 'dark') {
                 document.documentElement.classList.add('dark');
             } else {

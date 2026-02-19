@@ -63,7 +63,7 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        surface: "hsl(var(--card))", // Mapping surface to card for consistency
+        surface: "hsl(var(--card))", 
         'text-primary': "hsl(var(--foreground))",
         'text-secondary': "hsl(var(--muted-foreground))",
       },

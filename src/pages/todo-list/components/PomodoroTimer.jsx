@@ -7,8 +7,8 @@ import TimeSpinner from '../../focus-timer/components/TimeSpinner';
 const PomodoroTimer = () => {
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
-    const [mode, setMode] = useState('focus'); // focus, short, long
-    const [totalDuration, setTotalDuration] = useState(25 * 60); // Track total for progress
+    const [mode, setMode] = useState('focus'); 
+    const [totalDuration, setTotalDuration] = useState(25 * 60); 
 
     useEffect(() => {
         let interval = null;
@@ -18,7 +18,7 @@ const PomodoroTimer = () => {
             }, 1000);
         } else if (timeLeft === 0) {
             setIsActive(false);
-            // Play sound?
+            
         }
         return () => clearInterval(interval);
     }, [isActive, timeLeft]);

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const PredictionSchema = new mongoose.Schema({
@@ -7,8 +13,8 @@ const PredictionSchema = new mongoose.Schema({
     predictedGrade: Number,
     rangeLow: Number,
     rangeHigh: Number,
-    studyDataSummary: Object, // Store snapshot of study input
-    aiAnalysis: Object, // { insights, riskAssessment, actionPlan }
+    studyDataSummary: Object, 
+    aiAnalysis: Object, 
     timestamp: { type: Date, default: Date.now }
 });
 

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const systemLogSchema = new mongoose.Schema({
@@ -13,7 +19,7 @@ const systemLogSchema = new mongoose.Schema({
     },
     details: {
         type: Map,
-        of: String, // e.g., { "key": "value" }
+        of: String, 
         default: {}
     },
     userId: {
@@ -28,10 +34,10 @@ const systemLogSchema = new mongoose.Schema({
     timestamp: {
         type: Date,
         default: Date.now,
-        index: true // Index for sorting
+        index: true 
     }
 }, {
-    // No timestamps: true needed because we have timestamp field
+    
 });
 
 module.exports = mongoose.model('SystemLog', systemLogSchema);

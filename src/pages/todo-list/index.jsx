@@ -12,21 +12,21 @@ import { useAuth } from '../../contexts/AuthContext';
 const TodoList = () => {
     const { refreshUser } = useAuth();
     const [tasks, setTasks] = useState([]);
-    const [viewMode, setViewMode] = useState('list'); // list or kanban
+    const [viewMode, setViewMode] = useState('list'); 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
-    const [filter, setFilter] = useState('all'); // all, active, completed
+    const [filter, setFilter] = useState('all'); 
 
-    // API Integration
+    
     const fetchTasks = async () => {
         try {
             const data = await tasksApi.list();
-            // Backend returns _id, frontend might need id or just use _id.
-            // Let's normalize to ensure compatibility with existing UI if it uses .id
+            
+            
             const normalizedTasks = data.map(t => ({
                 ...t,
-                id: t._id, // Map _id to id for frontend compatibility
-                status: t.completed ? 'done' : (t.status || 'todo') // Normalize status
+                id: t._id, 
+                status: t.completed ? 'done' : (t.status || 'todo') 
             }));
             setTasks(normalizedTasks);
         } catch (error) {
@@ -38,30 +38,30 @@ const TodoList = () => {
         fetchTasks();
     }, []);
 
-    // Save tasks - REMOVED LocalStorage effect
+    
 
     const handleCreateTask = async (taskData) => {
         try {
             if (editingTask) {
-                // Update
+                
                 const updated = await tasksApi.update(editingTask.id, taskData);
                 setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...updated, id: updated._id, status: updated.completed ? 'done' : updated.status || 'todo' } : t));
             } else {
-                // Create
-                // Ensure proper fields are sent. Backend expects: title, priority, etc.
-                const { id, ...payload } = taskData; // Remove temp id
+                
+                
+                const { id, ...payload } = taskData; 
                 const created = await tasksApi.create(payload);
                 setTasks(prev => [...prev, { ...created, id: created._id, status: created.completed ? 'done' : created.status || 'todo' }]);
             }
             setIsModalOpen(false);
             setEditingTask(null);
 
-            // Refresh User for Quests (Task Force)
+            
             if (refreshUser) setTimeout(() => refreshUser(), 500);
 
         } catch (error) {
             console.error("Failed to save task:", error);
-            // Optionally show error notification
+            
         }
     };
 
@@ -78,20 +78,20 @@ const TodoList = () => {
 
     const handleStatusChange = async (id, newStatus) => {
         try {
-            // Optimistic update
+            
             setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
 
             const completed = newStatus === 'done';
             await tasksApi.update(id, { status: newStatus, completed });
 
-            // If completing a task, refresh user data for Quests
+            
             if (completed && refreshUser) {
                 setTimeout(() => refreshUser(), 500);
             }
         } catch (error) {
             console.error("Failed to update task status:", error);
-            // Revert on failure? For now just log.
-            fetchTasks(); // Re-fetch to sync
+            
+            fetchTasks(); 
         }
     };
 

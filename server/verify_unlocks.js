@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Task = require('./models/Task');
@@ -15,24 +21,24 @@ const boostStats = async () => {
             process.exit(0);
         }
 
-        const user = users[0]; // Just target the first user
+        const user = users[0]; 
         console.log(`Boosting stats for: ${user.firstName}`);
 
-        // 1. Boost Level (Unlocks Golden Avatar, Grandmaster)
-        user.level = 15; // Unlocks Golden Avatar (req 10)
+        
+        user.level = 15; 
 
-        // 2. Boost Garden (Unlocks Nature Theme)
+        
         if (!user.garden) user.garden = {};
-        user.garden.level = 5; // Unlocks Nature Theme (req 3)
+        user.garden.level = 5; 
 
-        // 3. Boost Streak (Unlocks Freeze)
-        user.streak = 10; // Unlocks Streak Freeze (req 7)
+        
+        user.streak = 10; 
 
         await user.save();
         console.log('User stats updated.');
 
-        // 4. Boost Tasks (Unlocks Cyberpunk Theme)
-        // We need to ensure there are 25 completed tasks.
+        
+        
         const currentTasks = await Task.countDocuments({ userId: user._id, status: 'completed' });
         const needed = 25 - currentTasks;
 

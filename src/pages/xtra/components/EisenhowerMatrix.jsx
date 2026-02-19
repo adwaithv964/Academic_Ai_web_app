@@ -7,11 +7,11 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 const EisenhowerMatrix = ({ onBack }) => {
     const { currentUser } = useAuth();
-    // Quadrants: 
-    // 1: Important & Urgent (Do First)
-    // 2: Important, Not Urgent (Schedule)
-    // 3: Not Important, Urgent (Delegate)
-    // 4: Not Important, Not Urgent (Delete)
+
+
+
+
+
 
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const EisenhowerMatrix = ({ onBack }) => {
         try {
             setLoading(true);
             const data = await eisenhowerTasks.list();
-            // Ensure data is an array, backend might return empty or null if no tasks
+
             setTasks(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to load tasks:', error);
@@ -43,7 +43,7 @@ const EisenhowerMatrix = ({ onBack }) => {
 
         try {
             const task = await eisenhowerTasks.create({
-                text: newTask,
+                title: newTask,
                 quad: targetQuad
             });
             setTasks(prev => [task, ...prev]);
@@ -58,7 +58,7 @@ const EisenhowerMatrix = ({ onBack }) => {
         if (!taskToMove) return;
 
         let nextQuad = taskToMove.quad;
-        // Simplified movement logic specific to 2x2 grid
+
         if (direction === 'right') nextQuad = taskToMove.quad === 1 ? 2 : (taskToMove.quad === 3 ? 4 : taskToMove.quad);
         if (direction === 'left') nextQuad = taskToMove.quad === 2 ? 1 : (taskToMove.quad === 4 ? 3 : taskToMove.quad);
         if (direction === 'down') nextQuad = taskToMove.quad === 1 ? 3 : (taskToMove.quad === 2 ? 4 : taskToMove.quad);
@@ -67,26 +67,26 @@ const EisenhowerMatrix = ({ onBack }) => {
         if (nextQuad === taskToMove.quad) return;
 
         try {
-            // Optimistic update
+
             const updatedTasks = tasks.map(t => t._id === id ? { ...t, quad: nextQuad } : t);
             setTasks(updatedTasks);
 
             await eisenhowerTasks.update(id, { quad: nextQuad });
         } catch (error) {
             console.error('Failed to move task:', error);
-            // Revert on failure
+
             loadTasks();
         }
     };
 
     const deleteTask = async (id) => {
         try {
-            // Optimistic update
+
             setTasks(tasks.filter(t => t._id !== id));
             await eisenhowerTasks.delete(id);
         } catch (error) {
             console.error('Failed to delete task:', error);
-            // Revert on failure
+
             loadTasks();
         }
     };
@@ -106,7 +106,7 @@ const EisenhowerMatrix = ({ onBack }) => {
             <div className="flex-1 space-y-2 overflow-y-auto max-h-[200px] pr-2">
                 {tasks.filter(t => t.quad === id).map(task => (
                     <div key={task._id} className="bg-white p-3 rounded-lg shadow-sm border border-black/5 group relative flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-800">{task.text}</span>
+                        <span className="text-sm font-medium text-gray-800">{task.title || task.text}</span>
                         <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                             {/* Move controls simplified for demo */}
                             {id < 3 && <button onClick={() => moveTask(task._id, 'down')} className="text-gray-400 hover:text-gray-700"><Icon name="ArrowDown" size={14} /></button>}

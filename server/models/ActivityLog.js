@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const ActivityLogSchema = new mongoose.Schema({
@@ -9,7 +15,7 @@ const ActivityLogSchema = new mongoose.Schema({
     },
     title: { type: String, required: true },
     description: String,
-    metadata: { type: Map, of: String }, // Flexible data (e.g., badgeId, courseName)
+    metadata: { type: Map, of: String }, 
     timestamp: { type: Date, default: Date.now }
 });
 

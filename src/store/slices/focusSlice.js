@@ -8,13 +8,13 @@ const loadState = () => {
         }
         const state = JSON.parse(serializedState);
 
-        // Calculate elapsed time if timer was active
+        
         if (state.isActive && state.lastTick) {
             const now = Date.now();
             const delta = Math.floor((now - state.lastTick) / 1000);
 
-            // If delta is huge (e.g. closed for days), maybe just pause it? 
-            // For now, let's just subtract from timeLeft, stopping at 0
+            
+            
             if (delta > 0) {
                 const newTimeLeft = Math.max(0, state.timeLeft - delta);
                 state.timeLeft = newTimeLeft;
@@ -31,11 +31,11 @@ const loadState = () => {
 
 const initialState = loadState() || {
     isActive: false,
-    mode: 'focus', // 'focus', 'shortBreak', 'longBreak'
+    mode: 'focus', 
     timeLeft: 25 * 60,
     initialDuration: 25 * 60,
-    task: null, // { id, title }
-    lastTick: null, // timestamp
+    task: null, 
+    lastTick: null, 
 };
 
 const focusSlice = createSlice({
@@ -48,7 +48,7 @@ const focusSlice = createSlice({
             state.isActive = false;
             if (mode === 'focus') state.initialDuration = 25 * 60;
             if (mode === 'shortBreak') state.initialDuration = 5 * 60;
-            if (mode === 'longBreak') state.initialDuration = 60 * 60; // 1 Hour
+            if (mode === 'longBreak') state.initialDuration = 60 * 60; 
             state.timeLeft = state.initialDuration;
         },
         setTimeLeft: (state, action) => {
@@ -80,13 +80,13 @@ const focusSlice = createSlice({
         },
         setInitialDuration: (state, action) => {
             state.initialDuration = action.payload;
-            state.timeLeft = action.payload; // Also update current time if specific duration is set
-            state.isActive = false; // Pause when changing duration
+            state.timeLeft = action.payload; 
+            state.isActive = false; 
         }
     },
 });
 
-// Middleware to save state to localStorage on every change
+
 export const focusMiddleware = store => next => action => {
     const result = next(action);
     if (action.type.startsWith('focus/')) {

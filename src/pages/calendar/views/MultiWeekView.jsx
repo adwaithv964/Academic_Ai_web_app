@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 
 const MultiWeekView = ({ currentDate, events, onDateClick, onEventClick }) => {
-    // Show 2 weeks starting from the week of currentDate
+    
     const startOfFirstWeek = startOfWeek(currentDate);
     const endOfFirstWeek = endOfWeek(currentDate);
     const startOfSecondWeek = addWeeks(startOfFirstWeek, 1);

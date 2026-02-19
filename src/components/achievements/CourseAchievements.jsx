@@ -46,7 +46,7 @@ const UserStatsDonut = ({ value, label, color }) => {
 };
 
 const CourseAchievements = () => {
-    // Mock data for now, would ideally come from backend analyzing Tasks or Course Progress
+    
     const syllabusProgress = 65;
     const assignmentAceRate = 88;
 

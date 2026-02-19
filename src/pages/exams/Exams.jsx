@@ -28,7 +28,7 @@ const Exams = () => {
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
     const selectedColor = watch('color', COLORS[0].value);
 
-    // Fetch Exams
+    
     const fetchExams = async () => {
         try {
             const data = await api.exams.list();
@@ -46,7 +46,7 @@ const Exams = () => {
         }
     }, [currentUser]);
 
-    // Open Modal
+    
     const openModal = (exam = null) => {
         setEditingExam(exam);
         if (exam) {
@@ -69,7 +69,7 @@ const Exams = () => {
         setIsModalOpen(true);
     };
 
-    // Save Exam (Create/Update)
+    
     const onSubmit = async (data) => {
         try {
             if (editingExam) {
@@ -85,7 +85,7 @@ const Exams = () => {
         }
     };
 
-    // Delete Exam
+    
     const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this exam?")) {
             try {

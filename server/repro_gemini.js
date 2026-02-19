@@ -1,15 +1,21 @@
+
+
+
+
+
+
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load env from root
+
 const envPath = path.join(__dirname, '../.env');
 console.log("Loading env from:", envPath);
 dotenv.config({ path: envPath });
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 console.log("API Key present:", !!apiKey);
-// console.log("API Key:", apiKey); // Uncomment to debug if needed, but be careful
+
 
 const models = [
     'gemini-2.5-flash',

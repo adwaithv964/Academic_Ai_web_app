@@ -3,9 +3,9 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
 const ZenMode = ({ onExit }) => {
-    // This component will act as a full-screen overlay
-    // Ideally, in a real app, this might lift state up to hide the layout
-    // For now, we simulate it with a high z-index fixed div covering everything
+    
+    
+    
 
     return (
         <div className="fixed inset-0 bg-white z-[9999] flex flex-col animate-in fade-in duration-500">

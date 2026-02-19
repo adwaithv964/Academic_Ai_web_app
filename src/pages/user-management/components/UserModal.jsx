@@ -20,7 +20,7 @@ const UserModal = ({ mode, user, onSubmit, onClose }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Initialize form data
+  
   useEffect(() => {
     if (mode === 'edit' && user) {
       setFormData({
@@ -82,7 +82,7 @@ const UserModal = ({ mode, user, onSubmit, onClose }) => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
+    
     if (errors?.[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -105,7 +105,7 @@ const UserModal = ({ mode, user, onSubmit, onClose }) => {
       newErrors.role = 'Role is required';
     }
 
-    // Role-specific validation
+    
     if (formData?.role === 'student') {
       if (!formData?.major?.trim()) {
         newErrors.major = 'Major is required for students';
@@ -137,7 +137,7 @@ const UserModal = ({ mode, user, onSubmit, onClose }) => {
 
     setLoading(true);
     try {
-      // Simulate API call
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       onSubmit?.(formData);

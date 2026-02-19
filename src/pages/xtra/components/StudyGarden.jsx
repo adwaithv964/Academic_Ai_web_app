@@ -21,7 +21,7 @@ const StudyGarden = ({ user }) => {
         fetchGarden();
     }, []);
 
-    // Fallback if API fails or loading (use props if available or zeros)
+    
     const displayHours = loading ? (user?.totalPoints ? (user.totalPoints / 100).toFixed(1) : "0.0") : gardenData.totalHours;
 
     return (
@@ -46,7 +46,7 @@ const StudyGarden = ({ user }) => {
                             <div key={plant.id} className={`flex flex-col items-center ${!plant.unlocked ? 'opacity-50 grayscale' : ''}`}>
                                 <Icon
                                     name={plant.icon}
-                                    size={plant.id === 'oak' ? 64 : 48} // Example sizing
+                                    size={plant.id === 'oak' ? 64 : 48} 
                                     className={`${plant.color} ${plant.unlocked ? 'hover:scale-110 transition-transform cursor-pointer' : ''}`}
                                 />
                                 <span className={`text-xs font-bold text-green-800 mt-2 ${plant.unlocked ? 'bg-white/60 px-2 py-0.5 rounded-full' : ''}`}>

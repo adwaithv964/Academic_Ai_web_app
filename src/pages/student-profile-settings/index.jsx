@@ -20,7 +20,7 @@ const StudentProfileSettings = () => {
         const profile = await userApi.get();
         setUserProfile(profile);
 
-        // Get GPA from academicSettings in localStorage or set default
+        
         try {
           const settings = localStorage.getItem('academicSettings');
           if (settings) {
@@ -169,24 +169,7 @@ const StudentProfileSettings = () => {
             </div>
           </nav>
 
-          {/* User Info Card */}
-          <div className="p-4 border-t border-border mt-auto">
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                  <Icon name="User" size={20} className="text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">{displayName}</p>
-                  <p className="text-sm text-muted-foreground">{studentId}</p>
-                </div>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>{major} • Class of {graduationYear}</p>
-                <p>Current GPA: {gpa} / 4.0</p>
-              </div>
-            </div>
-          </div>
+
         </aside>
 
         {/* Main Content */}

@@ -1,7 +1,147 @@
 import React, { useState, useEffect } from 'react';
-import { Link, ExternalLink, Globe, Youtube, Book, Filter, Trash2, Search, Edit2, Plus } from 'lucide-react';
+import { Link, ExternalLink, Globe, Youtube, Book, Filter, Trash2, Search, Edit2, Plus, X, FolderPlus } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import api from '../../../services/api';
+import Input from '../../../components/ui/Input';
+
+
+const SubjectManagerModal = ({ isOpen, onClose, onSubjectsUpdated }) => {
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [newCourseName, setNewCourseName] = useState('');
+    const [editingId, setEditingId] = useState(null);
+    const [editName, setEditName] = useState('');
+
+    useEffect(() => {
+        if (isOpen) fetchCourses();
+    }, [isOpen]);
+
+    const fetchCourses = async () => {
+        try {
+            setLoading(true);
+            const data = await api.courses.list().catch(() => []);
+            setCourses(data);
+        } catch (err) {
+            console.error("Failed to load courses:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddCourse = async () => {
+        if (!newCourseName.trim()) return;
+        try {
+            const newCourse = await api.courses.create({ name: newCourseName });
+            setCourses([newCourse, ...courses]);
+            setNewCourseName('');
+            onSubjectsUpdated();
+        } catch (err) {
+            console.error("Failed to add course:", err);
+        }
+    };
+
+    const handleUpdateCourse = async (id) => {
+        if (!editName.trim()) return;
+        try {
+            const updated = await api.courses.update(id, { name: editName });
+            setCourses(courses.map(c => c._id === id ? updated : c));
+            setEditingId(null);
+            onSubjectsUpdated();
+        } catch (err) {
+            console.error("Failed to update course:", err);
+        }
+    };
+
+    const handleDeleteCourse = async (id) => {
+        if (!window.confirm("Delete this subject?")) return;
+        try {
+            await api.courses.delete(id);
+            setCourses(courses.filter(c => c._id !== id));
+            onSubjectsUpdated();
+        } catch (err) {
+            console.error("Failed to delete course:", err);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 className="font-semibold text-gray-800">Manage Subjects</h3>
+                    <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="p-4 border-b border-gray-100 bg-white">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="New Subject Name..."
+                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                            value={newCourseName}
+                            onChange={(e) => setNewCourseName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddCourse()}
+                        />
+                        <Button size="sm" onClick={handleAddCourse} disabled={!newCourseName.trim()}>
+                            <Plus className="w-4 h-4 mr-1" /> Add
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar bg-gray-50/30">
+                    {loading ? (
+                        <div className="text-center py-8 text-gray-400 text-sm">Loading subjects...</div>
+                    ) : courses.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 text-sm">No subjects found. Add one above!</div>
+                    ) : (
+                        courses.map(course => (
+                            <div key={course._id} className="group flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-all">
+                                {editingId === course._id ? (
+                                    <div className="flex-1 flex gap-2 mr-2">
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            className="flex-1 px-2 py-1 text-sm border border-indigo-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleUpdateCourse(course._id);
+                                                if (e.key === 'Escape') setEditingId(null);
+                                            }}
+                                        />
+                                        <button onClick={() => handleUpdateCourse(course._id)} className="text-green-600 hover:text-green-700 font-medium text-xs px-2">Save</button>
+                                        <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 text-xs px-2">Cancel</button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span className="font-medium text-gray-700 text-sm pl-1">{course.name}</span>
+                                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                                            <button
+                                                onClick={() => { setEditingId(course._id); setEditName(course.name); }}
+                                                className="p-1.5 hover:bg-indigo-50 text-indigo-500 rounded-md transition-colors"
+                                            >
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteCourse(course._id)}
+                                                className="p-1.5 hover:bg-red-50 text-red-400 hover:text-red-500 rounded-md transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const WebReferenceHub = () => {
     const [links, setLinks] = useState([]);
@@ -10,22 +150,40 @@ const WebReferenceHub = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [adding, setAdding] = useState(false);
 
-    // New Link Input State
-    const [newLink, setNewLink] = useState({ url: '', subject: 'General' });
+    
+    const [subjects, setSubjects] = useState([]);
+    const [isSubjectManagerOpen, setIsSubjectManagerOpen] = useState(false);
 
-    // Edit State
+    
+    const [newLink, setNewLink] = useState({ url: '', subject: '' });
+
+    
     const [editingLink, setEditingLink] = useState(null);
     const [editForm, setEditForm] = useState({ title: '', url: '', subject: '', type: '' });
 
+    const fetchSubjects = async () => {
+        try {
+            const data = await api.courses.list().catch(() => []);
+            setSubjects(data);
+            
+            if (data.length > 0 && !newLink.subject) {
+                setNewLink(prev => ({ ...prev, subject: data[0].name }));
+            }
+        } catch (err) {
+            console.error("Failed to load subjects", err);
+        }
+    };
+
     useEffect(() => {
         loadLinks();
+        fetchSubjects();
     }, []);
 
     const loadLinks = async () => {
         try {
             setLoading(true);
             const data = await api.webReferences.list().catch(() => []);
-            // Fallback for demo if API fails/is empty
+            
             setLinks(data);
         } catch (err) {
             console.error("Failed to load web references:", err);
@@ -39,21 +197,23 @@ const WebReferenceHub = () => {
 
         try {
             setAdding(true);
-            // Simple logic to guess title/type
-            const type = newLink.url.includes('youtube') || newLink.url.includes('youtu.be') ? 'video' : 'article';
-            const title = newLink.url; // Ideally we'd fetch metadata, but for now just use URL
+            
+            const type = newLink.url.includes('youtube') || newLink.url.includes('youtu.be') ? 'video' :
+                newLink.url.includes('.pdf') ? 'documentation' : 'article';
+
+            const title = newLink.url; 
 
             const payload = {
                 url: newLink.url,
                 title: title,
-                subject: newLink.subject,
+                subject: newLink.subject || 'General',
                 type: type,
                 dateAdded: new Date().toISOString()
             };
 
-            const created = await api.webReferences.create(payload).catch(e => ({ ...payload, _id: Date.now() })); // Fallback mock
+            const created = await api.webReferences.create(payload).catch(e => ({ ...payload, _id: Date.now() })); 
             setLinks([created, ...links]);
-            setNewLink({ url: '', subject: 'General' });
+            setNewLink({ ...newLink, url: '' }); 
         } catch (err) {
             console.error("Failed to add link:", err);
             alert("Failed to save link");
@@ -65,7 +225,7 @@ const WebReferenceHub = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this link?")) {
             try {
-                await api.webReferences.delete(id).catch(e => { }); // Mock success
+                await api.webReferences.delete(id).catch(e => { }); 
                 setLinks(links.filter(l => l._id !== id));
             } catch (err) {
                 console.error("Delete failed:", err);
@@ -107,7 +267,7 @@ const WebReferenceHub = () => {
 
     const filteredLinks = links.filter(link => {
         const matchesFilter = activeFilter === 'all' || link.type === activeFilter;
-        // Search by title, url or subject
+        
         const matchesSearch =
             (link.title && link.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (link.url && link.url.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -125,6 +285,12 @@ const WebReferenceHub = () => {
 
     return (
         <div className="space-y-6">
+            <SubjectManagerModal
+                isOpen={isSubjectManagerOpen}
+                onClose={() => setIsSubjectManagerOpen(false)}
+                onSubjectsUpdated={fetchSubjects}
+            />
+
             {/* Input Zone */}
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4">
@@ -140,19 +306,33 @@ const WebReferenceHub = () => {
                             />
                         </div>
                     </div>
-                    <div className="w-full md:w-48">
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Subject</label>
-                        <select
-                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                            value={newLink.subject}
-                            onChange={(e) => setNewLink({ ...newLink, subject: e.target.value })}
-                        >
-                            <option value="General">General</option>
-                            <option value="Web Dev">Web Dev</option>
-                            <option value="Data Structures">Data Structures</option>
-                            <option value="Algorithms">Algorithms</option>
-                            <option value="System Design">System Design</option>
-                        </select>
+                    <div className="w-full md:w-64">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Subject</label>
+                            <button
+                                onClick={() => setIsSubjectManagerOpen(true)}
+                                className="text-[10px] text-primary hover:text-primary/80 font-medium flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded transition-colors"
+                            >
+                                <Edit2 className="w-3 h-3" /> Manage
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <select
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                                value={newLink.subject}
+                                onChange={(e) => setNewLink({ ...newLink, subject: e.target.value })}
+                            >
+                                <option value="" disabled>Select Subject...</option>
+                                <option value="General">General</option>
+                                {subjects.map(s => (
+                                    <option key={s._id} value={s.name}>{s.name}</option>
+                                ))}
+                            </select>
+                            {/* Custom Arrow */}
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex items-end">
                         <Button

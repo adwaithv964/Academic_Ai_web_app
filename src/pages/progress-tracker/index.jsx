@@ -19,7 +19,7 @@ const ProgressTracker = () => {
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    // Mock filter application
+    
     console.log('Applying filters:', newFilters);
   };
 

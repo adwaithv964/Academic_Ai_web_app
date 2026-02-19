@@ -5,7 +5,7 @@ import Rewards from './components/Rewards';
 import Wellness from './components/Wellness';
 
 const Xtra = () => {
-    const [view, setView] = useState('main'); // main, power, rewards, wellness
+    const [view, setView] = useState('main'); 
 
     if (view === 'power') return <PowerMode onBack={() => setView('main')} />;
     if (view === 'rewards') return <Rewards onBack={() => setView('main')} />;

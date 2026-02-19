@@ -35,7 +35,7 @@ const CalendarGrid = ({
       const sessionDay = new Date(session.date)?.getDay();
       const sessionHour = parseInt(session?.startTime?.split(':')?.[0]);
       const dayIndex = weekDays?.indexOf(day);
-      const adjustedSessionDay = sessionDay === 0 ? 6 : sessionDay - 1; // Convert Sunday=0 to Sunday=6
+      const adjustedSessionDay = sessionDay === 0 ? 6 : sessionDay - 1; 
 
       return adjustedSessionDay === dayIndex && sessionHour === hour;
     });
@@ -69,15 +69,15 @@ const CalendarGrid = ({
   };
 
   const getStickyNoteStyle = (subject, courseColor, isCompleted) => {
-    // Helper to generate sticky note classes from a color name
+    
     const getStyle = (colorName) => {
-      // Ensure we map red to rose if it comes through here
+      
       if (colorName === 'red') colorName = 'rose';
       const baseStyle = `bg-${colorName}-100 border-2 border-${colorName}-200 text-${colorName}-800 shadow-sm hover:shadow-md dark:bg-${colorName}-900/30 dark:border-${colorName}-700 dark:text-${colorName}-100`;
       return isCompleted ? `${baseStyle} opacity-60 grayscale-[50%]` : baseStyle;
     };
 
-    // 1. Try to extract color from course settings
+    
     if (courseColor) {
       const match = courseColor.match(/bg-(\w+)-/);
       if (match && match[1]) {
@@ -85,7 +85,7 @@ const CalendarGrid = ({
       }
     }
 
-    // 2. Fallback map for common subjects
+    
     const subjectColors = {
       'Mathematics': 'blue',
       'Physics': 'emerald',
@@ -97,20 +97,20 @@ const CalendarGrid = ({
       'Geography': 'cyan',
       'Art': 'fuchsia',
       'Music': 'rose',
-      // Map legacy colors if needed
+      
       'red': 'rose'
     };
 
-    // 3. deterministic fallback for unknown subjects
+    
     if (!subjectColors[subject]) {
       const fallbacks = ['yellow', 'lime', 'green', 'teal', 'sky', 'purple'];
-      // Simple hash to pick a color based on subject string length/chars
+      
       const hash = subject?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0;
       return getStyle(fallbacks[hash % fallbacks.length]);
     }
 
     let color = subjectColors[subject];
-    // specific fix for legacy 'red' which might be missing from new palette safelist
+    
     if (color === 'red') color = 'rose';
 
     return getStyle(color);
@@ -122,7 +122,7 @@ const CalendarGrid = ({
   };
 
   const handleCompleteClick = (e, session) => {
-    e.stopPropagation(); // Prevent opening modal
+    e.stopPropagation(); 
     if (onSessionComplete) {
       onSessionComplete(session);
     }
@@ -202,6 +202,130 @@ const CalendarGrid = ({
     );
   }
 
+  const getStartOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+    return new Date(d.setDate(diff));
+  };
+
+  const isSameDate = (date1, date2) => {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return d1.getDate() === d2.getDate() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getFullYear() === d2.getFullYear();
+  };
+
+  const getSessionsForDate = (date) => {
+    return studySessions?.filter(session => isSameDate(session.date, date));
+  };
+
+  if (currentView === 'monthly') {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; 
+    const totalDays = lastDay.getDate();
+
+    const days = [];
+    
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startingDayIndex - 1; i >= 0; i--) {
+      days.push({ day: prevMonthLastDay - i, type: 'prev', date: new Date(year, month - 1, prevMonthLastDay - i) });
+    }
+    
+    for (let i = 1; i <= totalDays; i++) {
+      days.push({ day: i, type: 'current', date: new Date(year, month, i) });
+    }
+    
+    const remainingCells = 42 - days.length; 
+    for (let i = 1; i <= remainingCells; i++) {
+      days.push({ day: i, type: 'next', date: new Date(year, month + 1, i) });
+    }
+
+    return (
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-border">
+          {weekDays.map(day => (
+            <div key={day} className="p-3 text-sm font-medium text-foreground text-center border-r border-border last:border-r-0">
+              {day}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 auto-rows-[120px]">
+          {days.map((dayObj, index) => {
+            const sessions = getSessionsForDate(dayObj.date);
+            const isToday = isSameDate(dayObj.date, new Date());
+
+            return (
+              <div
+                key={index}
+                className={`
+                    p-2 border-b border-r border-border hover:bg-muted/20 transition-colors relative
+                    ${dayObj.type !== 'current' ? 'bg-muted/10 text-muted-foreground' : ''}
+                    ${index % 7 === 6 ? 'border-r-0' : ''}
+                `}
+                onClick={() => {
+                  
+                  onTimeSlotClick(weekDays[dayObj.date.getDay() === 0 ? 6 : dayObj.date.getDay() - 1], 9); 
+                }}
+              >
+                <div className={`text-sm font-medium mb-1 ${isToday ? 'bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center' : ''}`}>
+                  {dayObj.day}
+                </div>
+                <div className="space-y-1 overflow-y-auto max-h-[80px] custom-scrollbar">
+                  {sessions?.map(session => (
+                    <div
+                      key={session._id}
+                      onClick={(e) => { e.stopPropagation(); onSessionClick(session); }}
+                      className={`
+                                text-[10px] p-1 rounded truncate flex items-center gap-1 cursor-pointer
+                                ${getSubjectColor(session.subject, session.isCompleted)}
+                            `}
+                    >
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${session.isCompleted ? 'bg-green-500' : 'bg-current opacity-50'}`}
+                      />
+                      <span className={session.isCompleted ? 'line-through opacity-70' : ''}>
+                        {session.subject}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  
+  
+  const startOfCurrentWeek = getStartOfWeek(currentDate);
+
+  const getSessionsForWeekSlot = (dayName, hour) => {
+    return studySessions?.filter(session => {
+      if (!session.date) return false;
+
+      const sessionDate = new Date(session.date);
+      const sessionHour = parseInt(session?.startTime?.split(':')?.[0]);
+
+      
+      
+      const diffTime = sessionDate - startOfCurrentWeek;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      
+      const dayIndex = weekDays.indexOf(dayName);
+
+      
+      return diffDays === dayIndex && sessionHour === hour;
+    });
+  };
+
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden overflow-x-auto">
       <div className="min-w-[600px]">
@@ -209,11 +333,20 @@ const CalendarGrid = ({
           <div className="p-3 text-sm font-medium text-muted-foreground border-r border-border sticky left-0 bg-card z-10">
             Time
           </div>
-          {weekDays?.map((day) => (
-            <div key={day} className="p-3 text-sm font-medium text-foreground border-r border-border last:border-r-0">
-              {day}
-            </div>
-          ))}
+          {weekDays?.map((day, index) => {
+            const date = new Date(startOfCurrentWeek);
+            date.setDate(date.getDate() + index);
+            const isToday = isSameDate(date, new Date());
+
+            return (
+              <div key={day} className={`p-3 text-sm text-foreground border-r border-border last:border-r-0 flex flex-col items-center ${isToday ? 'bg-primary/5' : ''}`}>
+                <span className="font-medium">{day}</span>
+                <span className={`text-xs mt-1 ${isToday ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                  {date.getDate()}
+                </span>
+              </div>
+            );
+          })}
         </div>
         <div className="max-h-96 overflow-y-auto">
           {timeSlots?.map((slot) => (
@@ -222,7 +355,7 @@ const CalendarGrid = ({
                 {slot?.time}
               </div>
               {weekDays?.map((day) => {
-                const sessions = getSessionsForTimeSlot(day, slot?.hour);
+                const sessions = getSessionsForWeekSlot(day, slot?.hour);
                 return (
                   <div
                     key={`${day}-${slot?.hour}`}

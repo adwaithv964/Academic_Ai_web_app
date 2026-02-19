@@ -22,7 +22,7 @@ const BulkActionsBar = ({ selectedCount, onBulkAction, selectedUsers }) => {
   const handleActionSubmit = () => {
     if (!selectedAction) return;
 
-    // For dangerous actions, show confirmation
+    
     if (['delete', 'suspend']?.includes(selectedAction)) {
       setIsConfirmModalOpen(true);
       return;

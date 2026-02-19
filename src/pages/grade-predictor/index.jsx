@@ -14,7 +14,7 @@ const GradePredictor = () => {
   const [toastMessage, setToastMessage] = useState(null);
   const [selectedHistory, setSelectedHistory] = useState(null);
 
-  // Backend API health and error state
+  
   const [serverAvailable, setServerAvailable] = useState(false);
   const [apiError, setApiError] = useState(null);
 
@@ -47,12 +47,12 @@ const GradePredictor = () => {
     setApiError(null);
 
     try {
-      // Gather extra data from LocalStorage
+      
       const studySessions = JSON.parse(localStorage.getItem('study_sessions') || '[]');
       const todoTasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
 
-      // Direct call to new backend endpoint
-      // expected response: { stats: {...}, aiInsights: {...} }
+      
+      
       const data = await predictGradesApi({
         courseName: formData?.courseName,
         currentGrade: parseFloat(formData?.currentGrade),
@@ -66,7 +66,7 @@ const GradePredictor = () => {
       setPredictionData(data);
       setShowResults(true);
 
-      // Save full result to indexedDB
+      
       try {
         await db.predictions.add({
           date: new Date(),

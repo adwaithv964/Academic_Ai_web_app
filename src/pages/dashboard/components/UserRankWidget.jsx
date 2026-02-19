@@ -19,7 +19,7 @@ const UserRankWidget = () => {
 
         const fetchStats = async () => {
             try {
-                // Try fetching from API similar to Achievements page
+                
                 const [statsRes, gameRes] = await Promise.all([
                     gamification.getStats(),
                     gamification.getGamification()
@@ -33,7 +33,7 @@ const UserRankWidget = () => {
                 });
             } catch (error) {
                 console.warn("Failed to fetch user rank stats, using localStorage or default", error);
-                // Fallback / Mock
+                
                 setStats({
                     rank: "Scholar Lvl 3",
                     streak: 3,

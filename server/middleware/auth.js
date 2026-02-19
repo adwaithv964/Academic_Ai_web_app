@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const admin = require('../config/firebase');
 const User = require('../models/User');
 const SystemSettings = require('../models/SystemSettings');
@@ -14,41 +20,41 @@ const authenticateUser = async (req, res, next) => {
         }
 
         const idToken = authHeader.split('Bearer ')[1];
-        // console.log("Auth Middleware Token received:", idToken ? "Yes (Length: " + idToken.length + ")" : "No/Empty");
+        
 
-        // 1. Verify Token with Firebase
+        
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         const { uid, email, firebase } = decodedToken;
 
-        // 2. Find or Create User in MongoDB
+        
         let user = await User.findOne({ email: email });
 
         if (!user) {
-            // Check if registration is allowed
+            
             const settings = await SystemSettings.getInstance();
             if (!settings.allowRegistration) {
                 return res.status(403).json({ error: 'Registration is currently disabled.' });
             }
 
-            // Option: Auto-create user or reject?
-            // Let's auto-create to be safe for new signups logic flow
+            
+            
             console.log(`Creating new user for ${email} from Auth Middleware`);
             user = new User({
                 email,
                 firstName: firebase.identities?.['google.com']?.[0]?.displayName || 'New',
                 lastName: 'User',
-                authUid: uid // We should save the UID
+                authUid: uid 
             });
             await user.save();
         } else {
-            // Ensure authUid is set for future stability
+            
             if (!user.authUid) {
                 user.authUid = uid;
                 await user.save();
             }
         }
 
-        // 3. Attach to request
+        
         req.user = user;
         next();
 

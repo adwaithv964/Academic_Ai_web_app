@@ -26,10 +26,10 @@ const WeeklyStudyFlowWidget = () => {
             try {
                 const allSessions = await sessionsApi.list() || [];
 
-                // Get current week's start (Monday) and end (Sunday)
+                
                 const now = new Date();
-                const dayOfWeek = now.getDay(); // 0 is Sunday
-                const diffToMon = (dayOfWeek + 6) % 7; // Days to subtract to get Monday
+                const dayOfWeek = now.getDay(); 
+                const diffToMon = (dayOfWeek + 6) % 7; 
                 const monday = new Date(now);
                 monday.setDate(now.getDate() - diffToMon);
                 monday.setHours(0, 0, 0, 0);
@@ -38,7 +38,7 @@ const WeeklyStudyFlowWidget = () => {
                 sunday.setDate(monday.getDate() + 6);
                 sunday.setHours(23, 59, 59, 999);
 
-                // Initialize days
+                
                 const daysMap = {
                     'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0
                 };
@@ -54,8 +54,8 @@ const WeeklyStudyFlowWidget = () => {
                         if (typeof session.duration === 'number') {
                             hours = session.duration;
                         } else if (typeof session.duration === 'string') {
-                            // Attempt to parse string durations if they exist (e.g. "2h" or "120")
-                            // Assuming simple number in string for now as per likely API usage or fallback to 0
+                            
+                            
                             hours = parseFloat(session.duration) || 0;
                         }
 
@@ -64,7 +64,7 @@ const WeeklyStudyFlowWidget = () => {
                     }
                 });
 
-                // Format data for Recharts
+                
                 const formattedData = [
                     { name: 'Mon', hours: daysMap['Mon'] },
                     { name: 'Tue', hours: daysMap['Tue'] },
@@ -77,7 +77,7 @@ const WeeklyStudyFlowWidget = () => {
 
                 setData(formattedData);
 
-                // Format total string
+                
                 const h = Math.floor(totalMinutes / 60);
                 const m = Math.round(totalMinutes % 60);
                 setTotalHours(`${h}h ${m}m`);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 import DeepFocusTimer from './DeepFocusTimer';
-// import ZenMode from './ZenMode';
+
 import EisenhowerMatrix from './EisenhowerMatrix';
 import Soundscapes from './Soundscapes';
 import StreaksHeatmap from './StreaksHeatmap';
@@ -11,14 +11,14 @@ const PowerMode = ({ onBack }) => {
     const [activeTool, setActiveTool] = useState(null);
 
     if (activeTool === 'timer') return <DeepFocusTimer onBack={() => setActiveTool(null)} />;
-    // if (activeTool === 'zen') return <ZenMode onExit={() => setActiveTool(null)} />; // Deprecated
+    
     if (activeTool === 'matrix') return <EisenhowerMatrix onBack={() => setActiveTool(null)} />;
     if (activeTool === 'sound') return <Soundscapes onBack={() => setActiveTool(null)} />;
     if (activeTool === 'heatmap') return <StreaksHeatmap onBack={() => setActiveTool(null)} />;
 
     const tools = [
         { id: 'timer', name: 'Deep Focus Timer', desc: 'Pomodoro Pro with DND & Zen mode', icon: 'Clock', color: 'text-indigo-600', bg: 'bg-indigo-100' },
-        // Zen Mode moved inside Timer
+        
         { id: 'matrix', name: 'Eisenhower Matrix', desc: 'Prioritize task quadrants', icon: 'Grid', color: 'text-blue-600', bg: 'bg-blue-100' },
         { id: 'sound', name: 'Focus Soundscapes', desc: 'Ambient background audio', icon: 'Headphones', color: 'text-rose-600', bg: 'bg-rose-100' },
         { id: 'heatmap', name: 'Goal Streaks', desc: 'Track your study consistency', icon: 'Activity', color: 'text-green-600', bg: 'bg-green-100' },

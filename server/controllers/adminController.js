@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const User = require('../models/User');
 const Task = require('../models/Task');
 const StudySession = require('../models/StudySession');
@@ -8,27 +14,27 @@ const ActivityLog = require('../models/ActivityLog');
 const Document = require('../models/Document');
 const WebReference = require('../models/WebReference');
 
-// @desc    Get dashboard stats
-// @route   GET /api/admin/stats
-// @access  Private/Admin
+
+
+
 const getDashboardStats = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
 
-        // Active users in last 24h (using lastActiveDate if available, else approximate from updated users)
-        // Since lastActiveDate was just added, we might not have it for everyone.
+        
+        
         const oneDayAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
         const activeUsers = await User.countDocuments({
             $or: [
                 { lastActiveDate: { $gte: oneDayAgo } },
-                { updatedAt: { $gte: oneDayAgo } } // Fallback
+                { updatedAt: { $gte: oneDayAgo } } 
             ]
         });
 
         const totalSessions = await StudySession.countDocuments();
         const totalTasks = await Task.countDocuments();
 
-        // Calculate total study time across all users
+        
         const sessions = await StudySession.find({}, 'duration');
         const totalStudyHours = sessions.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
@@ -44,9 +50,9 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
-// @desc    Get all users
-// @route   GET /api/admin/users
-// @access  Private/Admin
+
+
+
 const getAllUsers = async (req, res) => {
     try {
         const pageSize = 20;
@@ -62,7 +68,7 @@ const getAllUsers = async (req, res) => {
 
         const count = await User.countDocuments({ ...keyword });
         const users = await User.find({ ...keyword })
-            .select('-password -__v') // Exclude sensitive/unnecessary
+            .select('-password -__v') 
             .limit(pageSize)
             .skip(pageSize * (page - 1))
             .sort({ createdAt: -1 });
@@ -73,15 +79,15 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-// @desc    Get user details by ID
-// @route   GET /api/admin/users/:id
-// @access  Private/Admin
+
+
+
 const getUserDetails = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        // Parallel fetch for speed
+        
         const [tasks, sessions, courses, exams, documents, webRefs] = await Promise.all([
             Task.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
             StudySession.find({ userId: user._id }).sort({ date: -1 }).limit(50),
@@ -115,15 +121,15 @@ const getUserDetails = async (req, res) => {
     }
 };
 
-// @desc    Delete user
-// @route   DELETE /api/admin/users/:id
-// @access  Private/Admin
+
+
+
 const deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        // Clean up related data (Cascading delete manually)
+        
         await Promise.all([
             Task.deleteMany({ userId: user._id }),
             StudySession.deleteMany({ userId: user._id }),
@@ -145,9 +151,9 @@ const deleteUser = async (req, res) => {
 const SystemSettings = require('../models/SystemSettings');
 const GlobalCourse = require('../models/GlobalCourse');
 
-// @desc    Get system settings
-// @route   GET /api/admin/settings
-// @access  Private/Admin
+
+
+
 const getSystemSettings = async (req, res) => {
     try {
         const settings = await SystemSettings.getInstance();
@@ -157,9 +163,9 @@ const getSystemSettings = async (req, res) => {
     }
 };
 
-// @desc    Update system settings
-// @route   PUT /api/admin/settings
-// @access  Private/Admin
+
+
+
 const updateSystemSettings = async (req, res) => {
     try {
         const settings = await SystemSettings.getInstance();
@@ -170,7 +176,7 @@ const updateSystemSettings = async (req, res) => {
 
         const updatedSettings = await settings.save();
 
-        // Log the event
+        
         await createSystemLog(
             'WARNING',
             'System Settings Updated',
@@ -185,9 +191,9 @@ const updateSystemSettings = async (req, res) => {
     }
 };
 
-// @desc    Get all global courses
-// @route   GET /api/admin/content/courses
-// @access  Private/Admin
+
+
+
 const getGlobalCourses = async (req, res) => {
     try {
         const keyword = req.query.keyword ? {
@@ -204,9 +210,9 @@ const getGlobalCourses = async (req, res) => {
     }
 };
 
-// @desc    Add a global course
-// @route   POST /api/admin/content/courses
-// @access  Private/Admin
+
+
+
 const addGlobalCourse = async (req, res) => {
     try {
         const { code, name, credits, description, department } = req.body;
@@ -234,9 +240,9 @@ const addGlobalCourse = async (req, res) => {
     }
 };
 
-// @desc    Update a global course
-// @route   PUT /api/admin/content/courses/:id
-// @access  Private/Admin
+
+
+
 const updateGlobalCourse = async (req, res) => {
     try {
         const { name, credits, description, department } = req.body;
@@ -256,9 +262,9 @@ const updateGlobalCourse = async (req, res) => {
     }
 };
 
-// @desc    Delete a global course
-// @route   DELETE /api/admin/content/courses/:id
-// @access  Private/Admin
+
+
+
 const deleteGlobalCourse = async (req, res) => {
     try {
         const course = await GlobalCourse.findById(req.params.id);
@@ -276,7 +282,7 @@ const deleteGlobalCourse = async (req, res) => {
 
 const SystemLog = require('../models/SystemLog');
 
-// Helper to create logs
+
 const createSystemLog = async (level, message, userId = null, ip = null, details = {}) => {
     try {
         await SystemLog.create({
@@ -291,17 +297,17 @@ const createSystemLog = async (level, message, userId = null, ip = null, details
     }
 };
 
-// @desc    Get system logs
-// @route   GET /api/admin/logs
-// @access  Private/Admin
+
+
+
 const getSystemLogs = async (req, res) => {
     try {
-        // Simple pagination or limit
+        
         const limit = parseInt(req.query.limit) || 50;
         const logs = await SystemLog.find()
             .sort({ timestamp: -1 })
             .limit(limit)
-            .populate('userId', 'firstName lastName email'); // Populate user info if available
+            .populate('userId', 'firstName lastName email'); 
 
         res.json(logs);
     } catch (err) {
@@ -309,7 +315,7 @@ const getSystemLogs = async (req, res) => {
     }
 };
 
-// ... existing code ...
+
 
 module.exports = {
     getDashboardStats,
@@ -323,5 +329,5 @@ module.exports = {
     updateGlobalCourse,
     deleteGlobalCourse,
     getSystemLogs,
-    createSystemLog // Exporting helper for use in other files if needed, or just internal use
+    createSystemLog 
 };

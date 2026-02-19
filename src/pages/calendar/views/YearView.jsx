@@ -36,7 +36,7 @@ const YearView = ({ currentDate, events, onMonthClick }) => {
                             start: startOfMonth(month),
                             end: endOfMonth(month)
                         }).map((day, idx) => {
-                            // Simple padding for first day
+                            
                             const style = idx === 0 ? { gridColumnStart: day.getDay() + 1 } : {};
                             const hasEvent = events.some(e =>
                                 e.date.getDate() === day.getDate() &&

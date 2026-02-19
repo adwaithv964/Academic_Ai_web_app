@@ -45,7 +45,7 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
       const newSub = { value: val, label: newSubject.trim() };
       setSubjects(prev => [...prev, newSub]);
       setNewSubject('');
-      // Auto-select the new subject
+      
       handleInputChange('course', val);
     }
   };
@@ -60,7 +60,7 @@ const CourseSelectionForm = ({ onPredict, isLoading, initialData }) => {
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (formData?.course && formData?.currentGrade) {
-      // Find label for course or use raw value
+      
       const selectedCourse = subjects.find(c => c.value === formData.course);
 
       onPredict({

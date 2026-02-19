@@ -1,12 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Task Structure:
-// { id, title, description, dueDate, priority, status ('todo', 'in-progress', 'done'), courseId }
+
+
 
 const initialState = {
     items: [],
     filters: {
-        status: 'all', // 'all', 'active', 'completed'
+        status: 'all', 
         priority: 'all',
     },
     loading: false,

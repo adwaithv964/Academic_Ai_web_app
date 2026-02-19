@@ -9,7 +9,7 @@ import { user as userApi } from '../../../services/api';
 
 const PreferencesTab = () => {
   const defaultPreferences = {
-    // Notification preferences
+    
     deadlineReminders: true,
     gradeUpdates: true,
     peerHelpResponses: true,
@@ -19,18 +19,18 @@ const PreferencesTab = () => {
     pushNotifications: true,
     smsNotifications: false,
 
-    // Display preferences
+    
     language: "en",
     timezone: "Asia/Kolkata",
     dateFormat: "MM/DD/YYYY",
     timeFormat: "12",
 
-    // Dashboard preferences
+    
     showQuickStats: true,
     showUpcomingDeadlines: true,
     showRecentGrades: true,
 
-    // Privacy preferences
+    
     profileVisibility: "friends",
     progressSharing: true,
     studyGroupVisibility: true,
@@ -44,7 +44,7 @@ const PreferencesTab = () => {
       try {
         const userData = await userApi.get();
         if (userData && userData.preferences) {
-          // Merge backend preferences into state
+          
           setPreferences(prev => ({
             ...prev,
             ...(userData.preferences.notifications || {}),
@@ -122,7 +122,7 @@ const PreferencesTab = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Construct the nested object matching User schema
+      
       const payload = {
         preferences: {
           notifications: {

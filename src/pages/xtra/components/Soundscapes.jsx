@@ -3,15 +3,15 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
 const Soundscapes = ({ onBack }) => {
-    // Map of curated YouTube sounds - Study Focus Edition
-    // Using widely available long-form mixes/radios to avoid embed restrictions
+    
+    
     const sounds = [
-        { id: 'lofi', name: 'Lofi Beats', videoId: 'jfKfPfyJRdk', icon: 'Music', color: 'bg-purple-500', desc: 'Chill beats to study to' }, // Lofi Girl 
-        { id: 'classical', name: 'Mozart Effect', videoId: 'Rb0UmrCXxVA', icon: 'Book', color: 'bg-yellow-600', desc: 'Classical focus power' }, // Mozart Brain Power
-        { id: 'piano', name: 'Calm Piano', videoId: 'Cnfj6QCGLyA', icon: 'Layout', color: 'bg-blue-400', desc: 'Peaceful melodies' }, // Relaxing Piano
-        { id: 'jazz', name: 'Coffee Jazz', videoId: 'NJuSStkIZBg', icon: 'Coffee', color: 'bg-amber-700', desc: 'Cafe ambience & jazz' }, // Coffee Shop Jazz
-        { id: 'alpha', name: 'Alpha Waves', videoId: 'WPni755-Krg', icon: 'Activity', color: 'bg-indigo-600', desc: 'Deep concentration' }, // Alpha Waves
-        { id: 'synth', name: 'Synthwave', videoId: '4xDzrJKXOOY', icon: 'Cpu', color: 'bg-pink-600', desc: 'Retro futuristic focus' }, // Synthwave Radio
+        { id: 'lofi', name: 'Lofi Beats', videoId: 'jfKfPfyJRdk', icon: 'Music', color: 'bg-purple-500', desc: 'Chill beats to study to' }, 
+        { id: 'classical', name: 'Mozart Effect', videoId: 'Rb0UmrCXxVA', icon: 'Book', color: 'bg-yellow-600', desc: 'Classical focus power' }, 
+        { id: 'piano', name: 'Calm Piano', videoId: 'Cnfj6QCGLyA', icon: 'Layout', color: 'bg-blue-400', desc: 'Peaceful melodies' }, 
+        { id: 'jazz', name: 'Coffee Jazz', videoId: 'NJuSStkIZBg', icon: 'Coffee', color: 'bg-amber-700', desc: 'Cafe ambience & jazz' }, 
+        { id: 'alpha', name: 'Alpha Waves', videoId: 'WPni755-Krg', icon: 'Activity', color: 'bg-indigo-600', desc: 'Deep concentration' }, 
+        { id: 'synth', name: 'Synthwave', videoId: '4xDzrJKXOOY', icon: 'Cpu', color: 'bg-pink-600', desc: 'Retro futuristic focus' }, 
     ];
 
     const [activeSound, setActiveSound] = useState(null);
@@ -26,7 +26,7 @@ const Soundscapes = ({ onBack }) => {
             setActiveSound(sound.id);
             setCustomVideoId(null);
             setIsPlaying(true);
-            setSearchQuery(''); // Clear search when picking preset
+            setSearchQuery(''); 
         }
     };
 
@@ -41,8 +41,8 @@ const Soundscapes = ({ onBack }) => {
 
     const currentVideoId = activeSound === 'custom' ? null : (activeSound ? sounds.find(s => s.id === activeSound)?.videoId : null);
 
-    // Construct Embed URL
-    // Fix: Added origin and adjusted params for better stability
+    
+    
     const embedUrl = activeSound === 'custom'
         ? `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(searchQuery)}&controls=1`
         : `https://www.youtube.com/embed/${currentVideoId}?autoplay=1&controls=0&loop=1&playlist=${currentVideoId}&origin=${window.location.origin}`;

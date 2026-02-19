@@ -63,7 +63,7 @@ const FilterControls = ({ onFiltersChange }) => {
   };
 
   const exportData = () => {
-    // Mock export functionality
+    
     const exportData = {
       filters,
       timestamp: new Date()?.toISOString(),

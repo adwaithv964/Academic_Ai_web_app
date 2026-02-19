@@ -22,13 +22,13 @@ const StudyPlanner = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [activeTab, setActiveTab] = useState('calendar');
 
-  // Study sessions data with persistence
+  
   const [studySessions, setStudySessions] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data on load
+  
   useEffect(() => {
     if (!currentUser) return;
     const fetchData = async () => {
@@ -57,7 +57,7 @@ const StudyPlanner = () => {
     };
   }, [currentUser]);
 
-  // Tasks are now managed via API state above
+  
 
   const handleSessionClick = (session) => {
     setSelectedSession(session);
@@ -74,7 +74,7 @@ const StudyPlanner = () => {
   const handleSessionSave = async (sessionData) => {
     try {
       if (selectedSession && selectedSession._id) {
-        // Update existing session
+        
         const updated = await sessionsApi.update(selectedSession._id, sessionData);
         setStudySessions(prev =>
           prev.map(session =>
@@ -82,7 +82,7 @@ const StudyPlanner = () => {
           )
         );
       } else {
-        // Add new session
+        
         const created = await sessionsApi.create(sessionData);
         setStudySessions(prev => [...prev, created]);
       }
@@ -93,7 +93,7 @@ const StudyPlanner = () => {
 
   const handleCourseCreate = async (courseName) => {
     try {
-      // Predefined safe Tailwind color combinations
+      
       const palette = [
         'bg-yellow-100 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-100',
         'bg-orange-100 border-orange-200 text-orange-800 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-100',
@@ -186,7 +186,7 @@ const StudyPlanner = () => {
           task._id === taskId ? { ...task, completed } : task
         )
       );
-      // Refresh User Data (Quests) if completing a task
+      
       if (completed && refreshUser) {
         setTimeout(() => refreshUser(), 500);
       }
@@ -197,7 +197,7 @@ const StudyPlanner = () => {
 
   const handleTaskAdd = async (taskData) => {
     try {
-      // Remove temporary ID if present
+      
       const { id, ...data } = taskData;
       const created = await tasksApi.create(data);
       setTasks(prev => [...prev, created]);
@@ -244,7 +244,7 @@ const StudyPlanner = () => {
     const tableColumn = ["Date", "Time", "Subject", "Topic", "Duration (h)", "Priority", "Location"];
     const tableRows = [];
 
-    // Sort sessions by date and time
+    
     const sortedSessions = [...studySessions].sort((a, b) => {
       const dateA = new Date(a.date || a.createdAt);
       const dateB = new Date(b.date || b.createdAt);
@@ -285,7 +285,7 @@ const StudyPlanner = () => {
   const handleSessionComplete = async (session) => {
     try {
       const updatedSession = { ...session, isCompleted: !session.isCompleted };
-      // Optimistic update
+      
       setStudySessions(prev =>
         prev.map(s => s._id === session._id ? updatedSession : s)
       );
@@ -293,7 +293,7 @@ const StudyPlanner = () => {
       await sessionsApi.update(session._id, { isCompleted: !session.isCompleted });
     } catch (error) {
       console.error("Failed to toggle session completion:", error);
-      // Revert on failure
+      
       setStudySessions(prev =>
         prev.map(s => s._id === session._id ? session : s)
       );
@@ -498,7 +498,7 @@ const StudyPlanner = () => {
           session={selectedSession}
           selectedDay={selectedTimeSlot?.day}
           selectedHour={selectedTimeSlot?.hour}
-          currentDate={currentDate} // Pass current date context
+          currentDate={currentDate} 
           onSave={handleSessionSave}
           onDelete={handleSessionDelete}
           courses={courses}

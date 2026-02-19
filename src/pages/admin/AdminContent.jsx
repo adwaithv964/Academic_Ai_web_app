@@ -42,7 +42,7 @@ const AdminContent = () => {
         }
     };
 
-    // Debounce search
+    
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (currentUser) fetchCourses();

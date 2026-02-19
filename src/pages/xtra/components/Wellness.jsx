@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
-// --- CONFIGURATION ---
+
 
 const THEME = {
     teal: { bg: 'bg-teal-50', circle: 'bg-teal-200/50', circleInner: 'bg-teal-300/50', border: 'border-teal-500', ring: 'ring-teal-500', iconBg: 'bg-teal-100', iconText: 'text-teal-600', text: 'text-teal-900', btn: '!bg-teal-600 hover:!bg-teal-700' },
@@ -16,7 +16,7 @@ const THEME = {
 };
 
 const WELLNESS_MODES = [
-    // Mind
+    
     {
         id: 'relax', category: 'Mind', title: 'Relax', subtitle: 'Reduce stress instantly.', icon: 'Wind',
         type: 'breathing',
@@ -50,7 +50,7 @@ const WELLNESS_MODES = [
         config: { color: 'rose', pattern: [{ t: 'Inhale', d: 2000, effect: 'expand' }, { t: 'Sniff!', d: 1000, effect: 'expand-more' }, { t: 'Long Sigh...', d: 6000, effect: 'shrink-slow' }] }
     },
 
-    // Body
+    
     {
         id: 'energize', category: 'Body', title: 'Energize', subtitle: 'Boost alertness instantly.', icon: 'Zap',
         type: 'repetitive',
@@ -76,7 +76,7 @@ const WELLNESS_MODES = [
         config: { color: 'emerald', steps: [{ text: 'Look away from the screen.', d: 3000 }, { text: 'Focus on an object 20 feet away...', timer: 20, d: 21000 }, { text: 'Blink hard 5 times.', d: 5000 }, { text: 'Resume studying.', d: 0 }] }
     },
 
-    // Sleep
+    
     {
         id: 'sleep', category: 'Sleep', title: 'Sleep', subtitle: 'Prepare for rest.', icon: 'Moon',
         type: 'breathing',
@@ -91,15 +91,15 @@ const WELLNESS_MODES = [
 const Wellness = ({ onBack }) => {
     const [activeTab, setActiveTab] = useState('Mind');
     const [activeModeId, setActiveModeId] = useState(null);
-    const [sessionState, setSessionState] = useState('Idle'); // Idle, Info, Running, Finished
+    const [sessionState, setSessionState] = useState('Idle'); 
 
-    // Engine State
+    
     const [instruction, setInstruction] = useState('');
-    const [subInstruction, setSubInstruction] = useState(''); // For counts/timers
+    const [subInstruction, setSubInstruction] = useState(''); 
     const [stepIndex, setStepIndex] = useState(0);
     const [repCount, setRepCount] = useState(0);
-    const [visualState, setVisualState] = useState('neutral'); // neutral, expand, shrink, pulse, hold
-    const bgRef = useRef('light'); // For sleep darkening
+    const [visualState, setVisualState] = useState('neutral'); 
+    const bgRef = useRef('light'); 
 
     const timerRef = useRef(null);
     const activeMode = activeModeId ? WELLNESS_MODES.find(m => m.id === activeModeId) : null;
@@ -109,21 +109,21 @@ const Wellness = ({ onBack }) => {
         return () => clearTimeout(timerRef.current);
     }, []);
 
-    // --- SESSION RUNNER ---
+    
     useEffect(() => {
         if (!activeMode || sessionState !== 'Running') return;
 
         const runStep = async () => {
             const config = activeMode.config;
 
-            // --- BREATHING & REPETITIVE LOGIC ---
+            
             if (activeMode.type === 'breathing' || activeMode.type === 'repetitive') {
                 const pattern = config.pattern;
                 const currentStep = pattern[stepIndex % pattern.length];
 
                 setInstruction(currentStep.t);
 
-                // Visuals
+                
                 if ((currentStep.effect === 'expand') || currentStep.t.includes('Inhale')) setVisualState('expand');
                 else if (currentStep.effect === 'expand-more') setVisualState('expand-more');
                 else if ((currentStep.effect === 'shrink') || currentStep.t.includes('Exhale')) setVisualState('shrink');
@@ -131,40 +131,40 @@ const Wellness = ({ onBack }) => {
                 else if (currentStep.effect === 'pulse') setVisualState('pulse');
                 else setVisualState('hold');
 
-                // Rep Counters for Energize
+                
                 if (activeMode.type === 'repetitive') {
                     setSubInstruction(`${repCount + 1}/${config.reps}`);
                 }
 
-                // Wait for duration
+                
                 await new Promise(r => timerRef.current = setTimeout(r, currentStep.d));
 
-                // Next Step Calculation
+                
                 if (activeMode.type === 'repetitive') {
-                    // Check if full cycle (Inhale+Exhale) completed to increment rep
+                    
                     if ((stepIndex + 1) % pattern.length === 0) {
                         const newRep = repCount + 1;
                         setRepCount(newRep);
                         if (newRep >= config.reps) {
-                            // Finish Repetitive Mode
+                            
                             setInstruction(config.finish.t);
                             setVisualState('hold');
                             setSubInstruction('');
-                            return; // Stay here until manual stop
+                            return; 
                         }
                     }
                     setStepIndex(prev => prev + 1);
                 } else {
-                    // Standard Breathing Loop
+                    
                     setStepIndex(prev => (prev + 1) % pattern.length);
                 }
             }
 
-            // --- SEQUENCE LOGIC ---
+            
             else if (activeMode.type === 'sequence') {
                 const steps = config.steps;
                 if (stepIndex >= steps.length) {
-                    setSessionState('Finished'); // End of sequence
+                    setSessionState('Finished'); 
                     return;
                 }
 
@@ -172,10 +172,10 @@ const Wellness = ({ onBack }) => {
                 setInstruction(step.text);
                 setVisualState('neutral');
 
-                // Sound Effect for Eye Care? (Mocked by just logic for now)
+                
 
                 if (step.timer) {
-                    // Countdown Logic
+                    
                     let left = step.timer;
                     setSubInstruction(`${left}s`);
                     const interval = setInterval(() => {
@@ -192,12 +192,12 @@ const Wellness = ({ onBack }) => {
 
                 if (activeModeId) {
                     if (activeMode.id === 'confidence') {
-                        // Confidence Loop? Protocol says visualize steps. Usually looped or manual end.
-                        // Let's loop it as affirmations often are.
+                        
+                        
                         setStepIndex(prev => (prev + 1) % steps.length);
                     } else if (activeMode.id === 'stretch') {
-                        // Stretch protocol defines left/right, wait for next. 
-                        // One-pass seems appropriate for "Start -> End".
+                        
+                        
                         if (stepIndex < steps.length - 1) setStepIndex(prev => prev + 1);
                         else setInstruction('Great job!');
                     } else {
@@ -210,18 +210,18 @@ const Wellness = ({ onBack }) => {
 
         runStep();
 
-        // Darken Effect for Sleep
+        
         if (activeMode.config.visual === 'darken') {
             const timeout = setTimeout(() => {
-                if (bgRef.current !== 'dark') bgRef.current = 'dark'; // Signal to render darker
-            }, 5000); // Start darkening sooner
+                if (bgRef.current !== 'dark') bgRef.current = 'dark'; 
+            }, 5000); 
             return () => clearTimeout(timeout);
         }
 
     }, [activeModeId, sessionState, stepIndex, repCount]);
 
 
-    // --- HANDLERS ---
+    
     const handleSelectMode = (mode) => {
         setActiveModeId(mode.id);
         setSessionState('Info');
@@ -244,27 +244,27 @@ const Wellness = ({ onBack }) => {
         bgRef.current = 'light';
     };
 
-    // --- RENDER HELPERS ---
+    
     const getCircleClass = () => {
         const base = `transition-all ease-in-out absolute rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`;
         let anim = '';
         let duration = 'duration-[4000ms]';
         let size = 'w-48 h-48';
 
-        // Custom Timings/Sizes
+        
         if (activeMode?.type === 'breathing' || activeMode?.type === 'repetitive') {
             const step = activeMode.config.pattern[stepIndex % activeMode.config.pattern.length];
             if (step && step.d) duration = `duration-[${step.d}ms]`;
         }
 
         if (visualState === 'expand') anim = 'scale-150 opacity-100';
-        else if (visualState === 'expand-more') anim = 'scale-[1.7] opacity-100'; // Double inhale
+        else if (visualState === 'expand-more') anim = 'scale-[1.7] opacity-100'; 
         else if (visualState === 'shrink') anim = 'scale-50 opacity-80';
         else if (visualState === 'shrink-slow') anim = 'scale-50 opacity-80';
         else if (visualState === 'pulse') anim = 'scale-110 animate-pulse';
         else anim = 'scale-100';
 
-        if (activeMode?.id === 'energize') size = 'w-64 h-64'; // Bigger visual for intensity
+        if (activeMode?.id === 'energize') size = 'w-64 h-64'; 
 
         return `${base} ${theme?.circle} ${size} ${anim} ${duration}`;
     };
@@ -272,7 +272,7 @@ const Wellness = ({ onBack }) => {
 
     const filteredModes = WELLNESS_MODES.filter(m => m.category === activeTab);
 
-    // --- VIEW: INFO SCREEN ---
+    
     if (sessionState === 'Info' && activeMode) {
         return (
             <div className="animate-in fade-in duration-300 flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto text-center p-8">

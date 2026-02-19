@@ -19,8 +19,6 @@ const ProficiencyMatrix = () => {
     React.useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch Courses and Predictions (Mocking the join since APIs are separate)
-                // In a real scenario, we might want a dedicated endpoint or smarter joining
                 const [coursesData, predictionsData, tasksData, sessionsData] = await Promise.all([
                     api.courses.list().catch(() => []),
                     api.predictions.list().catch(() => []),
@@ -28,97 +26,149 @@ const ProficiencyMatrix = () => {
                     api.sessions.list().catch(() => [])
                 ]);
 
-                // --- Process Subject Insights ---
+                
+                const calculateTaskRate = (subjectName, keywords) => {
+                    const subjectTasks = tasksData.filter(t =>
+                        t.subject === subjectName &&
+                        keywords.some(k => (t.type || t.title).toLowerCase().includes(k))
+                    );
+                    if (subjectTasks.length === 0) return 0; 
+                    const completed = subjectTasks.filter(t => t.completed).length;
+                    return (completed / subjectTasks.length) * 100;
+                };
+
+                
+                const hasTasks = (subjectName, keywords) => {
+                    return tasksData.some(t =>
+                        t.subject === subjectName &&
+                        keywords.some(k => (t.type || t.title).toLowerCase().includes(k))
+                    );
+                };
+
+                
                 const processedSubjects = coursesData.map(course => {
-                    // Find latest prediction for this course
-                    const pred = predictionsData.find(p => p.courseName === course.name) || {};
-                    // Use prediction currentGrade if available, else random/default for demo if no data
-                    // For now, let's assume if no prediction, we check if there's a grade property in course (unlikely based on previous file view)
-                    // If no data, default to 0 to show "No Data" state
-                    const score = parseFloat(pred.currentGrade || 0);
+                    const subjectName = course.name;
+
+                    
+                    const pred = predictionsData.find(p => p.courseName === subjectName) || {};
+                    const theoryScore = parseFloat(pred.currentGrade || 0);
+
+                    
+                    const subjectSessions = sessionsData.filter(s => s.subject === subjectName);
+                    const attendanceScore = subjectSessions.length > 0
+                        ? (subjectSessions.filter(s => s.isCompleted).length / subjectSessions.length) * 100
+                        : 0;
+
+                    
+                    const assignmentScore = calculateTaskRate(subjectName, ['assign', 'homework', 'task']);
+
+                    
+                    const projectScore = calculateTaskRate(subjectName, ['project', 'presentation', 'report']);
+
+                    
+                    const practicalScore = calculateTaskRate(subjectName, ['lab', 'practical', 'experiment']);
+
+                    
+                    const quizScore = calculateTaskRate(subjectName, ['quiz', 'test', 'exam']);
+
+                    
+                    
+                    
+                    
+                    
+
+                    
+                    
+
+                    let validMetrics = [];
+                    validMetrics.push(theoryScore); 
+                    if (subjectSessions.length > 0) validMetrics.push(attendanceScore);
+                    if (hasTasks(subjectName, ['assign', 'homework'])) validMetrics.push(assignmentScore);
+                    if (hasTasks(subjectName, ['project'])) validMetrics.push(projectScore);
+                    if (hasTasks(subjectName, ['lab'])) validMetrics.push(practicalScore);
+                    if (hasTasks(subjectName, ['quiz'])) validMetrics.push(quizScore);
+
+                    const compositeScore = validMetrics.length > 0
+                        ? validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length
+                        : theoryScore; 
 
                     let comment = 'No data available';
                     let strength = false;
 
-                    if (score >= 90) { comment = 'Outstanding performance'; strength = true; }
-                    else if (score >= 80) { comment = 'Strong conceptual grasp'; strength = true; }
-                    else if (score >= 70) { comment = 'Good, but room to improve'; strength = true; }
-                    else if (score > 0) { comment = 'Needs attention'; strength = false; }
+                    if (compositeScore >= 75) { comment = 'Strong performance'; strength = true; }
+                    else if (compositeScore >= 50) { comment = 'On track'; strength = true; }
+                    else if (compositeScore > 0) { comment = 'Needs attention'; strength = false; }
 
                     return {
-                        name: course.name,
-                        score: score,
+                        name: subjectName,
+                        score: Math.round(compositeScore),
                         strength: strength,
                         comment: comment,
-                        id: course._id
+                        id: course._id,
+                        
+                        metrics: { theoryScore, attendanceScore, assignmentScore, projectScore, practicalScore, quizScore }
                     };
                 });
-                // Actually, let's show all, but if score is 0, maybe hide or show "N/A"
 
                 setSubjects(processedSubjects);
 
-                // --- Process Radar Data ---
-                // Heuristics for demo purposes since we don't have granular grade breakdowns (Theory vs Project etc)
-                // 1. Theory: Average of all subject scores
-                const avgScore = processedSubjects.length > 0
-                    ? processedSubjects.reduce((acc, curr) => acc + curr.score, 0) / processedSubjects.length
+                
+                
+
+                const avgMetric = (metricKey) => {
+                    const validSubjects = processedSubjects.filter(s => s.metrics[metricKey] > 0 || hasTasks(s.name, [] /* irrelevant here */));
+                    
+                    if (processedSubjects.length === 0) return 0;
+                    return processedSubjects.reduce((acc, curr) => acc + curr.metrics[metricKey], 0) / processedSubjects.length;
+                };
+
+                const globalTheory = avgMetric('theoryScore');
+                const globalAttendance = processedSubjects.length > 0
+                    ? processedSubjects.reduce((acc, curr) => acc + curr.metrics.attendanceScore, 0) / processedSubjects.length
                     : 0;
 
-                // 2. Assignments: Completion rate from Todo List
-                const totalTasks = tasksData.length;
-                const completedTasks = tasksData.filter(t => t.completed).length; // Check 'completed' property
-                const assignmentScore = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-                // 3. Attendance: Session completion rate
-                const totalSessions = sessionsData.length;
-                const completedSessions = sessionsData.filter(s => s.isCompleted).length;
-                const attendanceScore = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
-
-                // 4. Projects: Use avgScore for now, or check for tasks with 'Project' tag?
-                const projectScore = avgScore;
-
-                // 5. Practical: Use avgScore varies
-                const practicalScore = Math.min(100, Math.max(0, avgScore * 1.05));
-
-                // 6. Quizzes: Use avgScore varies
-                const quizScore = Math.min(100, Math.max(0, avgScore * 0.95));
+                
+                const globalTaskRate = (keywords) => {
+                    const relevantTasks = tasksData.filter(t => keywords.some(k => (t.type || t.title).toLowerCase().includes(k)));
+                    if (relevantTasks.length === 0) return 0;
+                    return (relevantTasks.filter(t => t.completed).length / relevantTasks.length) * 100;
+                };
 
                 setData([
-                    { subject: 'Theory', A: Math.round(avgScore), fullMark: 100 },
-                    { subject: 'Practical', A: Math.round(practicalScore), fullMark: 100 },
-                    { subject: 'Assignments', A: Math.round(assignmentScore), fullMark: 100 },
-                    { subject: 'Attendance', A: Math.round(attendanceScore), fullMark: 100 },
-                    { subject: 'Projects', A: Math.round(projectScore), fullMark: 100 },
-                    { subject: 'Quizzes', A: Math.round(quizScore), fullMark: 100 },
+                    { subject: 'Theory', A: Math.round(globalTheory), fullMark: 100 },
+                    { subject: 'Practical', A: Math.round(globalTaskRate(['lab', 'practical'])), fullMark: 100 },
+                    { subject: 'Assignments', A: Math.round(globalTaskRate(['assign', 'homework', 'task'])), fullMark: 100 },
+                    { subject: 'Attendance', A: Math.round(globalAttendance), fullMark: 100 },
+                    { subject: 'Projects', A: Math.round(globalTaskRate(['project', 'report'])), fullMark: 100 },
+                    { subject: 'Quizzes', A: Math.round(globalTaskRate(['quiz', 'test', 'exam'])), fullMark: 100 },
                 ]);
 
-                // Recommendation Logic
+                
                 if (processedSubjects.length > 0) {
-                    // Find weakest subject
                     const sorted = [...processedSubjects].sort((a, b) => a.score - b.score);
                     const weakest = sorted[0];
                     const secondWeakest = sorted[1];
 
-                    if (weakest.score < 80) {
+                    if (weakest.score < 50) {
                         setRecommendation(
                             <p className="text-sm text-muted-foreground bg-accent/10 p-3 rounded-md">
                                 Focus on improving <span className="font-semibold text-amber-600">{weakest.name}</span>
-                                {secondWeakest && secondWeakest.score < 80 ? <span> and <span className="font-semibold text-amber-600">{secondWeakest.name}</span></span> : ''}
-                                {" "}to boost your overall GPA.
+                                {secondWeakest && secondWeakest.score < 50 ? <span> and <span className="font-semibold text-amber-600">{secondWeakest.name}</span></span> : ''}
+                                {" "}to boost your overall proficiency.
                             </p>
                         );
                     } else {
                         setRecommendation(
                             <p className="text-sm text-green-600 bg-green-50 p-3 rounded-md border border-green-100">
                                 <CheckCircle className="w-4 h-4 inline mr-2 text-green-600" />
-                                Great job! You are maintaining high proficiency across all subjects.
+                                Great job! You are maintaining good proficiency across all subjects.
                             </p>
                         );
                     }
                 } else {
                     setRecommendation(
                         <p className="text-sm text-muted-foreground bg-accent/10 p-3 rounded-md">
-                            Add courses and predictions to see personalized recommendations.
+                            Add courses and tasks to see personalized recommendations.
                         </p>
                     );
                 }
@@ -198,8 +248,8 @@ const ProficiencyMatrix = () => {
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="font-medium text-foreground">{subject.name}</span>
                                             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${subject.score >= 90 ? 'bg-green-100 text-green-700' :
-                                                subject.score >= 80 ? 'bg-blue-100 text-blue-700' :
-                                                    subject.score >= 70 ? 'bg-amber-100 text-amber-700' :
+                                                subject.score >= 75 ? 'bg-blue-100 text-blue-700' :
+                                                    subject.score >= 50 ? 'bg-green-100 text-green-700' :
                                                         'bg-red-100 text-red-700'
                                                 }`}>
                                                 {subject.score}%

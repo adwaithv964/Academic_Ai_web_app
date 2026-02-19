@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const ProfileTab = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUser } = useAuth();
   const defaultProfileData = {
     firstName: "John",
     lastName: "Smith",
@@ -30,17 +30,17 @@ const ProfileTab = () => {
 
     const loadProfile = async () => {
       try {
-        // Fetch from MongoDB via API
+        
         const profile = await userApi.get();
         if (profile && Object.keys(profile).length > 0) {
           setProfileData(prev => ({ ...prev, ...profile }));
         } else {
-          // Fallback migration logic: check local storage if DB is empty
+          
           const saved = localStorage.getItem('studentProfile');
           if (saved) {
             const parsed = JSON.parse(saved);
             setProfileData(parsed);
-            // Migrate to MongoDB
+            
             await userApi.update(parsed);
           }
         }
@@ -87,7 +87,7 @@ const ProfileTab = () => {
       [field]: value
     }));
 
-    // Clear error when user starts typing
+    
     if (errors?.[field]) {
       setErrors(prev => ({
         ...prev,
@@ -126,21 +126,24 @@ const ProfileTab = () => {
 
     setIsSaving(true);
 
-    // Simulate API call
+    
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     await userApi.update(profileData);
-    localStorage.setItem('studentProfile', JSON.stringify(profileData)); // Keep sync for now or remove? Let's keep for safety but DB is primary.
+    localStorage.setItem('studentProfile', JSON.stringify(profileData)); 
+
+    
+    if (refreshUser) await refreshUser();
 
     setIsSaving(false);
     setIsEditing(false);
 
-    // Show success message (in real app, use toast notification)
+    
     alert('Profile updated successfully!');
   };
 
   const handleCancel = async () => {
-    // Reset form data to saved values
+    
     const profile = await userApi.get();
     setProfileData(profile || defaultProfileData);
     setErrors({});
@@ -265,41 +268,31 @@ const ProfileTab = () => {
               placeholder="Enter your student ID"
             />
 
-            <Select
+            <Input
               label="Institution"
-              options={institutionOptions}
+              type="text"
               value={profileData?.institution}
-              onChange={(value) => handleInputChange('institution', value)}
+              onChange={(e) => handleInputChange('institution', e?.target?.value)}
               disabled={!isEditing}
-              placeholder="Select your institution"
-            />
-
-            <Select
-              label="Major"
-              options={majorOptions}
-              value={profileData?.major}
-              onChange={(value) => handleInputChange('major', value)}
-              disabled={!isEditing}
-              placeholder="Select your major"
-              searchable
-            />
-
-            <Select
-              label="Expected Graduation Year"
-              options={graduationYearOptions}
-              value={profileData?.graduationYear}
-              onChange={(value) => handleInputChange('graduationYear', value)}
-              disabled={!isEditing}
-              placeholder="Select graduation year"
+              placeholder="Enter your institution name"
             />
 
             <Input
-              label="Address"
+              label="Major"
               type="text"
-              value={profileData?.address}
-              onChange={(e) => handleInputChange('address', e?.target?.value)}
+              value={profileData?.major}
+              onChange={(e) => handleInputChange('major', e?.target?.value)}
               disabled={!isEditing}
-              placeholder="Enter your address"
+              placeholder="Enter your major"
+            />
+
+            <Input
+              label="Expected Passout Year"
+              type="text"
+              value={profileData?.graduationYear}
+              onChange={(e) => handleInputChange('graduationYear', e?.target?.value)}
+              disabled={!isEditing}
+              placeholder="Enter expected year (e.g. 2026)"
             />
           </div>
         </div>

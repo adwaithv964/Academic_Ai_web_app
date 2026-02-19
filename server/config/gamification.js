@@ -1,11 +1,17 @@
 
-// Store Items: Challenge Contracts
+
+
+
+
+
+
+
 const STORE_ITEMS = [
     {
         id: 'challenge_night_owl',
         name: 'The Night Owl',
         type: 'challenge',
-        price: 0, // Costs nothing to accept/view
+        price: 0, 
         reward: 3000,
         description: 'Complete a study session between 2 AM and 5 AM.',
         unlockCondition: { type: 'time_window', startHour: 2, endHour: 5, description: 'Study between 2 AM - 5 AM' }
@@ -39,7 +45,7 @@ const STORE_ITEMS = [
     }
 ];
 
-// Achievements
+
 const ACHIEVEMENTS = [
     {
         id: 'marathoner',
@@ -47,7 +53,7 @@ const ACHIEVEMENTS = [
         description: 'Studied for 4 hours in a single day.',
         icon: 'runner_icon',
         tiers: {
-            bronze: { threshold: 1, reward: 200 } // 1x 4 hour session? Usually boolean or count. Let's say count of days
+            bronze: { threshold: 1, reward: 200 } 
         },
         condition: 'single_session_duration_minutes >= 240'
     },
@@ -116,14 +122,14 @@ const ACHIEVEMENTS = [
     }
 ];
 
-// Quests
+
 const DAILY_QUESTS_POOL = [
     { id: 'daily_tasks_3', text: 'Complete 3 tasks', target: 3, reward: 50, type: 'tasks_completed' },
     { id: 'daily_study_45', text: 'Study for 45 minutes', target: 45, reward: 75, type: 'study_minutes' },
     { id: 'daily_login', text: 'Log in today', target: 1, reward: 10, type: 'login' },
-    // New Quests
+    
     { id: 'daily_exam_1', text: 'Ace the Test: Complete 1 Exam/Quiz', target: 1, reward: 100, type: 'exam_completed' },
-    { id: 'daily_study_120', text: 'Deep Work: Study for 2 hours', target: 120, reward: 150, type: 'study_minutes' }, // type matches existing logic if possible, or new
+    { id: 'daily_study_120', text: 'Deep Work: Study for 2 hours', target: 120, reward: 150, type: 'study_minutes' }, 
     { id: 'daily_tasks_5', text: 'Task Force: Complete 5 Tasks', target: 5, reward: 100, type: 'tasks_completed' },
     { id: 'daily_focus_1', text: 'Laser Focus: Complete 1 Focus Session', target: 1, reward: 50, type: 'focus_session' }
 ];

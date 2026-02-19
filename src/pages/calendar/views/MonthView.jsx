@@ -11,7 +11,7 @@ import {
     isToday
 } from 'date-fns';
 
-const MonthView = ({ currentDate, events, onDateClick, onEventClick }) => {
+const MonthView = ({ currentDate, events, onDateClick, onEventClick, onEventComplete }) => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart);
@@ -53,18 +53,36 @@ const MonthView = ({ currentDate, events, onDateClick, onEventClick }) => {
                                 key={idx}
                                 onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(evt); }}
                                 className={`
-                                    flex items-center gap-2 w-[95%] mx-auto mb-1 px-2 py-1.5 rounded-[6px] text-xs font-semibold cursor-pointer truncate transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-[#333]
+                                    flex items-center gap-2 w-[95%] mx-auto mb-1 px-2 py-1.5 rounded-[6px] text-xs font-semibold cursor-pointer truncate transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 text-[#333] group/evt
                                     ${evt.color && evt.color.startsWith('bg-') ? evt.color : ''}
+                                    ${evt.isCompleted ? 'opacity-60 grayscale-[50%]' : ''}
                                 `}
                                 style={evt.color && !evt.color.startsWith('bg-') ? { backgroundColor: evt.color } : {}}
                                 title={`${evt.title} ${evt.time ? '- ' + evt.time : ''}`}
                             >
-                                <div className={`min-w-[14px] h-[14px] rounded-[4px] border border-[#333]/40 flex items-center justify-center flex-shrink-0`}>
-                                    <svg className="w-2.5 h-2.5 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
+                                <div
+                                    className={`
+                                        min-w-[14px] h-[14px] rounded-[4px] border border-[#333]/40 flex items-center justify-center flex-shrink-0 transition-colors
+                                        ${evt.isCompleted ? 'bg-green-500 border-green-600 text-white' : 'hover:bg-white/50'}
+                                    `}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onEventComplete && evt.type === 'generic') onEventComplete(evt);
+                                    }}
+                                >
+                                    {evt.isCompleted ? (
+                                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    ) : (
+                                        <div className="w-full h-full opacity-0 group-hover/evt:opacity-100 flex items-center justify-center">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[#333]/20" />
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="truncate flex-1 text-left">{evt.title}</span>
+                                <span className={`truncate flex-1 text-left ${evt.isCompleted ? 'line-through decoration-current' : ''}`}>
+                                    {evt.title}
+                                </span>
                                 {evt.time && <span className="text-[10px] font-medium opacity-60 flex-shrink-0">{evt.time}</span>}
                             </div>
                         ))}

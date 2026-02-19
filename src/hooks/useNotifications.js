@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'academic_notifications';
 const TIMESTAMP_KEY = 'academic_notifications_timestamp';
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 5 * 60 * 1000; 
 
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
@@ -15,7 +15,7 @@ export const useNotifications = () => {
 
         const fetchAndGenerateNotifications = async () => {
             try {
-                // Fetch real data
+                
                 const [allTasks, allSessions, allExams] = await Promise.all([
                     tasksApi.list().catch(() => []),
                     sessionsApi.list().catch(() => []),
@@ -27,11 +27,11 @@ export const useNotifications = () => {
                 const oneDay = 24 * 60 * 60 * 1000;
                 const oneHour = 60 * 60 * 1000;
 
-                // 1. Task/Assignment Deadlines (Due within 24 hours)
+                
                 allTasks.forEach(task => {
                     if (task.dueDate && !task.completed) {
                         const dueDate = new Date(task.dueDate);
-                        // Check if valid date
+                        
                         if (!isNaN(dueDate.getTime())) {
                             const diff = dueDate - now;
                             if (diff > 0 && diff < oneDay) {
@@ -47,13 +47,13 @@ export const useNotifications = () => {
                     }
                 });
 
-                // 2. Upcoming Study Sessions (Starts within 1 hour)
+                
                 allSessions.forEach(session => {
                     if (session.date) {
                         const sessionDate = new Date(session.date);
-                        // Combine date and time if mock data or string
-                        // Assuming session.date is full ISO or we need to parse time separately.
-                        // For simplicity, using session.date as start time
+                        
+                        
+                        
                         if (!isNaN(sessionDate.getTime())) {
                             const diff = sessionDate - now;
                             if (diff > 0 && diff < oneHour) {
@@ -69,7 +69,7 @@ export const useNotifications = () => {
                     }
                 });
 
-                // 3. Upcoming Exams (Within 48 hours)
+                
                 allExams.forEach(exam => {
                     if (exam.date) {
                         const examDate = new Date(exam.date);
@@ -88,15 +88,15 @@ export const useNotifications = () => {
                     }
                 });
 
-                // Merge with stored manual notifications (if any)
-                // For now, we overwrite with fresh data + preserve read status if ID matches
-                // but simpler to just set fresh ones for this request
+                
+                
+                
 
-                // Load read status from storage to preserve it
+                
                 const storedData = localStorage.getItem(STORAGE_KEY);
                 let storedNotifications = storedData ? JSON.parse(storedData) : [];
 
-                // Map read status
+                
                 const finalNotifications = generatedNotifications.map(n => {
                     const existing = storedNotifications.find(s => s.id === n.id);
                     return existing ? { ...n, unread: existing.unread } : n;
@@ -113,7 +113,7 @@ export const useNotifications = () => {
 
         fetchAndGenerateNotifications();
 
-        // Poll every minute
+        
         const interval = setInterval(fetchAndGenerateNotifications, 60 * 1000);
         return () => clearInterval(interval);
 
@@ -140,7 +140,7 @@ export const useNotifications = () => {
     const addNotification = (notification) => {
         const newNotification = {
             id: Date.now(),
-            timestamp: Date.now(), // Ensure timestamp is set
+            timestamp: Date.now(), 
             unread: true,
             ...notification
         };

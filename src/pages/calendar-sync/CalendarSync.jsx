@@ -16,7 +16,7 @@ const CalendarSync = () => {
     });
 
     useEffect(() => {
-        // Load state from local storage on mount
+        
         const saved = localStorage.getItem('calendar_sync_connections');
         if (saved) {
             setConnections(JSON.parse(saved));
@@ -30,18 +30,18 @@ const CalendarSync = () => {
 
     const handleConnect = async (provider) => {
         if (connections[provider]) {
-            // Disconnect logic
+            
             saveState({ ...connections, [provider]: false });
             return;
         }
 
         if (provider === 'google') {
-            // REAL AUTH FLOW
+            
             window.location.href = 'http://localhost:5002/api/auth/google';
             return;
         }
 
-        // Keep mock for others for now
+        
         setLoading(prev => ({ ...prev, [provider]: true }));
         await new Promise(resolve => setTimeout(resolve, 1500));
         await generateMockEvents(provider);
@@ -59,21 +59,21 @@ const CalendarSync = () => {
                 date: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(),
                 time: "10:00",
                 description: `Imported from ${providerName} Calendar`,
-                type: 'other' // default blue
+                type: 'other' 
             },
             {
                 title: `${providerName} Calendar Sync: Project Deadline`,
                 date: new Date(today.getTime() + 48 * 60 * 60 * 1000).toISOString(),
                 time: "17:00",
                 description: `Imported from ${providerName} Calendar`,
-                type: 'deadline' // orange
+                type: 'deadline' 
             },
             {
                 title: `${providerName} Calendar Sync: Study Session`,
                 date: new Date(today.getTime() + 72 * 60 * 60 * 1000).toISOString(),
                 time: "14:00-16:00",
                 description: `Imported from ${providerName} Calendar`,
-                type: 'class' // will be blue/purple usually
+                type: 'class' 
             }
         ];
 

@@ -91,7 +91,7 @@ const DataExportTab = () => {
 
     setIsExporting(true);
 
-    // Simulated Data Gathering (Replace with real API calls)
+    
     const exportData = {
       generatedAt: new Date().toISOString(),
       format: exportSettings.format,
@@ -106,7 +106,7 @@ const DataExportTab = () => {
     if (exportSettings.includeGrades) {
       exportData.data.grades = JSON.parse(localStorage.getItem('grades') || '[]');
       if (exportData.data.grades.length === 0) {
-        // Mock data for PDF demonstration if empty
+        
         exportData.data.grades = [
           { courseName: 'Mathematics', currentGrade: 85, credits: 4 },
           { courseName: 'Physics', currentGrade: 78, credits: 3 },
@@ -119,13 +119,13 @@ const DataExportTab = () => {
       exportData.data.tasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
     }
 
-    // Simulate delay
+    
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (exportSettings.format === 'pdf') {
       const doc = new jsPDF();
 
-      // Title
+      
       doc.setFontSize(20);
       doc.setTextColor(40, 40, 40);
       doc.text("Academic Data Export", 14, 22);
@@ -136,7 +136,7 @@ const DataExportTab = () => {
 
       let yPos = 40;
 
-      // Profile Section
+      
       if (exportSettings.includeSettings && exportData.data.profile) {
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
@@ -160,7 +160,7 @@ const DataExportTab = () => {
         yPos = doc.lastAutoTable.finalY + 15;
       }
 
-      // Grades Section
+      
       if (exportSettings.includeGrades && exportData.data.grades) {
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
@@ -184,7 +184,7 @@ const DataExportTab = () => {
         yPos = doc.lastAutoTable.finalY + 15;
       }
 
-      // Study Sessions/Tasks Section
+      
       if (exportSettings.includeStudySessions && exportData.data.tasks) {
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
@@ -228,13 +228,13 @@ const DataExportTab = () => {
     try {
       await deleteAccount();
 
-      // Clear all app data
+      
       localStorage.clear();
 
       setIsDeletingAccount(false);
       alert('Your account and all associated data have been deleted.');
 
-      // Redirect to home/login handled by AuthContext or Router but manual just in case
+      
       window.location.href = '/';
     } catch (error) {
       console.error("Error deleting account:", error);

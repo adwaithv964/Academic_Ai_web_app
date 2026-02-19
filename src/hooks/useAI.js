@@ -129,12 +129,12 @@ export const useAI = () => {
     }, [handleError]);
 
     return {
-        // State
+        
         loading,
         error,
         response,
 
-        // Actions
+        
         predictGrades,
         getStudyRecommendations,
         chatWithAI,

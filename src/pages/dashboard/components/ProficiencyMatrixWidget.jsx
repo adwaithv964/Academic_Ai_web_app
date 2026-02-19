@@ -10,10 +10,10 @@ const ProficiencyMatrixWidget = () => {
     useEffect(() => {
         const fetchPredictions = async () => {
             try {
-                // Fetch all predictions
+                
                 const allPredictions = await db.predictions.toArray();
 
-                // Group by course and take latest
+                
                 const latestByCourse = {};
                 allPredictions.forEach(p => {
                     const existing = latestByCourse[p.courseName];
@@ -24,11 +24,11 @@ const ProficiencyMatrixWidget = () => {
 
                 let chartData = Object.values(latestByCourse).map(p => ({
                     subject: p.courseName,
-                    A: p.predictedGrade || 0, // Using 'A' as key for Recharts
+                    A: p.predictedGrade || 0, 
                     fullMark: 100
                 }));
 
-                // Fallback / Pad data if fewer than 3 items (Radar chart looks broken with 1-2 points)
+                
                 if (chartData.length === 0) {
                     chartData = [
                         { subject: 'No Data', A: 0, fullMark: 100 },
@@ -36,7 +36,7 @@ const ProficiencyMatrixWidget = () => {
                         { subject: 'Subject 3', A: 0, fullMark: 100 },
                     ];
                 } else if (chartData.length < 3) {
-                    // Add placeholders to complete the triangle/polygon
+                    
                     for (let i = chartData.length; i < 3; i++) {
                         chartData.push({ subject: `...`, A: 0, fullMark: 100 });
                     }

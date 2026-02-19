@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const ScenarioSchema = new mongoose.Schema({
@@ -8,7 +14,7 @@ const ScenarioSchema = new mongoose.Schema({
     courses: [{
         name: String,
         credits: Number,
-        grade: String, // Projected grade
+        grade: String, 
         isNewCourse: Boolean
     }],
     createdAt: { type: Date, default: Date.now }

@@ -5,7 +5,7 @@ import AIImageAnalyzer from '../../components/AIImageAnalyzer';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { useAI } from '../../hooks/useAI';
-import { health as apiHealth } from '../../services/api';
+import { health as apiHealth, ai as aiApi } from '../../services/api';
 
 /**
  * AI Assistant Page
@@ -32,16 +32,8 @@ const AIAssistant = () => {
         const h = await apiHealth();
         if (mounted) setServerAIReady(Boolean(h?.aiReady));
 
-        // Fetch Stats
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/stats`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // Simple auth check
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (mounted) setStats(data);
-        }
+        const data = await aiApi.stats();
+        if (mounted) setStats(data);
       } catch (e) {
         console.error("Failed to fetch stats", e);
         if (mounted) setServerAIReady(false);
@@ -67,7 +59,7 @@ const AIAssistant = () => {
 
   const handleAnalysisComplete = (result) => {
     console.log('Analysis completed:', result);
-    // Refresh stats if needed
+
     setStats(prev => ({ ...prev, documentsAnalyzed: prev.documentsAnalyzed + 1 }));
   };
 

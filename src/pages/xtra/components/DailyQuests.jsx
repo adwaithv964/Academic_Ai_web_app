@@ -25,7 +25,7 @@ const DailyQuests = ({ user, onClaim }) => {
             const res = await api.gamification.claimQuest(quest.id);
             if (res.success) {
                 onClaim(res.points);
-                // Update local state to show as claimed
+                
                 setQuests(prev => prev.map(q => q.id === quest.id ? { ...q, claimed: true, completed: true } : q));
             }
         } catch (err) {

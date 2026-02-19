@@ -7,8 +7,8 @@ const client = axios.create({
   timeout: 60000,
 });
 
-// Add a request interceptor to attach the Token
-// Fixes 401 Unauthorized error
+
+
 import { auth } from './firebase';
 
 client.interceptors.request.use(async (config) => {
@@ -26,7 +26,7 @@ client.interceptors.request.use(async (config) => {
 
 export async function chat(message, subject = 'general') {
   const { data } = await client.post('/ai/chat', { message, subject });
-  return data; // { text }
+  return data; 
 }
 
 export async function analyzeImage(file, analysisType = 'general') {
@@ -36,5 +36,5 @@ export async function analyzeImage(file, analysisType = 'general') {
   const { data } = await client.post('/ai/analyze-image', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return data; // { analysis, analysisType }
+  return data; 
 }

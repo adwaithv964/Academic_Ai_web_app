@@ -41,7 +41,7 @@ const Achievements = () => {
             } catch (error) {
                 console.error("Failed to fetch achievements data. Using Demo Data.", error);
 
-                // Fallback Demo Data for UI Resilience
+                
                 setStats({
                     totalFocusTime: '12h 30m',
                     currentStreak: 3,

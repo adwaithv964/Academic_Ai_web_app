@@ -1,12 +1,18 @@
+
+
+
+
+
+
 const fs = require('fs');
 const path = require('path');
 
-// clean up previous run
+
 if (fs.existsSync('test_image.png')) {
     fs.unlinkSync('test_image.png');
 }
 
-// Create a dummy image file for testing
+
 const dummyImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 fs.writeFileSync('test_image.png', dummyImage);
 
@@ -45,10 +51,10 @@ async function runTest() {
     }
 }
 
-// We can't really run this easily without a running server and fetch with FormData in node (requires node 18+ or polyfills)
-// So we'll mainly use this for manual review or if we had a proper test setup.
-// A simpler way for the user might be to just try the UI.
-// But let's try to run it if the environment supports it.
+
+
+
+
 
 if (typeof fetch !== 'undefined' && typeof FormData !== 'undefined') {
     runTest();

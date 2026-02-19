@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
         } catch (error) {
             if (error.message && error.message.includes("The database connection is closing")) {
                 console.warn("Firebase Auth: Transient IndexedDB error detected. This often happens during hot-reloading. Please refresh the page if this persists.");
-                // Optionally retry or just let the user know
+                
             }
             throw error;
         }

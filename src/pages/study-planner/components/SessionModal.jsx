@@ -13,7 +13,7 @@ const SessionModal = ({
   onDelete,
   selectedDay,
   selectedHour,
-  currentDate, // Specific week context
+  currentDate, 
   courses = [],
   onCourseCreate,
   onCourseDelete,
@@ -56,7 +56,7 @@ const SessionModal = ({
     }
   }, [session, selectedDay, selectedHour]);
 
-  // Use dynamic courses if available, otherwise fallback
+  
   const subjectOptions = courses.length > 0
     ? courses.map(c => ({ value: c.name, label: c.name }))
     : [
@@ -142,24 +142,24 @@ const SessionModal = ({
       id: session?.id || Date.now(),
       date: (() => {
         if (selectedDay && currentDate) {
-          // Calculate date based on selected day of the week
+          
           const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
           const targetDayIndex = days.indexOf(selectedDay);
 
           if (targetDayIndex !== -1) {
-            // 1. Get start of current week (Monday)
+            
             const weekStart = new Date(currentDate);
             const day = weekStart.getDay();
-            const diff = (day === 0 ? -6 : 1) - day; // Adjust so Monday is start
+            const diff = (day === 0 ? -6 : 1) - day; 
             weekStart.setDate(weekStart.getDate() + diff);
-            weekStart.setHours(0, 0, 0, 0); // Reset time
+            weekStart.setHours(0, 0, 0, 0); 
 
-            // 2. Add target index days
+            
             const targetDate = new Date(weekStart);
             targetDate.setDate(weekStart.getDate() + targetDayIndex);
 
-            // Keep the time from startTime if possible, or T00:00:00.000Z
-            // But here we return ISO string often for just the date part reference
+            
+            
             return targetDate.toISOString();
           }
         }
@@ -209,7 +209,7 @@ const SessionModal = ({
       [field]: value
     }));
 
-    // Clear error when user starts typing
+    
     if (errors?.[field]) {
       setErrors(prev => ({
         ...prev,

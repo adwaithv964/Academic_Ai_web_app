@@ -18,13 +18,13 @@ const UserManagement = () => {
     dateRange: null
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
+  const [modalMode, setModalMode] = useState('create'); 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showActivityLogs, setShowActivityLogs] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // Mock users data
+  
   const mockUsers = [
     {
       id: 1,
@@ -87,11 +87,11 @@ const UserManagement = () => {
     }
   ];
 
-  // Initialize users data
+  
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true);
-      // Simulate API call delay
+      
       setTimeout(() => {
         setUsers(mockUsers);
         setFilteredUsers(mockUsers);
@@ -102,11 +102,11 @@ const UserManagement = () => {
     loadUsers();
   }, []);
 
-  // Apply filters
+  
   useEffect(() => {
     let filtered = [...users];
 
-    // Search filter
+    
     if (filters?.search) {
       const searchTerm = filters?.search?.toLowerCase();
       filtered = filtered?.filter(user =>
@@ -115,12 +115,12 @@ const UserManagement = () => {
       );
     }
 
-    // Status filter
+    
     if (filters?.status !== 'all') {
       filtered = filtered?.filter(user => user?.status === filters?.status);
     }
 
-    // Role filter
+    
     if (filters?.role !== 'all') {
       filtered = filtered?.filter(user => user?.role === filters?.role);
     }

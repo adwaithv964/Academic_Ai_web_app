@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 const User = require('./models/User');
 require('dotenv').config();
@@ -7,13 +13,13 @@ const addPoints = async () => {
         await mongoose.connect(process.env.MONGO_URI || process.env.SERVER_MONGO_URI);
         console.log('Connected to DB');
 
-        // Find the user (assuming the single active user, or by email if known, but I'll list all and pick one or update all)
+        
         const users = await User.find({});
         console.log(`Found ${users.length} users.`);
 
         for (const user of users) {
             console.log(`User: ${user.firstName} ${user.lastName} | Points: ${user.points}`);
-            user.points += 5000; // Give enough for everything
+            user.points += 5000; 
             await user.save();
             console.log(`Updated points to ${user.points}`);
         }

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const globalCourseSchema = new mongoose.Schema({
@@ -25,7 +31,7 @@ const globalCourseSchema = new mongoose.Schema({
     },
     department: {
         type: String,
-        default: 'General' // e.g., CS, Math, Physics
+        default: 'General' 
     },
     createdAt: {
         type: Date,

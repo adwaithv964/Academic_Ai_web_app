@@ -29,21 +29,21 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
     {
       label: 'Menu',
       path: '/menu',
-      icon: 'Grid', // Using Grid for Menu
+      icon: 'Grid', 
     },
     {
       label: 'AI Assistant',
       path: '/ai-assistant',
-      icon: 'Bot', // or BrainCircuit if available
+      icon: 'Bot', 
     },
     {
       label: 'Sessions',
       path: '/study-planner',
-      icon: 'Clock', // Or 'Timer'
+      icon: 'Clock', 
     },
     {
       label: 'Calendar',
-      path: '/calendar', // We might need to route this to StudyPlanner tab 'calendar'
+      path: '/calendar', 
       icon: 'Calendar',
     },
     {
@@ -53,17 +53,17 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
     },
     {
       label: 'Prediction',
-      path: '/grade-predictor', // Mapping "Courses" to Grade Predictor as it deals with courses/grades
+      path: '/grade-predictor', 
       icon: 'BookOpen',
     },
     {
       label: 'Data Room',
-      path: '/data-room', // Mapping "Data Room" to Analysis tools
-      icon: 'Database', // or BarChart3
+      path: '/data-room', 
+      icon: 'Database', 
     },
     {
       label: 'Achievements',
-      path: '/achievements', // Placeholder
+      path: '/achievements', 
       icon: 'Trophy',
     },
     {

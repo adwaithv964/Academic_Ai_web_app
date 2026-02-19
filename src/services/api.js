@@ -4,7 +4,7 @@ import { auth } from './firebase';
 
 let apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Ensure apiBase ends with /api if it's a full URL
+
 if (apiBase.startsWith('http') && !apiBase.endsWith('/api')) {
   apiBase = apiBase.replace(/\/$/, '') + '/api';
 }
@@ -17,7 +17,7 @@ const client = axios.create({
   },
 });
 
-// Add a request interceptor to attach the Token
+
 client.interceptors.request.use(async (config) => {
   try {
     const user = auth.currentUser;
@@ -31,7 +31,7 @@ client.interceptors.request.use(async (config) => {
   return config;
 });
 
-// --- Existing Methods ---
+
 export async function predictGrades(payload) {
   const { data } = await client.post('/predict', payload);
   return data;
@@ -42,7 +42,7 @@ export async function health() {
   return data;
 }
 
-// --- New Feature APIs ---
+
 
 export const user = {
   get: () => client.get('/user').then(r => r.data),
@@ -147,6 +147,10 @@ export const vacations = {
   delete: (id) => client.delete(`/vacations/${id}`).then(r => r.data),
 };
 
+export const ai = {
+  stats: () => client.get('/ai/stats').then(r => r.data),
+};
+
 export default {
   user,
   tasks,
@@ -162,6 +166,7 @@ export default {
   history,
   events,
   vacations,
+  ai,
   terms,
   predictGrades,
   health

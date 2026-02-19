@@ -7,7 +7,7 @@ const StudyStats = ({ studySessions, tasks }) => {
     const now = new Date();
     const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Study sessions stats
+    
     const totalSessions = studySessions?.length;
     const weekSessions = studySessions?.filter(session =>
       new Date(session.date) >= thisWeek
@@ -19,18 +19,18 @@ const StudyStats = ({ studySessions, tasks }) => {
 
     const weekStudyHours = studySessions?.filter(session => new Date(session.date) >= thisWeek)?.reduce((total, session) => total + (session?.duration || 0), 0);
 
-    // Task stats
+    
     const totalTasks = tasks?.length;
     const completedTasks = tasks?.filter(task => task?.completed)?.length;
     const pendingTasks = totalTasks - completedTasks;
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-    // Overdue tasks
+    
     const overdueTasks = tasks?.filter(task =>
       !task?.completed && task?.dueDate && new Date(task.dueDate) < now
     )?.length;
 
-    // Subject distribution
+    
     const subjectHours = {};
     studySessions?.forEach(session => {
       const subject = session?.subject || 'Other';
@@ -41,16 +41,16 @@ const StudyStats = ({ studySessions, tasks }) => {
       hours > (top?.hours || 0) ? { subject, hours } : top, {}
     );
 
-    // Calculate Study Streak
+    
     let streak = 0;
     const sortedDates = [...new Set(studySessions?.map(s => new Date(s.date).toDateString()))]
-      .sort((a, b) => new Date(b) - new Date(a)); // Sort descending
+      .sort((a, b) => new Date(b) - new Date(a)); 
 
     if (sortedDates.length > 0) {
       const today = new Date().toDateString();
       const yesterday = new Date(Date.now() - 86400000).toDateString();
 
-      // Check if streak is active (studied today or yesterday)
+      
       if (sortedDates[0] === today || sortedDates[0] === yesterday) {
         streak = 1;
         for (let i = 0; i < sortedDates.length - 1; i++) {

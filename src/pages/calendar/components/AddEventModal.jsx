@@ -26,7 +26,7 @@ const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
                 setValue('date', eventToEdit.date instanceof Date ? eventToEdit.date.toISOString().split('T')[0] : eventToEdit.date?.split('T')[0]);
                 setValue('time', eventToEdit.time || '');
                 setValue('description', eventToEdit.description || '');
-                setValue('color', eventToEdit.color || COLORS[9].value); // Default Blue
+                setValue('color', eventToEdit.color || COLORS[9].value); 
             } else {
                 reset({
                     title: '',

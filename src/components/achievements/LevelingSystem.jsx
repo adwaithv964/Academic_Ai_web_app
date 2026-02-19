@@ -5,11 +5,11 @@ import { Progress } from '@/components/ui/progress';
 const LevelingSystem = ({ leveling }) => {
     const { currentXp, nextLevelXp, currentLevel, title } = leveling;
 
-    // Calculate percentage relative to current level band
-    // To make bar specifically shows progress between levels:
-    // We need prevLevelXp. For now let's just do Raw % of NextLevel (simple) 
-    // or logic: (current - prevBase) / (next - prevBase)
-    // Re-using logic from backend for base:
+    
+    
+    
+    
+    
     const prevLevelBaseXp = Math.pow(((currentLevel - 1) / 0.1), 2);
     const bandTotal = nextLevelXp - prevLevelBaseXp;
     const progressInBand = currentXp - prevLevelBaseXp;

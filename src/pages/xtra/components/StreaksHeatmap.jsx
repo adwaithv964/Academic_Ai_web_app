@@ -33,20 +33,20 @@ const StreaksHeatmap = ({ onBack }) => {
     };
 
     const processStats = (tasks, sessions) => {
-        // 1. Calculate Activity Map (Date -> Intensity)
+        
         const activityMap = new Map();
 
-        // Process Sessions (1 hour = ~1 intensity point, max 4)
+        
         sessions.forEach(session => {
             if (!session.date) return;
             const dateStr = new Date(session.date).toDateString();
             const current = activityMap.get(dateStr) || 0;
-            // Add duration (assuming duration is in hours)
+            
             activityMap.set(dateStr, current + (session.duration || 1));
         });
 
-        // Process Tasks (1 task created = 0.5 intensity point)
-        // Using createdAt as proxy for activity date
+        
+        
         tasks.forEach(task => {
             if (!task.createdAt) return;
             const dateStr = new Date(task.createdAt).toDateString();
@@ -54,10 +54,10 @@ const StreaksHeatmap = ({ onBack }) => {
             activityMap.set(dateStr, current + 0.5);
         });
 
-        // 2. Generate Heatmap Data (Last 365 days)
+        
         const heatmapData = [];
         const today = new Date();
-        const dates = []; // For streak calc
+        const dates = []; 
 
         for (let i = 364; i >= 0; i--) {
             const d = new Date(today);
@@ -65,7 +65,7 @@ const StreaksHeatmap = ({ onBack }) => {
             const dateStr = d.toDateString();
             const score = activityMap.get(dateStr) || 0;
 
-            // Normalize score to intensity 0-4
+            
             let intensity = 0;
             if (score > 0) intensity = 1;
             if (score >= 1) intensity = 2;
@@ -79,32 +79,32 @@ const StreaksHeatmap = ({ onBack }) => {
             }
         }
 
-        // 3. Calculate Streaks
-        // Sort dates ascending
+        
+        
         const uniqueDates = [...new Set(dates)].sort((a, b) => a - b);
 
-        // Current Streak
+        
         let currentStreak = 0;
         const todayTime = new Date(today).setHours(0, 0, 0, 0);
         const yesterdayObj = new Date(today);
         yesterdayObj.setDate(today.getDate() - 1);
         const yesterdayTime = yesterdayObj.setHours(0, 0, 0, 0);
 
-        // Check if we have activity today or yesterday to keep streak alive
+        
         const lastActive = uniqueDates[uniqueDates.length - 1];
         if (lastActive === todayTime || lastActive === yesterdayTime) {
             let streak = 0;
             let checkDate = lastActive;
 
-            // Iterate backwards
+            
             for (let i = uniqueDates.length - 1; i >= 0; i--) {
                 const d = uniqueDates[i];
-                // Difference in days between checkDate and d
+                
                 const diff = (checkDate - d) / (1000 * 60 * 60 * 24);
 
-                if (diff <= 1) { // Same day or consecutive
-                    if (diff === 1) streak++; // increment only if consecutive day
-                    if (diff === 0 && i === uniqueDates.length - 1) streak = 1; // Start streak
+                if (diff <= 1) { 
+                    if (diff === 1) streak++; 
+                    if (diff === 0 && i === uniqueDates.length - 1) streak = 1; 
                     checkDate = d;
                 } else {
                     break;
@@ -113,7 +113,7 @@ const StreaksHeatmap = ({ onBack }) => {
             currentStreak = streak;
         }
 
-        // Longest Streak
+        
         let longestStreak = 0;
         let tempStreak = 0;
         let prevDate = null;
@@ -134,10 +134,10 @@ const StreaksHeatmap = ({ onBack }) => {
         });
 
 
-        // 4. Total Hours
+        
         const totalHours = sessions.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
-        // 5. Completion Rate
+        
         const totalTasks = tasks.length;
         const completedTasks = tasks.filter(t => t.completed).length;
         const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;

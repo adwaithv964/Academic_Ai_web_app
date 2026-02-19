@@ -21,7 +21,7 @@ const SyllabusTrackerWidget = () => {
                             data={data}
                             innerRadius={28}
                             outerRadius={40}
-                            paddingAngle={5} // Gap between segments
+                            paddingAngle={5} 
                             dataKey="value"
                             startAngle={90}
                             endAngle={-270}
@@ -51,25 +51,25 @@ const SyllabusTrackerWidget = () => {
 
         const fetchStats = async () => {
             try {
-                // Fetch data
+                
                 const [allTasks, allCourses] = await Promise.all([
                     tasksApi.list(),
                     coursesApi.list()
                 ]);
 
-                // 1. Calculate Assignment Ace Rate directly from Tasks
+                
                 const totalTasks = allTasks.length;
                 const completedTasks = allTasks.filter(t => t.completed || t.status === 'done').length;
                 const aceRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-                // 2. Calculate Syllabus Covered
-                // Strategy: Use 'progress' field if exists in courses
+                
+                
                 let totalProgress = 0;
                 let courseCount = 0;
 
                 if (allCourses.length > 0) {
                     allCourses.forEach(c => {
-                        // If course has explicit progress, use it. Else default to a calculation or 0.
+                        
                         const p = parseFloat(c.progress) || 0;
                         totalProgress += p;
                         courseCount++;
@@ -92,12 +92,12 @@ const SyllabusTrackerWidget = () => {
     }, [currentUser]);
 
     const coverageData = [
-        { name: 'Covered', value: Number.isFinite(stats.syllabusCovered) ? stats.syllabusCovered : 0, color: '#3b82f6' }, // Blue
+        { name: 'Covered', value: Number.isFinite(stats.syllabusCovered) ? stats.syllabusCovered : 0, color: '#3b82f6' }, 
         { name: 'Remaining', value: Number.isFinite(stats.syllabusCovered) ? Math.max(0, 100 - stats.syllabusCovered) : 100, color: '#eff6ff' },
     ];
 
     const assignmentData = [
-        { name: 'Ace', value: Number.isFinite(stats.assignmentAce) ? stats.assignmentAce : 0, color: '#10b981' }, // Green
+        { name: 'Ace', value: Number.isFinite(stats.assignmentAce) ? stats.assignmentAce : 0, color: '#10b981' }, 
         { name: 'Missed', value: Number.isFinite(stats.assignmentAce) ? Math.max(0, 100 - stats.assignmentAce) : 100, color: '#f0fdf4' },
     ];
 

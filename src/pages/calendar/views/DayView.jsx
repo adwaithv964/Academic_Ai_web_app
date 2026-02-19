@@ -15,14 +15,14 @@ const DayView = ({ currentDate, events, onEventClick }) => {
                 {hours.map(hour => {
                     const currentTimestamp = new Date(currentDate).setHours(hour, 0, 0, 0);
                     const hourEvents = events.filter(e => {
-                        // Very rough check, ideally use proper timestamp comparison
-                        // e.date is normalized to Date object at midnight usually
-                        // e.time is string. Need real date parsing for accurate time view.
-                        // For now showing 'all day' events if they match date
+                        
+                        
+                        
+                        
                         const isSameDate = new Date(e.date).toDateString() === currentDate.toDateString();
-                        // Simple string match for demo if time exists
+                        
                         const isSameHour = e.time && e.time.startsWith(format(currentTimestamp, 'hh'));
-                        return isSameDate && (isSameHour || !e.time); // Show all if no time specified (all day) in first slot logic effectively
+                        return isSameDate && (isSameHour || !e.time); 
                     });
 
                     return (

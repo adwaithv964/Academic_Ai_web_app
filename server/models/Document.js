@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const DocumentSchema = new mongoose.Schema({
@@ -6,7 +12,7 @@ const DocumentSchema = new mongoose.Schema({
     subject: String,
     type: { type: String, enum: ['note', 'paper', 'syllabus', 'assignment', 'other'], default: 'other' },
     size: String,
-    data: Buffer, // Storing file directly in Mongo for simplicity as requested
+    data: Buffer, 
     contentType: String,
     uploadDate: { type: Date, default: Date.now }
 });

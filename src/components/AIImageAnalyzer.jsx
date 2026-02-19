@@ -53,12 +53,12 @@ const AIImageAnalyzer = ({ onAnalysisComplete = () => { }, className = '' }) => 
 
     setSelectedFile(file);
 
-    // Create preview
+    
     const reader = new FileReader();
     reader.onload = () => setPreview(reader?.result);
     reader?.readAsDataURL(file);
 
-    // Reset previous analysis
+    
     setAnalysisResult(null);
     resetState();
   };
@@ -226,11 +226,11 @@ const AIImageAnalyzer = ({ onAnalysisComplete = () => { }, className = '' }) => 
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="prose prose-sm max-w-none">
                 {analysisResult?.analysis?.split('\n').map((line, i) => {
-                  // Handle bullet points
+                  
                   const isBullet = line.trim().startsWith('* ') || line.trim().startsWith('- ');
                   const cleanLine = isBullet ? line.trim().substring(2) : line;
 
-                  // Handle bold text (**text**)
+                  
                   const parts = cleanLine.split(/\*\*(.*?)\*\*/g);
 
                   return (
@@ -238,7 +238,7 @@ const AIImageAnalyzer = ({ onAnalysisComplete = () => { }, className = '' }) => 
                       {isBullet && <span className="text-primary/70">•</span>}
                       <span className="break-words">
                         {parts.map((part, j) =>
-                          // Even indices are normal text, odd are bold (captured groups)
+                          
                           j % 2 === 1 ? <strong key={j} className="font-semibold">{part}</strong> : part
                         )}
                       </span>

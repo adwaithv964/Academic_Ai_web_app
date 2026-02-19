@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const systemSettingsSchema = new mongoose.Schema({
@@ -19,7 +25,7 @@ const systemSettingsSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Ensure only one document exists
+
 systemSettingsSchema.statics.getInstance = async function () {
     let settings = await this.findOne();
     if (!settings) {

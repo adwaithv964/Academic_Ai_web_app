@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    history: [], // [{ id, courseId, startTime, endTime, duration, notes }]
-    currentSession: null, // { startTime, courseId, status: 'running'|'paused' }
+    history: [], 
+    currentSession: null, 
     loading: false,
 };
 
@@ -22,7 +22,7 @@ const sessionsSlice = createSlice({
                 const session = {
                     ...state.currentSession,
                     endTime: new Date().toISOString(),
-                    duration: action.payload.duration, // in seconds
+                    duration: action.payload.duration, 
                     completed: true
                 };
                 state.history.push(session);

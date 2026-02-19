@@ -18,11 +18,11 @@ const AdminLogin = () => {
         setLoading(true);
 
         try {
-            // 1. Perform Firebase Login
+            
             const userCredential = await login(email, password);
             const user = userCredential.user;
 
-            // 2. Verified Role Check (Backend Fetch)
+            
             const token = await user.getIdToken();
             const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api';
 
@@ -46,7 +46,7 @@ const AdminLogin = () => {
         } catch (err) {
             console.error("Admin Login Error:", err);
             setError('Invalid credentials or system error.');
-            // Ensure we don't leave a session open if it failed logic
+            
             await logout();
         } finally {
             setLoading(false);

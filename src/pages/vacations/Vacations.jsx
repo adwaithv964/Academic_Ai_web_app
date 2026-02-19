@@ -46,7 +46,7 @@ const Vacations = () => {
         const endDate = new Date(end);
         const diffTime = Math.abs(endDate - startDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays + 1; // Include start date
+        return diffDays + 1; 
     };
 
     const handleSubmit = async (e) => {

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 const mongoose = require('mongoose');
 
 const TaskSchema = new mongoose.Schema({
@@ -6,7 +12,7 @@ const TaskSchema = new mongoose.Schema({
     subject: String,
     priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
     dueDate: { type: String, index: true },
-    type: String, // assignment, exam, etc.
+    type: String, 
     completed: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now, index: true }
 });

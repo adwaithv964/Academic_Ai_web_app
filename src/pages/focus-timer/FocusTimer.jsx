@@ -9,7 +9,7 @@ const FocusTimer = () => {
     const dispatch = useDispatch();
     const { isActive, timeLeft, mode } = useSelector(state => state.focus);
 
-    // No local timer effect needed, Header handles the tick!
+    
 
     const formatTime = (seconds) => {
         const hrs = Math.floor(seconds / 3600);

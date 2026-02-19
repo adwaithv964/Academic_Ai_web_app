@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button';
 import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
 const PredictionHistory = ({ onLoad, selectedId }) => {
-    // Fetch predictions from IndexedDB, ordered by date descending
+    
     const [predictions, setPredictions] = React.useState([]);
 
     React.useEffect(() => {
@@ -19,7 +19,7 @@ const PredictionHistory = ({ onLoad, selectedId }) => {
             }
         };
         fetchPredictions();
-    }, [selectedId]); // Refresh when selection changes (e.g. after new prediction)
+    }, [selectedId]); 
 
     const handleDelete = async (e, id) => {
         e.stopPropagation();

@@ -1,19 +1,25 @@
+
+
+
+
+
+
 const SystemSettings = require('../models/SystemSettings');
 
 const maintenance = async (req, res, next) => {
     try {
-        // Exclude Admin routes and Auth routes from maintenance check
+        
         if (req.path.startsWith('/api/admin') ||
             req.path.startsWith('/api/auth') ||
             req.path.startsWith('/api/public') ||
-            req.path === '/api/user') { // Allow user profile fetch to determine role
+            req.path === '/api/user') { 
             return next();
         }
 
         const settings = await SystemSettings.getInstance();
 
         if (settings.maintenanceMode) {
-            // Check if user is admin (req.user is populated by auth middleware if token was present)
+            
             if (req.user && req.user.role === 'admin') {
                 return next();
             }
@@ -27,7 +33,7 @@ const maintenance = async (req, res, next) => {
         next();
     } catch (error) {
         console.error("Maintenance Middleware Error:", error);
-        next(); // Fail open if DB error
+        next(); 
     }
 };
 

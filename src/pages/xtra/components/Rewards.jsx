@@ -6,7 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../constants';
 
-// Sub-components
+
 import StudyStore from './StudyStore';
 import DailyQuests from './DailyQuests';
 import Leaderboard from './Leaderboard';
@@ -21,7 +21,7 @@ const Rewards = ({ onBack }) => {
     const fetchUserData = () => {
         api.user.get()
             .then(data => {
-                // Initialize defaults if missing (for legacy users)
+                
                 if (!data.points) data.points = 0;
                 if (!data.inventory) data.inventory = [];
                 if (!data.achievements) data.achievements = {};
@@ -57,26 +57,26 @@ const Rewards = ({ onBack }) => {
         { id: 'leaderboard', label: 'Leaderboard', icon: 'Trophy' },
     ];
 
-    // Calculated derived state
+    
     const currentLevel = LEVEL_THRESHOLDS.slice().reverse().find(l => (user.totalPoints || 0) >= l.points) || LEVEL_THRESHOLDS[0];
     const nextLevel = LEVEL_THRESHOLDS.find(l => l.points > (user.totalPoints || 0));
     const progressToNext = nextLevel
         ? ((user.totalPoints - currentLevel.points) / (nextLevel.points - currentLevel.points)) * 100
         : 100;
 
-    // Process Achievements with User Data
+    
     const achievementsStatus = ACHIEVEMENTS_LIST.map(base => {
         const userState = user.achievements?.[base.id] || { progress: 0, tier: 'locked' };
-        // Simple logic: if tier is not locked, it's completed (for binary view), 
-        // OR check if progress > bronze threshold
+        
+        
         const isUnlocked = userState.tier !== 'locked' || userState.progress >= base.tiers.bronze.threshold;
 
         return {
             ...base,
             progress: userState.progress,
             currentTier: userState.tier,
-            completed: isUnlocked, // For the summary view
-            nextThreshold: base.tiers.bronze.threshold // Simplified for summary
+            completed: isUnlocked, 
+            nextThreshold: base.tiers.bronze.threshold 
         };
     });
 

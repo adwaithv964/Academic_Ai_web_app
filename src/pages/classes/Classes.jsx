@@ -28,7 +28,7 @@ const Classes = () => {
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
     const selectedColor = watch('color', COLORS[0].value);
 
-    // Fetch Classes
+    
     const fetchClasses = async () => {
         try {
             const data = await api.courses.list();
@@ -46,7 +46,7 @@ const Classes = () => {
         }
     }, [currentUser]);
 
-    // Open Modal
+    
     const openModal = (cls = null) => {
         setEditingClass(cls);
         if (cls) {
@@ -67,7 +67,7 @@ const Classes = () => {
         setIsModalOpen(true);
     };
 
-    // Save Class (Create/Update)
+    
     const onSubmit = async (data) => {
         try {
             if (editingClass) {
@@ -83,7 +83,7 @@ const Classes = () => {
         }
     };
 
-    // Delete Class
+    
     const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this class?")) {
             try {
