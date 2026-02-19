@@ -61,6 +61,7 @@ app.set('trust proxy', 1); // Trust first proxy (Render load balancer)
 const PORT = process.env.PORT || 5003;
 
 // --- OPTIMIZATION & SECURITY MIDDLEWARE ---
+app.use(cors()); // Enable CORS first
 app.use(compression()); // Compress all responses
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to avoid breaking dev tools/inline scripts
@@ -85,7 +86,7 @@ const heavyLimiter = rateLimit({
 });
 app.use('/api/ai-scan', heavyLimiter);
 
-app.use(cors());
+
 app.use(express.json());
 
 // Store image in memory buffer so we can pass it to AI

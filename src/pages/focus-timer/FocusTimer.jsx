@@ -51,19 +51,19 @@ const FocusTimer = () => {
 
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 w-full max-w-md text-center">
                 <div className="flex justify-center gap-2 mb-8 bg-gray-100 p-1 rounded-xl">
-                    {['focus', 'shortBreak', 'longBreak'].map(m => (
+                    {['focus', 'shortBreak'].map(m => (
                         <button
                             key={m}
                             onClick={() => handleSetMode(m)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === m ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
                         >
-                            {m === 'focus' ? 'Focus' : m === 'shortBreak' ? 'Short Break' : 'Long Break'}
+                            {m === 'focus' ? 'Focus' : 'Short Break'}
                         </button>
                     ))}
                 </div>
 
                 <div className="relative w-64 h-64 mx-auto mb-8 flex items-center justify-center">
-                    <div className={`absolute inset-0 rounded-full border-8 opacity-20 ${mode === 'focus' ? 'border-blue-500' : mode === 'shortBreak' ? 'border-green-500' : 'border-purple-500'}`}></div>
+                    <div className={`absolute inset-0 rounded-full border-8 opacity-20 ${mode === 'shortBreak' ? 'border-green-500' : 'border-blue-500'}`}></div>
 
                     {isActive ? (
                         <div className="text-6xl font-black font-mono text-gray-800">
@@ -73,7 +73,7 @@ const FocusTimer = () => {
                         <TimeSpinner
                             totalSeconds={timeLeft}
                             onChange={handleTimeChange}
-                            showHours={mode === 'focus' || mode === 'longBreak'}
+                            showHours={mode === 'focus'}
                             minMinutes={mode === 'shortBreak' ? 5 : 0}
                             maxMinutes={mode === 'shortBreak' ? 15 : 59}
                         />

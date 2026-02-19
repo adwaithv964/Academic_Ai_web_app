@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { tasks as tasksApi } from '../../../services/api';
 
 const PriorityTasksWidget = () => {
     const [tasks, setTasks] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const loadTasks = () => {
+    const loadTasks = async () => {
         try {
-            const savedTasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
+            setIsLoading(true);
+            const allTasks = await tasksApi.list();
+
             // Filter pending tasks
-            const pending = savedTasks.filter(t => t.status !== 'done');
+            const pending = allTasks.filter(t => !t.completed && t.status !== 'done');
 
             // Sort by priority (high > medium > low) and due date if available
             const sorted = pending.sort((a, b) => {
@@ -23,30 +27,41 @@ const PriorityTasksWidget = () => {
             setTasks(sorted.slice(0, 5)); // Show top 5
         } catch (e) {
             console.error("Error loading tasks", e);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         loadTasks();
-        window.addEventListener('storage', loadTasks);
-        // Also listen for custom event if we add one, but storage event works for tab sync.
-        // For same-tab updates, components usually dispatch a custom even or use context.
-        // I'll add a simplified listener for now.
-        return () => window.removeEventListener('storage', loadTasks);
+
+        // Listen for task updates from other components
+        const handleTaskUpdate = () => loadTasks();
+        window.addEventListener('task-updated', handleTaskUpdate);
+
+        return () => window.removeEventListener('task-updated', handleTaskUpdate);
     }, []);
 
-    const handleComplete = (taskId) => {
+    const handleComplete = async (taskId) => {
         try {
-            const savedTasks = JSON.parse(localStorage.getItem('todoTasks') || '[]');
-            const updated = savedTasks.map(t => t.id === taskId ? { ...t, status: 'done' } : t);
-            localStorage.setItem('todoTasks', JSON.stringify(updated));
-            // Dispatch storage event manually for same-tab listeners
-            window.dispatchEvent(new Event('storage'));
-            loadTasks();
+            await tasksApi.update(taskId, { completed: true, status: 'done' });
+            // Refresh local list immediately
+            setTasks(prev => prev.filter(t => t._id !== taskId && t.id !== taskId));
+
+            // Notify other components
+            window.dispatchEvent(new Event('task-updated'));
         } catch (e) {
-            console.error("Error updating tasks", e);
+            console.error("Error updating task", e);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full flex items-center justify-center">
+                <div className="text-sm text-gray-500">Loading tasks...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full">
@@ -61,13 +76,13 @@ const PriorityTasksWidget = () => {
             <div className="space-y-3">
                 {tasks.length > 0 ? (
                     tasks.map(task => (
-                        <div key={task.id} className="group flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all">
+                        <div key={task._id || task.id} className="group flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:shadow-sm transition-all">
                             <div className="flex items-center gap-3">
                                 <div className={`w-2 h-2 rounded-full ${task.priority === 'high' ? 'bg-red-500' : task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`} />
                                 <div>
                                     <p className="font-medium text-gray-800 text-sm line-clamp-1">{task.title}</p>
                                     <div className="flex gap-2 text-xs text-gray-500 mt-0.5">
-                                        {task.dueDate && <span>Due: {task.dueDate}</span>}
+                                        {task.dueDate && <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>}
                                         {task.tags?.map(tag => (
                                             <span key={tag} className="uppercase text-[10px] bg-gray-200 px-1 rounded">{tag}</span>
                                         ))}
@@ -77,7 +92,7 @@ const PriorityTasksWidget = () => {
 
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                                 <button
-                                    onClick={() => handleComplete(task.id)}
+                                    onClick={() => handleComplete(task._id || task.id)}
                                     className="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200"
                                     title="Mark Complete"
                                 >

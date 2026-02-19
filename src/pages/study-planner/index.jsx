@@ -478,6 +478,7 @@ const StudyPlanner = () => {
           session={selectedSession}
           selectedDay={selectedTimeSlot?.day}
           selectedHour={selectedTimeSlot?.hour}
+          currentDate={currentDate} // Pass current date context
           onSave={handleSessionSave}
           onDelete={handleSessionDelete}
           courses={courses}

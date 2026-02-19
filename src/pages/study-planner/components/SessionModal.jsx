@@ -13,6 +13,7 @@ const SessionModal = ({
   onDelete,
   selectedDay,
   selectedHour,
+  currentDate, // Specific week context
   courses = [],
   onCourseCreate,
   onCourseDelete,
@@ -139,9 +140,33 @@ const SessionModal = ({
     const sessionData = {
       ...formData,
       id: session?.id || Date.now(),
-      date: selectedDay ? new Date()?.toISOString() : session?.date,
-      createdAt: session?.createdAt || new Date()?.toISOString(),
-      updatedAt: new Date()?.toISOString()
+      date: (() => {
+        if (selectedDay && currentDate) {
+          // Calculate date based on selected day of the week
+          const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          const targetDayIndex = days.indexOf(selectedDay);
+
+          if (targetDayIndex !== -1) {
+            // 1. Get start of current week (Monday)
+            const weekStart = new Date(currentDate);
+            const day = weekStart.getDay();
+            const diff = (day === 0 ? -6 : 1) - day; // Adjust so Monday is start
+            weekStart.setDate(weekStart.getDate() + diff);
+            weekStart.setHours(0, 0, 0, 0); // Reset time
+
+            // 2. Add target index days
+            const targetDate = new Date(weekStart);
+            targetDate.setDate(weekStart.getDate() + targetDayIndex);
+
+            // Keep the time from startTime if possible, or T00:00:00.000Z
+            // But here we return ISO string often for just the date part reference
+            return targetDate.toISOString();
+          }
+        }
+        return session?.date || new Date().toISOString();
+      })(),
+      createdAt: session?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     onSave(sessionData);
@@ -150,7 +175,7 @@ const SessionModal = ({
 
   const handleDelete = () => {
     if (session && onDelete) {
-      onDelete(session?.id);
+      onDelete(session._id || session.id);
       onClose();
     }
   };
