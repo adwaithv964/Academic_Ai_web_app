@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import { terms } from '../../services/api';
 
 const ScheduleSetup = () => {
     const [config, setConfig] = React.useState({
@@ -25,20 +26,14 @@ const ScheduleSetup = () => {
 
     const fetchTermConfig = async () => {
         try {
-            const res = await fetch('http://localhost:5002/api/terms');
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.name) {
-                    setConfig({
-                        termName: data.name,
-                        startDate: data.startDate ? data.startDate.split('T')[0] : '',
-                        endDate: data.endDate ? data.endDate.split('T')[0] : '',
-                        defaultDuration: data.defaultDuration || 45
-                    });
-                }
-            } else {
-                const errData = await res.text();
-                console.error('Failed to fetch term config:', res.status, errData);
+            const data = await terms.get();
+            if (data && data.name) {
+                setConfig({
+                    termName: data.name,
+                    startDate: data.startDate ? data.startDate.split('T')[0] : '',
+                    endDate: data.endDate ? data.endDate.split('T')[0] : '',
+                    defaultDuration: data.defaultDuration || 45
+                });
             }
         } catch (error) {
             console.error('Failed to fetch term config:', error);
@@ -60,22 +55,11 @@ const ScheduleSetup = () => {
                 defaultDuration: config.defaultDuration
             };
 
-            const res = await fetch('http://localhost:5002/api/terms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                alert('Configuration saved successfully!');
-            } else {
-                const errData = await res.json();
-                console.error('Save failed:', errData);
-                alert(`Failed to save configuration: ${errData.error || res.statusText}`);
-            }
+            await terms.save(payload);
+            alert('Configuration saved successfully!');
         } catch (error) {
             console.error('Error saving config:', error);
-            alert(`An error occurred: ${error.message}`);
+            alert(`Failed to save configuration: ${error.message || 'Unknown error'}`);
         } finally {
             setLoading(false);
         }

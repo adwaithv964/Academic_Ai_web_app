@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, File, BookOpen, Filter, Download, Trash2, Search, Edit2, X } from 'lucide-react';
+import { Upload, FileText, File, BookOpen, Filter, Download, Trash2, Search, Edit2, X, Eye } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { documents as documentsApi } from '../../../services/api';
 import { formatDate } from '../../../utils/dateUtils';
@@ -106,10 +106,39 @@ const DigitalBackpack = () => {
         }
     };
 
-    const handleDownload = (doc) => {
-        // Create a temporary link to download
-        const url = documentsApi.getDownloadUrl(doc._id);
-        window.open(url, '_blank');
+    const handleDownload = async (doc) => {
+        try {
+            const blob = await documentsApi.download(doc._id);
+            // blob is already a Blob object from axios
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', doc.name);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed:", error);
+            alert("Failed to download file. Please try again.");
+        }
+    };
+
+    const handleView = async (doc) => {
+        try {
+            const blob = await documentsApi.download(doc._id);
+            // It's already a blob, create URL directly
+            const url = window.URL.createObjectURL(blob);
+
+            // Open in new tab
+            window.open(url, '_blank');
+
+            // Clean up after a delay to allow the new tab to load the blob
+            setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+            console.error("View failed:", error);
+            alert("Failed to view file. Please try again.");
+        }
     };
 
     const startEdit = (file) => {
@@ -363,6 +392,15 @@ const DigitalBackpack = () => {
                                 </div>
 
                                 <div className="col-span-3 md:col-span-2 flex justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                        onClick={() => handleView(file)}
+                                        title="View"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </Button>
                                     <Button
                                         variant="ghost"
                                         size="icon"

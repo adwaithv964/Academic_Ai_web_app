@@ -21,10 +21,11 @@ const ProficiencyMatrix = () => {
             try {
                 // Fetch Courses and Predictions (Mocking the join since APIs are separate)
                 // In a real scenario, we might want a dedicated endpoint or smarter joining
-                const [coursesData, predictionsData, tasksData] = await Promise.all([
+                const [coursesData, predictionsData, tasksData, sessionsData] = await Promise.all([
                     api.courses.list().catch(() => []),
                     api.predictions.list().catch(() => []),
-                    api.tasks.list().catch(() => [])
+                    api.tasks.list().catch(() => []),
+                    api.sessions.list().catch(() => [])
                 ]);
 
                 // --- Process Subject Insights ---
@@ -51,7 +52,7 @@ const ProficiencyMatrix = () => {
                         comment: comment,
                         id: course._id
                     };
-                }).filter(s => s.score > 0); // Only show subjects with data? Or show all? Let's show all but sort by score?
+                });
                 // Actually, let's show all, but if score is 0, maybe hide or show "N/A"
 
                 setSubjects(processedSubjects);
@@ -65,22 +66,22 @@ const ProficiencyMatrix = () => {
 
                 // 2. Assignments: Completion rate from Todo List
                 const totalTasks = tasksData.length;
-                const completedTasks = tasksData.filter(t => t.status === 'done').length;
+                const completedTasks = tasksData.filter(t => t.completed).length; // Check 'completed' property
                 const assignmentScore = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-                // 3. Attendance: Mock random high score or fetch if available (Not in API currently)
-                // Let's use a base of 85 + random for 'realism' if no data, or just 100 if we want to be nice.
-                // Better: Use avgScore but slightly boosted?
-                const attendanceScore = Math.min(100, Math.max(70, avgScore + 10));
+                // 3. Attendance: Session completion rate
+                const totalSessions = sessionsData.length;
+                const completedSessions = sessionsData.filter(s => s.isCompleted).length;
+                const attendanceScore = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
 
-                // 4. Projects: Use avgScore
+                // 4. Projects: Use avgScore for now, or check for tasks with 'Project' tag?
                 const projectScore = avgScore;
 
-                // 5. Practical: Use avgScore * variance
-                const practicalScore = Math.min(100, avgScore * 1.05);
+                // 5. Practical: Use avgScore varies
+                const practicalScore = Math.min(100, Math.max(0, avgScore * 1.05));
 
-                // 6. Quizzes: Use avgScore * variance
-                const quizScore = Math.min(100, avgScore * 0.95);
+                // 6. Quizzes: Use avgScore varies
+                const quizScore = Math.min(100, Math.max(0, avgScore * 0.95));
 
                 setData([
                     { subject: 'Theory', A: Math.round(avgScore), fullMark: 100 },

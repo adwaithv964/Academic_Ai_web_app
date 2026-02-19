@@ -12,6 +12,7 @@ const StudySessionSchema = new mongoose.Schema({
     type: String, // study, review, etc.
     location: String,
     notes: String,
+    isCompleted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
 

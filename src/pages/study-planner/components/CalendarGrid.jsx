@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
+import { CheckCircle, Circle } from 'lucide-react';
 import { useDateFormatter } from '../../../hooks/useDateFormatter';
 
 
@@ -9,6 +10,7 @@ const CalendarGrid = ({
   currentDate,
   studySessions,
   onSessionClick,
+  onSessionComplete,
   onTimeSlotClick,
   onSessionDrop,
   onSessionResize,
@@ -66,12 +68,13 @@ const CalendarGrid = ({
     setResizingSession(null);
   };
 
-  const getStickyNoteStyle = (subject, courseColor) => {
+  const getStickyNoteStyle = (subject, courseColor, isCompleted) => {
     // Helper to generate sticky note classes from a color name
     const getStyle = (colorName) => {
       // Ensure we map red to rose if it comes through here
       if (colorName === 'red') colorName = 'rose';
-      return `bg-${colorName}-100 border-2 border-${colorName}-200 text-${colorName}-800 shadow-sm hover:shadow-md dark:bg-${colorName}-900/30 dark:border-${colorName}-700 dark:text-${colorName}-100`;
+      const baseStyle = `bg-${colorName}-100 border-2 border-${colorName}-200 text-${colorName}-800 shadow-sm hover:shadow-md dark:bg-${colorName}-900/30 dark:border-${colorName}-700 dark:text-${colorName}-100`;
+      return isCompleted ? `${baseStyle} opacity-60 grayscale-[50%]` : baseStyle;
     };
 
     // 1. Try to extract color from course settings
@@ -113,9 +116,16 @@ const CalendarGrid = ({
     return getStyle(color);
   };
 
-  const getSubjectColor = (subject) => {
+  const getSubjectColor = (subject, isCompleted) => {
     const course = courses.find(c => c.name === subject);
-    return getStickyNoteStyle(subject, course?.color);
+    return getStickyNoteStyle(subject, course?.color, isCompleted);
+  };
+
+  const handleCompleteClick = (e, session) => {
+    e.stopPropagation(); // Prevent opening modal
+    if (onSessionComplete) {
+      onSessionComplete(session);
+    }
   };
 
   if (currentView === 'daily') {
@@ -156,16 +166,24 @@ const CalendarGrid = ({
                         onDragStart={(e) => handleDragStart(e, session)}
                         onClick={() => onSessionClick(session)}
                         className={`
-                          p-3 rounded-lg cursor-pointer mb-2 last:mb-0
-                          ${getSubjectColor(session?.subject)}
+                          p-3 rounded-lg cursor-pointer mb-2 last:mb-0 relative group
+                          ${getSubjectColor(session?.subject, session?.isCompleted)}
                           transition-all duration-200
                         `}
                         whileHover={{ scale: 1.02, rotate: 1 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-center justify-between">
+                        <button
+                          onClick={(e) => handleCompleteClick(e, session)}
+                          className={`absolute top-2 right-2 p-1 rounded-full transition-colors ${session.isCompleted ? 'text-green-600 bg-white/50' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:text-green-600 hover:bg-white/50'}`}
+                          title={session.isCompleted ? "Mark as incomplete" : "Mark as complete"}
+                        >
+                          {session.isCompleted ? <CheckCircle size={16} /> : <Circle size={16} />}
+                        </button>
+
+                        <div className="flex items-center justify-between pr-6">
                           <div>
-                            <p className="font-medium text-sm">{session?.subject}</p>
+                            <p className={`font-medium text-sm ${session.isCompleted ? 'line-through decoration-current' : ''}`}>{session?.subject}</p>
                             <p className="text-xs opacity-80">{session?.topic}</p>
                           </div>
                           <div className="text-xs opacity-60">
@@ -227,16 +245,26 @@ const CalendarGrid = ({
                           onDragStart={(e) => handleDragStart(e, session)}
                           onClick={() => onSessionClick(session)}
                           className={`
-                          p-1.5 rounded-md text-xs cursor-pointer mb-1 last:mb-0
-                          ${getSubjectColor(session?.subject)}
+                          p-1.5 rounded-md text-xs cursor-pointer mb-1 last:mb-0 relative group
+                          ${getSubjectColor(session?.subject, session?.isCompleted)}
                           transition-all duration-200
                         `}
                           whileHover={{ scale: 1.05, rotate: 1 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <p className="font-medium truncate">{session?.subject}</p>
-                          <p className="opacity-80 truncate">{session?.topic}</p>
-                          <p className="opacity-60">{session?.duration}h</p>
+                          <button
+                            onClick={(e) => handleCompleteClick(e, session)}
+                            className={`absolute top-1 right-1 p-0.5 rounded-full transition-colors ${session.isCompleted ? 'text-green-600 bg-white/50' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:text-green-600 hover:bg-white/50'}`}
+                            title={session.isCompleted ? "Mark as incomplete" : "Mark as complete"}
+                          >
+                            {session.isCompleted ? <CheckCircle size={12} /> : <Circle size={12} />}
+                          </button>
+
+                          <div className="pr-4">
+                            <p className={`font-medium truncate ${session.isCompleted ? 'line-through decoration-current' : ''}`}>{session?.subject}</p>
+                            <p className="opacity-80 truncate">{session?.topic}</p>
+                            <p className="opacity-60">{session?.duration}h</p>
+                          </div>
                         </motion.div>
                       ))
                     )}

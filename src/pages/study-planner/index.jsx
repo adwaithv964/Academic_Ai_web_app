@@ -282,6 +282,24 @@ const StudyPlanner = () => {
     { key: 'stats', label: 'Statistics', icon: 'BarChart3' }
   ];
 
+  const handleSessionComplete = async (session) => {
+    try {
+      const updatedSession = { ...session, isCompleted: !session.isCompleted };
+      // Optimistic update
+      setStudySessions(prev =>
+        prev.map(s => s._id === session._id ? updatedSession : s)
+      );
+
+      await sessionsApi.update(session._id, { isCompleted: !session.isCompleted });
+    } catch (error) {
+      console.error("Failed to toggle session completion:", error);
+      // Revert on failure
+      setStudySessions(prev =>
+        prev.map(s => s._id === session._id ? session : s)
+      );
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -372,6 +390,7 @@ const StudyPlanner = () => {
                   studySessions={studySessions}
                   courses={courses}
                   onSessionClick={handleSessionClick}
+                  onSessionComplete={handleSessionComplete}
                   onTimeSlotClick={handleTimeSlotClick}
                   onSessionDrop={handleSessionDrop}
                   onSessionResize={handleSessionResize}
@@ -419,6 +438,7 @@ const StudyPlanner = () => {
                   studySessions={studySessions}
                   courses={courses}
                   onSessionClick={handleSessionClick}
+                  onSessionComplete={handleSessionComplete}
                   onTimeSlotClick={handleTimeSlotClick}
                   onSessionDrop={handleSessionDrop}
                   onSessionResize={handleSessionResize}

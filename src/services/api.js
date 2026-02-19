@@ -91,6 +91,12 @@ export const documents = {
   update: (id, data) => client.put(`/documents/${id}`, data).then(r => r.data),
   delete: (id) => client.delete(`/documents/${id}`).then(r => r.data),
   getDownloadUrl: (id) => `${apiBase}/documents/${id}/download`,
+  download: (id) => client.get(`/documents/${id}/download`, { responseType: 'blob' }).then(r => r.data),
+};
+
+export const terms = {
+  get: () => client.get('/terms').then(r => r.data),
+  save: (data) => client.post('/terms', data).then(r => r.data),
 };
 
 export const webReferences = {
@@ -156,6 +162,7 @@ export default {
   history,
   events,
   vacations,
+  terms,
   predictGrades,
   health
 };
