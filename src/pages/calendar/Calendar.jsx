@@ -218,6 +218,7 @@ const Calendar = () => {
                 onSave={handleSaveEvent}
                 onDelete={handleDeleteEvent}
                 eventToEdit={selectedEvent}
+                selectedDate={currentDate}
             />
         </div>
     );

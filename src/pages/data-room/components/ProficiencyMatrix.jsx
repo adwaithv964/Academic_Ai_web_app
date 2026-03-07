@@ -26,18 +26,18 @@ const ProficiencyMatrix = () => {
                     api.sessions.list().catch(() => [])
                 ]);
 
-                
+
                 const calculateTaskRate = (subjectName, keywords) => {
                     const subjectTasks = tasksData.filter(t =>
                         t.subject === subjectName &&
                         keywords.some(k => (t.type || t.title).toLowerCase().includes(k))
                     );
-                    if (subjectTasks.length === 0) return 0; 
+                    if (subjectTasks.length === 0) return 0;
                     const completed = subjectTasks.filter(t => t.completed).length;
                     return (completed / subjectTasks.length) * 100;
                 };
 
-                
+
                 const hasTasks = (subjectName, keywords) => {
                     return tasksData.some(t =>
                         t.subject === subjectName &&
@@ -45,52 +45,52 @@ const ProficiencyMatrix = () => {
                     );
                 };
 
-                
+
                 const processedSubjects = coursesData.map(course => {
                     const subjectName = course.name;
 
-                    
+
                     const pred = predictionsData.find(p => p.courseName === subjectName) || {};
                     const theoryScore = parseFloat(pred.currentGrade || 0);
 
-                    
+
                     const subjectSessions = sessionsData.filter(s => s.subject === subjectName);
                     const attendanceScore = subjectSessions.length > 0
                         ? (subjectSessions.filter(s => s.isCompleted).length / subjectSessions.length) * 100
                         : 0;
 
-                    
+
                     const assignmentScore = calculateTaskRate(subjectName, ['assign', 'homework', 'task']);
 
-                    
+
                     const projectScore = calculateTaskRate(subjectName, ['project', 'presentation', 'report']);
 
-                    
+
                     const practicalScore = calculateTaskRate(subjectName, ['lab', 'practical', 'experiment']);
 
-                    
+
                     const quizScore = calculateTaskRate(subjectName, ['quiz', 'test', 'exam']);
 
-                    
-                    
-                    
-                    
-                    
 
-                    
-                    
+
+
+
+
+
+
+
 
                     let validMetrics = [];
-                    validMetrics.push(theoryScore); 
+                    validMetrics.push(theoryScore);
                     if (subjectSessions.length > 0) validMetrics.push(attendanceScore);
-                    if (hasTasks(subjectName, ['assign', 'homework'])) validMetrics.push(assignmentScore);
-                    if (hasTasks(subjectName, ['project'])) validMetrics.push(projectScore);
-                    if (hasTasks(subjectName, ['lab'])) validMetrics.push(practicalScore);
-                    if (hasTasks(subjectName, ['quiz'])) validMetrics.push(quizScore);
+                    if (hasTasks(subjectName, ['assign', 'homework', 'task'])) validMetrics.push(assignmentScore);
+                    if (hasTasks(subjectName, ['project', 'presentation', 'report'])) validMetrics.push(projectScore);
+                    if (hasTasks(subjectName, ['lab', 'practical', 'experiment'])) validMetrics.push(practicalScore);
+                    if (hasTasks(subjectName, ['quiz', 'test', 'exam'])) validMetrics.push(quizScore);
 
                     const compositeScore = validMetrics.length > 0
                         ? validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length
-                        : theoryScore; 
+                        : theoryScore;
 
                     let comment = 'No data available';
                     let strength = false;
@@ -105,19 +105,19 @@ const ProficiencyMatrix = () => {
                         strength: strength,
                         comment: comment,
                         id: course._id,
-                        
+
                         metrics: { theoryScore, attendanceScore, assignmentScore, projectScore, practicalScore, quizScore }
                     };
                 });
 
                 setSubjects(processedSubjects);
 
-                
-                
+
+
 
                 const avgMetric = (metricKey) => {
                     const validSubjects = processedSubjects.filter(s => s.metrics[metricKey] > 0 || hasTasks(s.name, [] /* irrelevant here */));
-                    
+
                     if (processedSubjects.length === 0) return 0;
                     return processedSubjects.reduce((acc, curr) => acc + curr.metrics[metricKey], 0) / processedSubjects.length;
                 };
@@ -127,7 +127,7 @@ const ProficiencyMatrix = () => {
                     ? processedSubjects.reduce((acc, curr) => acc + curr.metrics.attendanceScore, 0) / processedSubjects.length
                     : 0;
 
-                
+
                 const globalTaskRate = (keywords) => {
                     const relevantTasks = tasksData.filter(t => keywords.some(k => (t.type || t.title).toLowerCase().includes(k)));
                     if (relevantTasks.length === 0) return 0;
@@ -143,7 +143,7 @@ const ProficiencyMatrix = () => {
                     { subject: 'Quizzes', A: Math.round(globalTaskRate(['quiz', 'test', 'exam'])), fullMark: 100 },
                 ]);
 
-                
+
                 if (processedSubjects.length > 0) {
                     const sorted = [...processedSubjects].sort((a, b) => a.score - b.score);
                     const weakest = sorted[0];

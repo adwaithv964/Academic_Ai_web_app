@@ -28,10 +28,10 @@ const Select = React.forwardRef(({
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    
+
     const selectId = id || `select-${Math.random()?.toString(36)?.substr(2, 9)}`;
 
-    
+
     const filteredOptions = searchable && searchTerm
         ? options?.filter(option =>
             option?.label?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
@@ -39,7 +39,7 @@ const Select = React.forwardRef(({
         )
         : options;
 
-    
+
     const getSelectedDisplay = () => {
         if (!value) return placeholder;
 
@@ -156,15 +156,15 @@ const Select = React.forwardRef(({
                 <select
                     name={name}
                     value={value || ''}
-                    onChange={() => { }} 
+                    onChange={() => { }}
                     className="sr-only"
                     tabIndex={-1}
                     multiple={multiple}
                     required={required}
                 >
                     <option value="">Select...</option>
-                    {options?.map(option => (
-                        <option key={option?.value} value={option?.value}>
+                    {options?.map((option, index) => (
+                        <option key={`${option?.value}-${index}`} value={option?.value}>
                             {option?.label}
                         </option>
                     ))}
@@ -193,9 +193,9 @@ const Select = React.forwardRef(({
                                     {searchTerm ? 'No options found' : 'No options available'}
                                 </div>
                             ) : (
-                                filteredOptions?.map((option) => (
+                                filteredOptions?.map((option, index) => (
                                     <div
-                                        key={option?.value}
+                                        key={`${option?.value}-${index}`}
                                         className={cn(
                                             "relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
                                             isSelected(option?.value) && "bg-primary text-primary-foreground",

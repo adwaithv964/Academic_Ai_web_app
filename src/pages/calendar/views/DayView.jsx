@@ -21,8 +21,21 @@ const DayView = ({ currentDate, events, onEventClick }) => {
                         
                         const isSameDate = new Date(e.date).toDateString() === currentDate.toDateString();
                         
-                        const isSameHour = e.time && e.time.startsWith(format(currentTimestamp, 'hh'));
-                        return isSameDate && (isSameHour || !e.time); 
+                        // e.time from HTML input is 24-hour HH:mm format (e.g. "13:45", "09:30")
+                        let isSameHour = false;
+                        if (e.time) {
+                            const eventHour = parseInt(e.time.split(':')[0], 10);
+                            isSameHour = eventHour === hour;
+                        }
+                        
+                        let shouldRender = isSameDate && isSameHour;
+                        
+                        // If no time is specified, render it in the 12 AM (0) slot by default
+                        if (isSameDate && !e.time && hour === 0) {
+                            shouldRender = true;
+                        }
+
+                        return shouldRender;
                     });
 
                     return (
@@ -51,8 +64,8 @@ const DayView = ({ currentDate, events, onEventClick }) => {
                                                 </svg>
                                             </div>
                                             <div>
-                                                <div className="font-bold text-sm">{evt.title}</div>
-                                                {evt.time && <div className="text-xs opacity-70 mt-0.5">{evt.time} - {evt.location}</div>}
+                                                <div className="font-bold text-sm text-gray-800">{evt.title}</div>
+                                                {evt.time && <div className="text-xs text-gray-700 opacity-90 mt-0.5">{evt.time} {evt.location ? `- ${evt.location}` : ''}</div>}
                                             </div>
                                         </div>
                                     );

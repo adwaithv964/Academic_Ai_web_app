@@ -32,8 +32,19 @@ const MultiDayView = ({ currentDate, events, onEventClick }) => {
                             const currentTimestamp = new Date(day).setHours(hour, 0, 0, 0);
                             const hourEvents = events.filter(e => {
                                 const isSameDate = new Date(e.date).toDateString() === day.toDateString();
-                                const isSameHour = e.time && e.time.startsWith(format(currentTimestamp, 'hh'));
-                                return isSameDate && (isSameHour || !e.time);
+                                
+                                let isSameHour = false;
+                                if (e.time) {
+                                    const eventHour = parseInt(e.time.split(':')[0], 10);
+                                    isSameHour = eventHour === hour;
+                                }
+
+                                let shouldRender = isSameDate && isSameHour;
+                                if (isSameDate && !e.time && hour === 0) {
+                                    shouldRender = true;
+                                }
+
+                                return shouldRender;
                             });
 
                             return (

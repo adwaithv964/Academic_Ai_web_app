@@ -18,18 +18,18 @@ const originalFetch = globalThis.fetch;
 globalThis.fetch = async (url, options = {}) => {
   const newOptions = { ...options };
 
-  
+
   if (!newOptions.headers) {
     newOptions.headers = {};
   }
 
-  
+
   if (typeof Headers !== 'undefined' && newOptions.headers instanceof Headers) {
     newOptions.headers.set('Referer', 'http://localhost:4028');
   } else if (Array.isArray(newOptions.headers)) {
     newOptions.headers.push(['Referer', 'http://localhost:4028']);
   } else {
-    
+
     newOptions.headers = { ...newOptions.headers, 'Referer': 'http://localhost:4028' };
   }
 
@@ -60,24 +60,24 @@ const Event = require('./models/Event');
 const WebReference = require('./models/WebReference');
 
 
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '.env') });
 
 const app = express();
-app.set('trust proxy', 1); 
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5003;
 
 
-app.use(cors()); 
-app.use(compression()); 
+app.use(cors());
+app.use(compression());
 app.use(helmet({
-  contentSecurityPolicy: false, 
-  crossOriginResourcePolicy: { policy: "cross-origin" } 
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 300, 
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.'
@@ -87,7 +87,7 @@ app.use('/api', generalLimiter);
 
 const heavyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50, 
+  max: 50,
   message: 'Too many AI requests, please wait a moment.'
 });
 app.use('/api/ai-scan', heavyLimiter);
@@ -111,10 +111,10 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API
 
 
 const MODEL_HIERARCHY = [
-  'gemini-2.5-flash',     
-  'gemini-2.0-flash-exp', 
+  'gemini-2.5-flash',
+  'gemini-2.0-flash-exp',
   'gemini-1.5-pro',
-  'gemini-1.5-flash',     
+  'gemini-1.5-flash',
 ];
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -129,7 +129,7 @@ async function generateContentSafe(input) {
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      
+
       const content = Array.isArray(input) ? input : [input];
 
       const result = await model.generateContent(content);
@@ -142,15 +142,15 @@ async function generateContentSafe(input) {
       console.warn(`[Gemini] Model ${modelName} failed (RateLimit: ${isRateLimit}, NotFound: ${isNotFound})`);
       lastError = error;
 
-      
-      
+
+
       if (isRateLimit) {
         console.warn('[Gemini] Rate limit hit. Attempting fallback to next model...');
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
+        await new Promise(resolve => setTimeout(resolve, 2000));
         continue;
       }
 
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
@@ -181,46 +181,46 @@ function runSmartMonteCarlo(currentGrade, params) {
   const startGrade = Number(currentGrade);
   const { remainingWeight, volatility, trend, difficultyAdjust } = params;
 
-  
+
   let stdDev = 5;
   if (volatility === 'low') stdDev = 2;
   if (volatility === 'high') stdDev = 10;
 
-  
+
   if (!remainingWeight) remainingWeight = 0.3;
 
   const results = [];
 
   for (let i = 0; i < iterations; i++) {
-    
-    
+
+
     const u1 = Math.random();
     const u2 = Math.random();
     const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 
     let performance = startGrade + (trend || 0) + (z * stdDev);
 
-    
-    if (difficultyAdjust) performance *= (1 / difficultyAdjust); 
 
-    
+    if (difficultyAdjust) performance *= (1 / difficultyAdjust);
+
+
     performance = Math.max(0, Math.min(100, performance));
 
-    
-    
+
+
     const finalGrade = (startGrade * (1 - (remainingWeight || 0.3))) + (performance * (remainingWeight || 0.3));
     results.push(finalGrade);
   }
 
   results.sort((a, b) => a - b);
   const median = results[Math.floor(iterations * 0.5)];
-  const p10 = results[Math.floor(iterations * 0.1)]; 
-  const p90 = results[Math.floor(iterations * 0.9)]; 
+  const p10 = results[Math.floor(iterations * 0.1)];
+  const p90 = results[Math.floor(iterations * 0.9)];
 
-  
+
   const buckets = {};
   results.forEach(g => {
-    const bucket = Math.floor(g / 2) * 2; 
+    const bucket = Math.floor(g / 2) * 2;
     buckets[bucket] = (buckets[bucket] || 0) + 1;
   });
 
@@ -247,7 +247,7 @@ function runSmartMonteCarlo(currentGrade, params) {
 async function analyzeContextAndSimulate(studentData) {
   const { currentGrade, courseName, context, studyData } = studentData;
 
-  
+
   if (!GEMINI_API_KEY) throw new Error("Missing GEMINI_API_KEY");
 
   const plannerSummary = studyData?.studySessions?.map(s =>
@@ -291,7 +291,7 @@ async function analyzeContextAndSimulate(studentData) {
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error("AI Analysis Failed:", e);
-    
+
     return {
       parameters: { remainingWeight: 0.3, volatility: 'medium', trend: 0 },
       insights: {
@@ -315,7 +315,7 @@ app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error: Gemini API Key missing' });
     }
 
-    
+
     const mimeType = req.file.mimetype;
     const imageBase64 = req.file.buffer.toString('base64');
 
@@ -356,22 +356,22 @@ app.post('/api/ai-scan', upload.single('file'), async (req, res) => {
 
     let text = "";
     try {
-      
+
       text = await generateContentSafe(parts);
     } catch (genErr) {
       console.error("Gemini Generation Failed:", genErr);
       return res.status(500).json({ error: `AI Generation Failed: ${genErr.message || genErr}` });
     }
 
-    console.log("[AI Scan] Raw AI Response:", text.substring(0, 500) + "..."); 
+    console.log("[AI Scan] Raw AI Response:", text.substring(0, 500) + "...");
 
     let events = [];
     try {
-      
-      
+
+
       let cleanText = text.replace(/```json/g, '').replace(/```/g, '');
 
-      
+
       const startIndex = cleanText.indexOf('[');
       const endIndex = cleanText.lastIndexOf(']');
 
@@ -419,7 +419,7 @@ app.get('/api/auth/google', (req, res) => {
     return res.status(500).send('Google Client ID/Secret missing in .env');
   }
   const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline', 
+    access_type: 'offline',
     scope: SCOPES,
   });
   res.redirect(url);
@@ -432,7 +432,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    
+
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
     const now = new Date();
@@ -450,20 +450,20 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     const googleEvents = response.data.items || [];
 
-    
-    const savePromises = googleEvents.map(gEvent => {
-      if (!gEvent.start) return null; 
 
-      
+    const savePromises = googleEvents.map(gEvent => {
+      if (!gEvent.start) return null;
+
+
       const newEvent = {
         title: gEvent.summary || 'No Title',
         description: gEvent.description || 'Imported from Google Calendar',
         date: new Date(gEvent.start.dateTime || gEvent.start.date),
         time: gEvent.start.dateTime ? new Date(gEvent.start.dateTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : 'All Day',
-        color: 'bg-green-100 text-green-700 border-green-200' 
+        color: 'bg-green-100 text-green-700 border-green-200'
       };
 
-      
+
       return Event.findOneAndUpdate(
         { title: newEvent.title, date: newEvent.date },
         newEvent,
@@ -473,7 +473,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     await Promise.all(savePromises);
 
-    
+
     res.redirect('http://localhost:4028/sync?status=success&provider=google');
 
   } catch (error) {
@@ -503,14 +503,14 @@ app.get('/api/public/status', async (req, res) => {
 
 
 app.use('/api', async (req, res, next) => {
-  
+
   const publicPaths = ['/auth', '/health', '/public'];
-  
+
   if (publicPaths.some(p => req.path.startsWith(p))) return next();
 
-  
+
   await authenticateUser(req, res, async () => {
-    
+
     await maintenance(req, res, next);
   });
 });
@@ -522,6 +522,7 @@ app.get('/api/admin/users/:id', admin, adminController.getUserDetails);
 app.delete('/api/admin/users/:id', admin, adminController.deleteUser);
 app.get('/api/admin/settings', admin, adminController.getSystemSettings);
 app.put('/api/admin/settings', admin, adminController.updateSystemSettings);
+app.post('/api/admin/set-role', admin, adminController.setAdminRole);
 
 
 app.get('/api/admin/content/courses', admin, adminController.getGlobalCourses);
@@ -574,28 +575,28 @@ app.get('/api/store/items', (req, res) => {
 app.post('/api/store/buy', async (req, res) => {
   try {
     const { itemId } = req.body;
-    
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const item = STORE_ITEMS.find(i => i.id === itemId);
     if (!item) return res.status(400).json({ error: 'Item not found' });
 
-    
+
     if (user.inventory && user.inventory.includes(itemId)) {
       return res.status(400).json({ error: 'Item already owned' });
     }
 
-    
-    
-    
+
+
+
     if (item.unlockCondition) {
       try {
         const { type, threshold, startHour, endHour, taskType, days, minMinutes } = item.unlockCondition;
         let met = false;
 
         switch (type) {
-          
+
           case 'level':
             met = (user.level || 1) >= threshold;
             break;
@@ -604,24 +605,24 @@ app.post('/api/store/buy', async (req, res) => {
             met = streak >= threshold;
             break;
 
-          
+
           case 'time_window':
-            
-            
-            
-            
+
+
+
+
             const StudySession = require('./models/StudySession');
-            
+
             const sessions = await StudySession.find({ userId: user._id });
             met = sessions.some(s => {
               const h = new Date(s.startTime).getHours();
-              return h >= startHour && h < endHour; 
+              return h >= startHour && h < endHour;
             });
             break;
 
           case 'task_count':
             const Task = require('./models/Task');
-            
+
             const totalTasks = await Task.countDocuments({
               userId: user._id,
               status: 'completed'
@@ -631,7 +632,7 @@ app.post('/api/store/buy', async (req, res) => {
 
           case 'task_type_count':
             const TaskType = require('./models/Task');
-            
+
             const codingTasks = await TaskType.countDocuments({
               userId: user._id,
               status: 'completed',
@@ -644,22 +645,22 @@ app.post('/api/store/buy', async (req, res) => {
             break;
 
           case 'weekend_study':
-            
+
             const StudySessionWeekend = require('./models/StudySession');
             const weekendSessions = await StudySessionWeekend.find({ userId: user._id });
             const weekendMinutes = weekendSessions.reduce((acc, s) => {
-              const day = new Date(s.startTime).getDay(); 
+              const day = new Date(s.startTime).getDay();
               if (day === 0 || day === 6) return acc + (s.duration || 0);
               return acc;
             }, 0);
-            met = weekendMinutes >= threshold; 
+            met = weekendMinutes >= threshold;
             break;
 
           case 'strict_streak':
-            
-            
+
+
             const strictStreak = user.streak || 0;
-            met = strictStreak >= days; 
+            met = strictStreak >= days;
             break;
 
           default:
@@ -675,10 +676,10 @@ app.post('/api/store/buy', async (req, res) => {
       }
     }
 
-    
+
     if (item.type === 'challenge') {
       user.points += (item.reward || 0);
-      user.totalPoints += (item.reward || 0); 
+      user.totalPoints += (item.reward || 0);
       user.inventory.push(itemId);
       await user.save();
       return res.json({
@@ -689,7 +690,7 @@ app.post('/api/store/buy', async (req, res) => {
       });
     }
 
-    
+
     if (user.points < item.price) {
       return res.status(400).json({ error: 'Not enough points' });
     }
@@ -710,9 +711,9 @@ app.get('/api/quests', async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    
+
     if (!user.quests || !user.quests.daily || user.quests.daily.length === 0) {
-      
+
       user.quests = {
         daily: DAILY_QUESTS_POOL.map(q => ({ id: q.id, progress: 0, completed: false, claimed: false })),
         lastGenerated: new Date()
@@ -720,7 +721,7 @@ app.get('/api/quests', async (req, res) => {
       await user.save();
     }
 
-    
+
     const dailyQuests = DAILY_QUESTS_POOL.map(poolItem => {
       const userStatus = user.quests.daily.find(q => q.id === poolItem.id) || { progress: 0, completed: false, claimed: false };
       return { ...poolItem, ...userStatus };
@@ -741,10 +742,10 @@ app.post('/api/quests/claim', async (req, res) => {
     const questDef = DAILY_QUESTS_POOL.find(q => q.id === questId);
     if (!questDef) return res.status(400).json({ error: 'Quest not found' });
 
-    
+
     let userQuest = user.quests.daily.find(q => q.id === questId);
     if (!userQuest) {
-      
+
       userQuest = { id: questId, progress: 0, completed: false, claimed: false };
       user.quests.daily.push(userQuest);
     }
@@ -757,11 +758,11 @@ app.post('/api/quests/claim', async (req, res) => {
       return res.status(400).json({ error: 'Quest not completed' });
     }
 
-    
+
     userQuest.claimed = true;
     userQuest.completed = true;
 
-    
+
     user.points += questDef.reward;
     user.totalPoints += questDef.reward;
 
@@ -778,36 +779,36 @@ app.get('/api/garden', async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    
+
     const StudySession = require('./models/StudySession');
     const sessions = await StudySession.find({ userId: req.user._id });
     const studyMinutes = sessions.reduce((acc, session) => acc + (session.duration * 60 || 0), 0);
 
-    
+
     const Task = require('./models/Task');
     const completedTasksCount = await Task.countDocuments({ userId: req.user._id, completed: true });
     const taskMinutes = completedTasksCount * 15;
 
     const totalMinutes = studyMinutes + taskMinutes;
-    const totalHours = parseFloat((totalMinutes / 60).toFixed(2)); 
+    const totalHours = parseFloat((totalMinutes / 60).toFixed(2));
 
-    
+
     const plants = [
       { id: 'rose', name: 'Rose', unlockHours: 0, icon: 'Flower2', color: 'text-pink-500' },
       { id: 'oak', name: 'Oak', unlockHours: 5, icon: 'Trees', color: 'text-green-600' },
-      { id: 'cactus', name: 'Cactus', unlockHours: 20, icon: 'Sprout', color: 'text-emerald-600' }, 
-      { id: 'sunflower', name: 'Sunflower', unlockHours: 50, icon: 'Sun', color: 'text-yellow-500' } 
+      { id: 'cactus', name: 'Cactus', unlockHours: 20, icon: 'Sprout', color: 'text-emerald-600' },
+      { id: 'sunflower', name: 'Sunflower', unlockHours: 50, icon: 'Sun', color: 'text-yellow-500' }
     ];
 
-    
+
     const gardenState = plants.map(plant => ({
       ...plant,
       unlocked: totalHours >= plant.unlockHours,
-      progress: Math.min(100, (totalHours / plant.unlockHours) * 100) || (totalHours > 0 ? 100 : 0) 
+      progress: Math.min(100, (totalHours / plant.unlockHours) * 100) || (totalHours > 0 ? 100 : 0)
     }));
 
     res.json({
-      totalHours, 
+      totalHours,
       breakdown: { studyMinutes, taskMinutes, tasks: completedTasksCount },
       plants: gardenState
     });
@@ -823,14 +824,14 @@ app.post('/api/garden/grow', async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    
-    
+
+
 
     if (!user.garden.plants.length) {
       user.garden.plants.push({ type: 'sapling', stage: 1, plantedAt: new Date() });
     }
 
-    
+
     res.json({ success: true, message: 'Garden watered' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -840,7 +841,7 @@ app.post('/api/garden/grow', async (req, res) => {
 
 app.get('/api/user', async (req, res) => {
   try {
-    
+
     if (!req.user) return res.status(404).json({ error: 'User not found' });
     res.json(req.user);
   } catch (err) {
@@ -850,8 +851,8 @@ app.get('/api/user', async (req, res) => {
 
 app.post('/api/user', async (req, res) => {
   try {
-    
-    
+
+
     const allowedUpdates = ['firstName', 'lastName', 'institution', 'major', 'graduationYear', 'phone', 'dateOfBirth', 'address', 'academicSettings', 'preferences', 'garden', 'activeTheme', 'studentId'];
 
     const updates = {};
@@ -881,7 +882,7 @@ app.put('/api/user/theme', async (req, res) => {
 
     user.preferences.display.activeTheme = theme;
 
-    
+
     user.markModified('preferences');
 
     await user.save();
@@ -906,9 +907,9 @@ app.post('/api/tasks', async (req, res) => {
     const task = new Task({ ...req.body, userId: req.user._id });
     await task.save();
 
-    
-    
-    
+
+
+
 
     res.json(task);
   } catch (err) {
@@ -918,23 +919,23 @@ app.post('/api/tasks', async (req, res) => {
 
 app.put('/api/tasks/:id', async (req, res) => {
   try {
-    
+
     const existingTask = await Task.findOne({ _id: req.params.id, userId: req.user._id });
     if (!existingTask) return res.status(404).json({ error: 'Task not found' });
 
-    
+
     const wasCompleted = existingTask.completed;
     const isNowCompleted = req.body.completed === true;
     const justCompleted = !wasCompleted && isNowCompleted;
 
-    
+
     const updatedTask = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       req.body,
       { new: true }
     );
 
-    
+
     if (justCompleted) {
       const user = await User.findById(req.user._id);
       if (user) await user.updateQuestProgress('tasks_completed', 1);
@@ -971,27 +972,27 @@ app.post('/api/study-sessions', async (req, res) => {
     const session = new StudySession({ ...req.body, userId: req.user._id });
     await session.save();
 
-    
+
     const user = await User.findById(req.user._id);
     if (user) {
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       const durationInMinutes = (req.body.duration || 0) * 60;
       await user.updateQuestProgress('study_minutes', durationInMinutes);
       await user.updateQuestProgress('focus_session', 1);
@@ -1086,7 +1087,7 @@ app.post('/api/exams', async (req, res) => {
     const exam = new Exam({ ...req.body, userId: req.user._id });
     await exam.save();
 
-    
+
     const user = await User.findById(req.user._id);
     if (user) await user.updateQuestProgress('exam_completed', 1);
 
@@ -1190,8 +1191,8 @@ app.delete('/api/events/:id', async (req, res) => {
 
 app.get('/api/documents', async (req, res) => {
   try {
-    
-    
+
+
     const documents = await Document.find({ userId: req.user._id }, '-data').sort({ uploadDate: -1 });
     res.json(documents);
   } catch (err) {
@@ -1207,25 +1208,25 @@ app.post('/api/documents/upload', upload.single('file'), async (req, res) => {
 
     const { subject, type } = req.body;
 
-    
+
     const sizeBytes = req.file.size;
     let sizeStr = sizeBytes + ' B';
     if (sizeBytes > 1024 * 1024) sizeStr = (sizeBytes / (1024 * 1024)).toFixed(1) + ' MB';
     else if (sizeBytes > 1024) sizeStr = (sizeBytes / 1024).toFixed(1) + ' KB';
 
     const newDoc = new Document({
-      userId: req.user._id, 
+      userId: req.user._id,
       name: req.file.originalname,
       subject: subject || 'General',
       type: type || 'other',
       size: sizeStr,
       contentType: req.file.mimetype,
-      data: req.file.buffer 
+      data: req.file.buffer
     });
 
     await newDoc.save();
 
-    
+
     const docResponse = newDoc.toObject();
     delete docResponse.data;
 
@@ -1276,7 +1277,7 @@ app.delete('/api/documents/:id', async (req, res) => {
 
 app.get('/api/terms', async (req, res) => {
   try {
-    const term = await Term.findOne().sort({ createdAt: -1 }); 
+    const term = await Term.findOne().sort({ createdAt: -1 });
     res.json(term || {});
   } catch (err) {
     console.error("Error in GET /api/terms:", err);
@@ -1286,7 +1287,7 @@ app.get('/api/terms', async (req, res) => {
 
 app.post('/api/terms', async (req, res) => {
   try {
-    
+
     const term = new Term({ ...req.body, userId: req.user._id });
     await term.save();
     res.json(term);
@@ -1383,13 +1384,13 @@ app.post('/api/predict', async (req, res) => {
   try {
     const studentData = req.body || {};
 
-    
+
     const aiAnalysis = await analyzeContextAndSimulate(studentData);
 
-    
+
     const simulationStats = runSmartMonteCarlo(studentData.currentGrade, aiAnalysis.parameters);
 
-    
+
     const responseData = {
       stats: simulationStats,
       aiAnalysis: aiAnalysis.insights,
@@ -1397,7 +1398,7 @@ app.post('/api/predict', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    
+
     try {
       const newPrediction = new Prediction({
         courseName: studentData.courseName,
@@ -1412,9 +1413,9 @@ app.post('/api/predict', async (req, res) => {
       await newPrediction.save();
       console.log('Prediction saved to DB:', newPrediction._id);
 
-      
+
       responseData._id = newPrediction._id;
-      responseData.id = newPrediction._id; 
+      responseData.id = newPrediction._id;
 
     } catch (dbErr) {
       console.error('Failed to save prediction:', dbErr);
@@ -1425,7 +1426,7 @@ app.post('/api/predict', async (req, res) => {
 
     console.error("Prediction API Error:", e);
 
-    
+
     try {
       const defaultParams = { remainingWeight: 0.3, volatility: 'medium', trend: 0 };
       const fallbackStats = runSmartMonteCarlo(req.body.currentGrade || 80, defaultParams);
@@ -1452,28 +1453,28 @@ app.get('/api/ai/stats', authenticateUser, async (req, res) => {
 
     const userId = req.user._id;
 
-    
+
     const chatCount = await ActivityLog.countDocuments({ userId, type: 'ai_chat' });
 
-    
+
     const docCount = await ActivityLog.countDocuments({ userId, type: 'ai_analysis' });
 
-    
+
     const studyPlanCount = await StudySession.countDocuments({ userId });
 
-    
-    
+
+
     const predictions = await Prediction.find({ userId }).select('currentGrade predictedGrade');
     let avgImprovement = 0;
     if (predictions.length > 0) {
       const totalImprovement = predictions.reduce((acc, curr) => {
         const improvement = (curr.predictedGrade || 0) - (curr.currentGrade || 0);
-        return acc + (improvement > 0 ? improvement : 0); 
+        return acc + (improvement > 0 ? improvement : 0);
       }, 0);
       avgImprovement = Math.round((totalImprovement / predictions.length) * 10) / 10;
     }
 
-    
+
     const displayStats = {
       chatSessions: chatCount || 0,
       documentsAnalyzed: docCount || 0,
@@ -1497,10 +1498,10 @@ app.post('/api/ai/chat', async (req, res) => {
     }
     const prompt = `You are an expert ${subject || 'general'} tutor. Provide clear, step-by-step guidance.\n\nStudent question: ${message}`;
 
-    
+
     const text = await geminiGenerate(prompt);
 
-    
+
     if (req.user && req.user._id) {
       try {
         await ActivityLog.create({
@@ -1517,10 +1518,10 @@ app.post('/api/ai/chat', async (req, res) => {
 
     return res.json({ text });
   } catch (err) {
-    
+
     console.error('Gemini chat error:', err.message);
 
-    
+
     if (err.message.includes('429')) {
       return res.status(429).json({ error: 'AI Quota Exceeded. Please try again later.' });
     }
@@ -1537,7 +1538,7 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
     const analysisType = (req.body?.analysisType || 'general').toString();
     const mimeType = req.file.mimetype || 'image/png';
 
-    
+
     const imagePart = {
       inlineData: {
         data: req.file.buffer.toString('base64'),
@@ -1554,10 +1555,10 @@ app.post('/api/ai/analyze-image', upload.single('image'), async (req, res) => {
 
     const textPrompt = `${prompts[analysisType] || prompts.general}\n\nFormat: Clean Markdown. Tone: Professional & Concise.`;
 
-    
+
     const analysis = await generateContentSafe([textPrompt, imagePart]);
 
-    
+
     if (req.user && req.user._id) {
       try {
         await ActivityLog.create({
@@ -1623,7 +1624,7 @@ app.delete('/api/web-references/:id', async (req, res) => {
 });
 
 if (require.main === module) {
-  
+
   process.on('uncaughtException', (err) => {
     console.error(`[FATAL] Uncaught Exception: ${err.message}\n${err.stack}`);
     process.exit(1);

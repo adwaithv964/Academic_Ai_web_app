@@ -4,10 +4,12 @@ import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { startTimer, pauseTimer, resetTimer, setMode, setInitialDuration } from '../../store/slices/focusSlice';
 import TimeSpinner from './components/TimeSpinner';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const FocusTimer = () => {
     const dispatch = useDispatch();
-    const { isActive, timeLeft, mode } = useSelector(state => state.focus);
+    const { isActive, timeLeft, mode, initialDuration } = useSelector(state => state.focus);
+    const { addNotification } = useNotificationContext();
 
     
 
@@ -27,6 +29,14 @@ const FocusTimer = () => {
             dispatch(pauseTimer());
         } else {
             dispatch(startTimer());
+            addNotification({
+                id: `timer-start-${Date.now()}`,
+                type: 'TIMER',
+                title: `⏱️ ${mode === 'focus' ? 'Focus' : 'Break'} Timer Started`,
+                message: `Your ${mode === 'focus' ? 'focus' : 'break'} session has begun. Stay on track!`,
+                timestamp: Date.now(),
+                unread: true,
+            });
         }
     };
 

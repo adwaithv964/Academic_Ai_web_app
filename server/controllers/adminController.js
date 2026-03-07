@@ -21,20 +21,20 @@ const getDashboardStats = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
 
-        
-        
+
+
         const oneDayAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
         const activeUsers = await User.countDocuments({
             $or: [
                 { lastActiveDate: { $gte: oneDayAgo } },
-                { updatedAt: { $gte: oneDayAgo } } 
+                { updatedAt: { $gte: oneDayAgo } }
             ]
         });
 
         const totalSessions = await StudySession.countDocuments();
         const totalTasks = await Task.countDocuments();
 
-        
+
         const sessions = await StudySession.find({}, 'duration');
         const totalStudyHours = sessions.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
@@ -68,7 +68,7 @@ const getAllUsers = async (req, res) => {
 
         const count = await User.countDocuments({ ...keyword });
         const users = await User.find({ ...keyword })
-            .select('-password -__v') 
+            .select('-password -__v')
             .limit(pageSize)
             .skip(pageSize * (page - 1))
             .sort({ createdAt: -1 });
@@ -87,7 +87,7 @@ const getUserDetails = async (req, res) => {
         const user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        
+
         const [tasks, sessions, courses, exams, documents, webRefs] = await Promise.all([
             Task.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
             StudySession.find({ userId: user._id }).sort({ date: -1 }).limit(50),
@@ -129,7 +129,7 @@ const deleteUser = async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        
+
         await Promise.all([
             Task.deleteMany({ userId: user._id }),
             StudySession.deleteMany({ userId: user._id }),
@@ -176,7 +176,7 @@ const updateSystemSettings = async (req, res) => {
 
         const updatedSettings = await settings.save();
 
-        
+
         await createSystemLog(
             'WARNING',
             'System Settings Updated',
@@ -302,12 +302,12 @@ const createSystemLog = async (level, message, userId = null, ip = null, details
 
 const getSystemLogs = async (req, res) => {
     try {
-        
+
         const limit = parseInt(req.query.limit) || 50;
         const logs = await SystemLog.find()
             .sort({ timestamp: -1 })
             .limit(limit)
-            .populate('userId', 'firstName lastName email'); 
+            .populate('userId', 'firstName lastName email');
 
         res.json(logs);
     } catch (err) {
@@ -316,6 +316,29 @@ const getSystemLogs = async (req, res) => {
 };
 
 
+
+const setAdminRole = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        if (user.role === 'admin') {
+            return res.json({ message: 'User is already an admin', user });
+        }
+
+        user.role = 'admin';
+        await user.save();
+
+        await createSystemLog('SUCCESS', `User promoted to Admin: ${email}`, req.user?._id, req.ip);
+
+        res.json({ message: 'User promoted to admin successfully', user });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 
 module.exports = {
     getDashboardStats,
@@ -329,5 +352,6 @@ module.exports = {
     updateGlobalCourse,
     deleteGlobalCourse,
     getSystemLogs,
-    createSystemLog 
+    createSystemLog,
+    setAdminRole
 };

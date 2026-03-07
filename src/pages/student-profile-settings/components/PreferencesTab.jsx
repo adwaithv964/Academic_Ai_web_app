@@ -4,7 +4,7 @@ import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
 import { useClock } from '../../../contexts/ClockContext';
-
+import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { user as userApi } from '../../../services/api';
 
 const PreferencesTab = () => {
@@ -60,6 +60,7 @@ const PreferencesTab = () => {
   }, []);
 
   const { currentTime } = useClock();
+  const { addNotification } = useNotificationContext();
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
@@ -153,10 +154,24 @@ const PreferencesTab = () => {
       };
 
       await userApi.update(payload);
-      alert('Preferences updated successfully!');
+      addNotification({
+        id: `settings-saved-${Date.now()}`,
+        type: 'SETTINGS',
+        title: '⚙️ Settings Updated',
+        message: 'Your notification and display preferences have been saved successfully.',
+        timestamp: Date.now(),
+        unread: true,
+      });
     } catch (error) {
       console.error("Failed to save preferences:", error);
-      alert("Failed to save preferences. Please try again.");
+      addNotification({
+        id: `settings-error-${Date.now()}`,
+        type: 'SETTINGS',
+        title: '❌ Save Failed',
+        message: 'Could not save preferences. Please try again.',
+        timestamp: Date.now(),
+        unread: true,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -164,7 +179,14 @@ const PreferencesTab = () => {
 
   const resetToDefaults = () => {
     setPreferences(defaultPreferences);
-    alert('Preferences reset to defaults (not saved yet).');
+    addNotification({
+      id: `settings-reset-${Date.now()}`,
+      type: 'SETTINGS',
+      title: '⚙️ Preferences Reset',
+      message: 'Preferences reset to defaults. Click Save to apply changes.',
+      timestamp: Date.now(),
+      unread: true,
+    });
   };
 
   return (

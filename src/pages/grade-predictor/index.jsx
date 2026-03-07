@@ -4,6 +4,7 @@ import CourseSelectionForm from './components/CourseSelectionForm';
 import PredictionDashboard from './components/PredictionDashboard';
 import Icon from '../../components/AppIcon';
 import { predictGrades as predictGradesApi, health as apiHealth } from '../../services/api';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 import { db } from '../../services/db';
 import PredictionHistory from './components/PredictionHistory';
 
@@ -13,6 +14,7 @@ const GradePredictor = () => {
   const [showResults, setShowResults] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [selectedHistory, setSelectedHistory] = useState(null);
+  const { addNotification } = useNotificationContext();
 
   
   const [serverAvailable, setServerAvailable] = useState(false);
@@ -65,6 +67,14 @@ const GradePredictor = () => {
 
       setPredictionData(data);
       setShowResults(true);
+      addNotification({
+        id: `prediction-complete-${Date.now()}`,
+        type: 'PREDICTION',
+        title: '🔮 Prediction Complete',
+        message: `Your AI grade prediction for ${formData?.courseName || 'your course'} is ready!`,
+        timestamp: Date.now(),
+        unread: true,
+      });
 
       
       try {

@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNotificationContext } from '../../contexts/NotificationContext';
+import { events as eventsApi } from '../../services/api';
 
 const AiScheduleScan = () => {
     const [file, setFile] = useState(null);
@@ -10,6 +12,7 @@ const AiScheduleScan = () => {
     const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
     const [saved, setSaved] = useState(false);
+    const { addNotification } = useNotificationContext();
 
     const fileInputRef = useRef(null);
 
@@ -60,6 +63,14 @@ const AiScheduleScan = () => {
 
             if (data.events) {
                 setEvents(data.events);
+                addNotification({
+                    id: `ai-scan-${Date.now()}`,
+                    type: 'AI_SCAN',
+                    title: '🤖 AI Scan Complete!',
+                    message: `Found ${data.events.length} event${data.events.length !== 1 ? 's' : ''} in your schedule. Review and save them to your calendar.`,
+                    timestamp: Date.now(),
+                    unread: true,
+                });
             }
         } catch (err) {
             setError(err.message);
@@ -71,18 +82,23 @@ const AiScheduleScan = () => {
     const saveToCalendar = async () => {
         try {
             const savePromises = events.map(event =>
-                fetch('http://localhost:5002/api/events', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(event)
-                })
+                eventsApi.create(event)
             );
 
             await Promise.all(savePromises);
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
+            addNotification({
+                id: `ai-scan-saved-${Date.now()}`,
+                type: 'CALENDAR',
+                title: '📆 Events Added to Calendar',
+                message: `${events.length} event${events.length !== 1 ? 's' : ''} from your schedule scan have been saved to your calendar.`,
+                timestamp: Date.now(),
+                unread: true,
+            });
         } catch (err) {
-            setError("Failed to save to calendar");
+            console.error("Failed to save to calendar", err);
+            setError("Failed to save to calendar. Please try again.");
         }
     };
 

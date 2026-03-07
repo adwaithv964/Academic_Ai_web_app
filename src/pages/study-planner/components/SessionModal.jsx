@@ -13,7 +13,7 @@ const SessionModal = ({
   onDelete,
   selectedDay,
   selectedHour,
-  currentDate, 
+  currentDate,
   courses = [],
   onCourseCreate,
   onCourseDelete,
@@ -56,7 +56,7 @@ const SessionModal = ({
     }
   }, [session, selectedDay, selectedHour]);
 
-  
+
   const subjectOptions = courses.length > 0
     ? courses.map(c => ({ value: c.name, label: c.name }))
     : [
@@ -137,33 +137,41 @@ const SessionModal = ({
       return;
     }
 
+    // Helper: format a Date as local YYYY-MM-DD (avoids UTC timezone shift)
+    const toLocalDateString = (d) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
     const sessionData = {
       ...formData,
       id: session?.id || Date.now(),
       date: (() => {
         if (selectedDay && currentDate) {
-          
           const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
           const targetDayIndex = days.indexOf(selectedDay);
 
           if (targetDayIndex !== -1) {
-            
+            // Find Monday of the current week in LOCAL time
             const weekStart = new Date(currentDate);
-            const day = weekStart.getDay();
-            const diff = (day === 0 ? -6 : 1) - day; 
+            const day = weekStart.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+            const diff = (day === 0 ? -6 : 1) - day; // offset to Monday
             weekStart.setDate(weekStart.getDate() + diff);
-            weekStart.setHours(0, 0, 0, 0); 
+            weekStart.setHours(0, 0, 0, 0);
 
-            
+            // Add the target day offset
             const targetDate = new Date(weekStart);
             targetDate.setDate(weekStart.getDate() + targetDayIndex);
 
-            
-            
-            return targetDate.toISOString();
+            // Save as local YYYY-MM-DD to avoid UTC timezone shift
+            return toLocalDateString(targetDate);
           }
         }
-        return session?.date || new Date().toISOString();
+        // Fallback: keep existing date or use today as local string
+        if (session?.date) return session.date;
+        return toLocalDateString(new Date());
       })(),
       createdAt: session?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -209,7 +217,7 @@ const SessionModal = ({
       [field]: value
     }));
 
-    
+
     if (errors?.[field]) {
       setErrors(prev => ({
         ...prev,

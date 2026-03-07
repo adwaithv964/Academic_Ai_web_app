@@ -37,6 +37,8 @@ import AdminLayout from './components/layout/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 import AdminLogin from './pages/admin/AdminLogin';
 import { useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { Toaster } from 'react-hot-toast';
 
 const PrivateRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -88,8 +90,10 @@ const Routes = () => {
   }
 
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <ErrorBoundary>
+    <NotificationProvider>
+      <Toaster />
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ErrorBoundary>
         <ScrollToTop />
         <RouterRoutes>
           <Route path="/maintenance" element={<Maintenance />} />
@@ -230,6 +234,7 @@ const Routes = () => {
         </RouterRoutes>
       </ErrorBoundary>
     </BrowserRouter>
+    </NotificationProvider>
   );
 };
 

@@ -35,7 +35,7 @@ const CalendarGrid = ({
       const sessionDay = new Date(session.date)?.getDay();
       const sessionHour = parseInt(session?.startTime?.split(':')?.[0]);
       const dayIndex = weekDays?.indexOf(day);
-      const adjustedSessionDay = sessionDay === 0 ? 6 : sessionDay - 1; 
+      const adjustedSessionDay = sessionDay === 0 ? 6 : sessionDay - 1;
 
       return adjustedSessionDay === dayIndex && sessionHour === hour;
     });
@@ -69,15 +69,15 @@ const CalendarGrid = ({
   };
 
   const getStickyNoteStyle = (subject, courseColor, isCompleted) => {
-    
+
     const getStyle = (colorName) => {
-      
+
       if (colorName === 'red') colorName = 'rose';
       const baseStyle = `bg-${colorName}-100 border-2 border-${colorName}-200 text-${colorName}-800 shadow-sm hover:shadow-md dark:bg-${colorName}-900/30 dark:border-${colorName}-700 dark:text-${colorName}-100`;
       return isCompleted ? `${baseStyle} opacity-60 grayscale-[50%]` : baseStyle;
     };
 
-    
+
     if (courseColor) {
       const match = courseColor.match(/bg-(\w+)-/);
       if (match && match[1]) {
@@ -85,7 +85,7 @@ const CalendarGrid = ({
       }
     }
 
-    
+
     const subjectColors = {
       'Mathematics': 'blue',
       'Physics': 'emerald',
@@ -97,20 +97,20 @@ const CalendarGrid = ({
       'Geography': 'cyan',
       'Art': 'fuchsia',
       'Music': 'rose',
-      
+
       'red': 'rose'
     };
 
-    
+
     if (!subjectColors[subject]) {
       const fallbacks = ['yellow', 'lime', 'green', 'teal', 'sky', 'purple'];
-      
+
       const hash = subject?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0;
       return getStyle(fallbacks[hash % fallbacks.length]);
     }
 
     let color = subjectColors[subject];
-    
+
     if (color === 'red') color = 'rose';
 
     return getStyle(color);
@@ -122,7 +122,7 @@ const CalendarGrid = ({
   };
 
   const handleCompleteClick = (e, session) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     if (onSessionComplete) {
       onSessionComplete(session);
     }
@@ -205,8 +205,18 @@ const CalendarGrid = ({
   const getStartOfWeek = (date) => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
-    return new Date(d.setDate(diff));
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0); // normalize to local midnight
+    return d;
+  };
+
+  // Format a Date as local YYYY-MM-DD string (no UTC shift)
+  const toLocalDateStr = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   };
 
   const isSameDate = (date1, date2) => {
@@ -226,21 +236,21 @@ const CalendarGrid = ({
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startingDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; 
+    const startingDayIndex = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
     const totalDays = lastDay.getDate();
 
     const days = [];
-    
+
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDayIndex - 1; i >= 0; i--) {
       days.push({ day: prevMonthLastDay - i, type: 'prev', date: new Date(year, month - 1, prevMonthLastDay - i) });
     }
-    
+
     for (let i = 1; i <= totalDays; i++) {
       days.push({ day: i, type: 'current', date: new Date(year, month, i) });
     }
-    
-    const remainingCells = 42 - days.length; 
+
+    const remainingCells = 42 - days.length;
     for (let i = 1; i <= remainingCells; i++) {
       days.push({ day: i, type: 'next', date: new Date(year, month + 1, i) });
     }
@@ -268,8 +278,8 @@ const CalendarGrid = ({
                     ${index % 7 === 6 ? 'border-r-0' : ''}
                 `}
                 onClick={() => {
-                  
-                  onTimeSlotClick(weekDays[dayObj.date.getDay() === 0 ? 6 : dayObj.date.getDay() - 1], 9); 
+
+                  onTimeSlotClick(weekDays[dayObj.date.getDay() === 0 ? 6 : dayObj.date.getDay() - 1], 9);
                 }}
               >
                 <div className={`text-sm font-medium mb-1 ${isToday ? 'bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center' : ''}`}>
@@ -302,27 +312,29 @@ const CalendarGrid = ({
     );
   }
 
-  
-  
+
+
   const startOfCurrentWeek = getStartOfWeek(currentDate);
 
   const getSessionsForWeekSlot = (dayName, hour) => {
     return studySessions?.filter(session => {
       if (!session.date) return false;
 
-      const sessionDate = new Date(session.date);
       const sessionHour = parseInt(session?.startTime?.split(':')?.[0]);
+      if (sessionHour !== hour) return false;
 
-      
-      
-      const diffTime = sessionDate - startOfCurrentWeek;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      
+      // Build the local date string for this slot's day in the current week
       const dayIndex = weekDays.indexOf(dayName);
+      const slotDate = new Date(startOfCurrentWeek);
+      slotDate.setDate(startOfCurrentWeek.getDate() + dayIndex);
+      const slotDateStr = toLocalDateStr(slotDate);
 
-      
-      return diffDays === dayIndex && sessionHour === hour;
+      // Parse session.date tolerantly — handles both 'YYYY-MM-DD' and ISO strings
+      const sessionDateStr = session.date.length === 10
+        ? session.date // already 'YYYY-MM-DD'
+        : toLocalDateStr(new Date(session.date)); // convert ISO to local date str
+
+      return sessionDateStr === slotDateStr;
     });
   };
 

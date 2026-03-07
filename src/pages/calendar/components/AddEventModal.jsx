@@ -15,7 +15,7 @@ const COLORS = [
     { value: '#FFDAC1', label: 'Peach' },
 ];
 
-const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
+const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete, selectedDate }) => {
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
     const selectedColor = watch('color');
 
@@ -28,16 +28,22 @@ const AddEventModal = ({ isOpen, onClose, onSave, eventToEdit, onDelete }) => {
                 setValue('description', eventToEdit.description || '');
                 setValue('color', eventToEdit.color || COLORS[9].value); 
             } else {
+                const defaultDate = selectedDate ? new Date(selectedDate) : new Date();
+                
+                // Keep local timezone to avoid off-by-one errors from UTC conversion
+                const offset = defaultDate.getTimezoneOffset();
+                const localDate = new Date(defaultDate.getTime() - (offset*60*1000));
+                
                 reset({
                     title: '',
-                    date: new Date().toISOString().split('T')[0],
+                    date: localDate.toISOString().split('T')[0],
                     time: '',
                     description: '',
                     color: COLORS[0].value
                 });
             }
         }
-    }, [isOpen, eventToEdit, setValue, reset]);
+    }, [isOpen, eventToEdit, setValue, reset, selectedDate]);
 
     const onSubmit = (data) => {
         onSave({ ...data, _id: eventToEdit?._id });

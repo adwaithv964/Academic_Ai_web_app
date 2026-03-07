@@ -40,12 +40,15 @@ const WeekView = ({ currentDate, events, onDateClick, onEventClick }) => {
 
                         {/* Cells */}
                         {days.map(day => {
-                            const currentHourEvents = events.filter(e =>
-                                isSameDay(e.date, day) &&
+                            const currentHourEvents = events.filter(e => {
+                                if (!isSameDay(e.date, day)) return false;
                                 
+                                if (!e.time && hour === 0) return true; // Show all-day/no-time events in 12 AM slot
+                                if (!e.time) return false;
                                 
-                                (e.time && e.time.startsWith(format(new Date().setHours(hour), 'hh')))
-                            );
+                                const eventHour = parseInt(e.time.split(':')[0], 10);
+                                return eventHour === hour;
+                            });
 
                             return (
                                 <div key={day.toString()} className="border-r border-b border-gray-100 relative group hover:bg-gray-50/50">
